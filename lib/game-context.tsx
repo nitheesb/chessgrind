@@ -72,29 +72,33 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // Check for existing session on mount
   useEffect(() => {
+    let mounted = true
+    
     const checkSession = async () => {
       if (!isBackendEnabled) {
-        setIsLoading(false)
+        if (mounted) setIsLoading(false)
         return
       }
 
       try {
         const response = await authApi.getSession()
-        if (response.authenticated && response.user) {
+        if (mounted && response.authenticated && response.user) {
           setProfile(mapApiUserToProfile(response.user))
           setIsLoggedIn(true)
         }
       } catch (error) {
         // Backend not available, disable it and allow local mode
         console.warn('Backend not available, using local mode')
-        setIsBackendEnabled(false)
+        if (mounted) setIsBackendEnabled(false)
       } finally {
-        setIsLoading(false)
+        if (mounted) setIsLoading(false)
       }
     }
 
     checkSession()
-  }, [isBackendEnabled])
+    
+    return () => { mounted = false }
+  }, []) // Only run on mount
 
   // Sync to backend when there are pending changes
   const syncToBackend = useCallback(async () => {
