@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { ChessPiece } from '@/components/chess/chess-pieces'
@@ -36,6 +36,11 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [localError, setLocalError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSubmit = async () => {
     if (!username.trim()) return
@@ -71,20 +76,17 @@ export function LoginPage() {
 
   const error = localError || authError
 
-  if (isLoading) {
+  // Show loading state
+  if (isLoading || !mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full"
-        />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background">
       <motion.div
         variants={container}
         initial="hidden"
