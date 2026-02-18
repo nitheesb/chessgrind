@@ -131,42 +131,71 @@ function OpeningDetail({ opening, onBack }: { opening: Opening; onBack: () => vo
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0)
   const [isCompleted, setIsCompleted] = useState(false)
   const [activeTab, setActiveTab] = useState<'moves' | 'variations' | 'stats'>('moves')
+  const [showNextMoveHint, setShowNextMoveHint] = useState(true)
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
 
   const positions = useMemo(() => {
     const game = new Chess()
     const fens = [game.fen()]
+    const moves: { from: string; to: string }[] = []
+    
     for (const move of opening.moves) {
       try {
-        game.move(move)
+        const moveResult = game.move(move)
+        if (moveResult) {
+          moves.push({ from: moveResult.from, to: moveResult.to })
+        }
         fens.push(game.fen())
       } catch {
         break
       }
     }
-    return fens
+    return { fens, moves }
   }, [opening.moves])
 
-  const currentFen = positions[currentMoveIndex] || positions[0]
+  const currentFen = positions.fens[currentMoveIndex] || positions.fens[0]
+  
+  // Get the next move to show as hint
+  const nextMoveHint = useMemo(() => {
+    if (currentMoveIndex >= positions.moves.length) return null
+    return positions.moves[currentMoveIndex]
+  }, [currentMoveIndex, positions.moves])
 
   const handleNext = useCallback(() => {
-    if (currentMoveIndex < positions.length - 1) {
-      setCurrentMoveIndex(prev => prev + 1)
-      if (currentMoveIndex === positions.length - 2 && !isCompleted) {
+    if (currentMoveIndex < positions.fens.length - 1) {
+      const newIndex = currentMoveIndex + 1
+      setCurrentMoveIndex(newIndex)
+      
+      // Set the last move for highlighting
+      if (currentMoveIndex < positions.moves.length) {
+        setLastMove(positions.moves[currentMoveIndex])
+      }
+      
+      if (newIndex === positions.fens.length - 1 && !isCompleted) {
         setIsCompleted(true)
         addXP(15)
         incrementOpeningsLearned()
       }
     }
-  }, [currentMoveIndex, positions.length, isCompleted, addXP, incrementOpeningsLearned])
+  }, [currentMoveIndex, positions.fens.length, positions.moves, isCompleted, addXP, incrementOpeningsLearned])
 
   const handlePrev = useCallback(() => {
     if (currentMoveIndex > 0) {
-      setCurrentMoveIndex(prev => prev - 1)
+      const newIndex = currentMoveIndex - 1
+      setCurrentMoveIndex(newIndex)
+      
+      // Set the last move for highlighting (previous move)
+      if (newIndex > 0) {
+        setLastMove(positions.moves[newIndex - 1])
+      } else {
+        setLastMove(null)
+      }
     }
-  }, [currentMoveIndex])
+  }, [currentMoveIndex, positions.moves])
 
   const handleReset = useCallback(() => {
     setCurrentMoveIndex(0)
+    setLastMove(null)
   }, [])
 
   return (
@@ -180,7 +209,7 @@ function OpeningDetail({ opening, onBack }: { opening: Opening; onBack: () => vo
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"
+          className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
@@ -203,42 +232,78 @@ function OpeningDetail({ opening, onBack }: { opening: Opening; onBack: () => vo
           fen={currentFen}
           size={Math.min(360, typeof window !== 'undefined' ? window.innerWidth - 48 : 360)}
           showCoordinates
-          lastMove={currentMoveIndex > 0 ? {
-            from: '',
-            to: '',
-          } : undefined}
+          lastMove={lastMove || undefined}
+          hintArrow={nextMoveHint}
+          showHintArrow={showNextMoveHint && !!nextMoveHint}
         />
+      </div>
+
+      {/* Hint toggle */}
+      <div className="flex items-center justify-center">
+        <button
+          onClick={() => setShowNextMoveHint(!showNextMoveHint)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            showNextMoveHint 
+              ? 'bg-primary/10 text-primary border border-primary/20' 
+              : 'bg-secondary text-muted-foreground'
+          }`}
+        >
+          <Play className="w-3 h-3" />
+          {showNextMoveHint ? 'Hint On' : 'Show Next Move'}
+        </button>
       </div>
 
       {/* Move controls */}
       <div className="flex items-center justify-center gap-3">
-        <button
+        <motion.button
           onClick={handleReset}
           disabled={currentMoveIndex === 0}
           className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center disabled:opacity-30 transition-opacity"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <RotateCcw className="w-4 h-4 text-foreground" />
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           onClick={handlePrev}
           disabled={currentMoveIndex === 0}
           className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center disabled:opacity-30 transition-opacity"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <SkipBack className="w-4 h-4 text-foreground" />
-        </button>
+        </motion.button>
         <div className="px-4 py-2 rounded-lg bg-secondary text-sm font-mono text-foreground min-w-[120px] text-center">
           {currentMoveIndex === 0
             ? 'Start position'
             : `${Math.ceil(currentMoveIndex / 2)}. ${currentMoveIndex % 2 === 1 ? '' : '...'}${opening.moves[currentMoveIndex - 1]}`
           }
         </div>
-        <button
+        <motion.button
           onClick={handleNext}
-          disabled={currentMoveIndex >= positions.length - 1}
+          disabled={currentMoveIndex >= positions.fens.length - 1}
           className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center disabled:opacity-30 transition-opacity"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <SkipForward className="w-4 h-4 text-primary-foreground" />
-        </button>
+        </motion.button>
+      </div>
+
+      {/* Move progress bar */}
+      <div className="px-4">
+        <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+          <motion.div 
+            className="h-full bg-primary rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${(currentMoveIndex / (positions.fens.length - 1)) * 100}%` }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          />
+        </div>
+        <div className="flex justify-between mt-1">
+          <span className="text-[10px] text-muted-foreground">Start</span>
+          <span className="text-[10px] text-muted-foreground">{currentMoveIndex}/{positions.fens.length - 1} moves</span>
+        </div>
       </div>
 
       {/* Completion Badge */}
@@ -263,21 +328,33 @@ function OpeningDetail({ opening, onBack }: { opening: Opening; onBack: () => vo
           {opening.moves.map((move, idx) => {
             const moveNum = Math.floor(idx / 2) + 1
             const isWhite = idx % 2 === 0
+            const isCurrentMove = currentMoveIndex === idx + 1
+            const isPastMove = currentMoveIndex > idx + 1
+            
             return (
               <span key={idx} className="flex items-center gap-0.5">
                 {isWhite && (
                   <span className="text-[10px] text-muted-foreground mr-0.5">{moveNum}.</span>
                 )}
-                <button
-                  onClick={() => setCurrentMoveIndex(idx + 1)}
+                <motion.button
+                  onClick={() => {
+                    setCurrentMoveIndex(idx + 1)
+                    if (idx > 0) {
+                      setLastMove(positions.moves[idx - 1])
+                    }
+                  }}
                   className={`px-1.5 py-0.5 rounded text-xs font-mono transition-colors ${
-                    currentMoveIndex === idx + 1
+                    isCurrentMove
                       ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-secondary'
+                      : isPastMove
+                        ? 'text-foreground/70 hover:bg-secondary'
+                        : 'text-muted-foreground hover:bg-secondary'
                   }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   {move}
-                </button>
+                </motion.button>
               </span>
             )
           })}
@@ -318,12 +395,18 @@ function OpeningDetail({ opening, onBack }: { opening: Opening; onBack: () => vo
               <h3 className="text-sm font-semibold text-foreground mb-2">Key Ideas</h3>
               <div className="flex flex-col gap-2">
                 {opening.keyIdeas.map((idea, idx) => (
-                  <div key={idx} className="flex items-start gap-2">
+                  <motion.div 
+                    key={idx} 
+                    className="flex items-start gap-2"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
                     <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <span className="text-[10px] font-bold text-primary">{idx + 1}</span>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">{idea}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -339,7 +422,13 @@ function OpeningDetail({ opening, onBack }: { opening: Opening; onBack: () => vo
             className="flex flex-col gap-3"
           >
             {opening.variations.map((variation, idx) => (
-              <div key={idx} className="glass-card p-4">
+              <motion.div 
+                key={idx} 
+                className="glass-card p-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+              >
                 <h3 className="text-sm font-semibold text-foreground mb-1">{variation.name}</h3>
                 <p className="text-xs text-muted-foreground mb-2">{variation.description}</p>
                 <div className="flex flex-wrap gap-1">
@@ -352,7 +441,7 @@ function OpeningDetail({ opening, onBack }: { opening: Opening; onBack: () => vo
                     </span>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         )}
@@ -368,17 +457,23 @@ function OpeningDetail({ opening, onBack }: { opening: Opening; onBack: () => vo
             <div>
               <p className="text-xs text-muted-foreground mb-2">Win Rate Distribution</p>
               <div className="flex h-4 rounded-full overflow-hidden">
-                <div
-                  className="bg-foreground/90 transition-all"
-                  style={{ width: `${opening.winRate.white}%` }}
+                <motion.div
+                  className="bg-foreground/90"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${opening.winRate.white}%` }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
                 />
-                <div
-                  className="bg-muted-foreground/50 transition-all"
-                  style={{ width: `${opening.winRate.draw}%` }}
+                <motion.div
+                  className="bg-muted-foreground/50"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${opening.winRate.draw}%` }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
                 />
-                <div
-                  className="bg-muted-foreground/20 transition-all"
-                  style={{ width: `${opening.winRate.black}%` }}
+                <motion.div
+                  className="bg-muted-foreground/20"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${opening.winRate.black}%` }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
                 />
               </div>
               <div className="flex justify-between mt-2 text-[10px]">
