@@ -3,33 +3,19 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
-import { ChessPiece } from '@/components/chess/chess-pieces'
+import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import {
-  Crown,
   ArrowRight,
-  Puzzle,
-  BookOpen,
-  Target,
-  Swords,
-  Zap,
   Eye,
   EyeOff,
   UserPlus,
   LogIn,
+  Loader2,
 } from 'lucide-react'
-
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 },
-}
 
 export function LoginPage() {
   const { login, register, authError, isLoading, isBackendEnabled } = useGame()
+  const { playSound } = useSoundAndHaptics()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -46,6 +32,7 @@ export function LoginPage() {
     if (!username.trim()) return
     setLocalError(null)
     setIsSubmitting(true)
+    playSound('click')
 
     try {
       if (isBackendEnabled && password) {
@@ -55,146 +42,99 @@ export function LoginPage() {
         
         if (!success) {
           setLocalError(authError || 'Authentication failed')
+          playSound('fail')
+        } else {
+          playSound('success')
         }
       } else {
-        // Demo mode - just use username
         await login(username.trim())
+        playSound('success')
       }
-    } catch (error) {
+    } catch {
       setLocalError('An error occurred. Please try again.')
+      playSound('fail')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const features = [
-    { icon: <Puzzle className="w-5 h-5" />, label: 'Tactical Puzzles', description: 'Train your pattern recognition' },
-    { icon: <BookOpen className="w-5 h-5" />, label: 'Opening Explorer', description: 'Master popular openings' },
-    { icon: <Target className="w-5 h-5" />, label: 'Opening Traps', description: 'Learn devastating tricks' },
-    { icon: <Swords className="w-5 h-5" />, label: 'Play vs AI', description: '8 difficulty levels to challenge' },
-  ]
-
   const error = localError || authError
 
-  // Show loading state
   if (isLoading || !mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background">
+    <div className="min-h-screen flex flex-col bg-[#121212]">
+      {/* Header */}
+      <div className="flex-shrink-0 pt-12 pb-8 px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-center gap-2.5 mb-3"
+        >
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+            <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
+              <path d="M12 2L13.09 8.26L18 6L15.74 10.91L22 12L15.74 13.09L18 18L13.09 15.74L12 22L10.91 15.74L6 18L8.26 13.09L2 12L8.26 10.91L6 6L10.91 8.26L12 2Z"/>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">ChessVault</h1>
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="text-sm text-white/60"
+        >
+          Master chess through practice
+        </motion.p>
+      </div>
+
+      {/* Main content */}
       <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="w-full max-w-sm flex flex-col items-center gap-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="flex-1 bg-background rounded-t-3xl px-6 pt-8 pb-safe"
       >
-        {/* Logo & Hero */}
-        <motion.div variants={item} className="flex flex-col items-center gap-4">
-          {/* Animated floating pieces */}
-          <div className="relative w-32 h-32 flex items-center justify-center">
-            <motion.div
-              animate={{ y: [-4, 4, -4] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute top-0 left-2"
-            >
-              <ChessPiece piece="wN" size={32} />
-            </motion.div>
-            <motion.div
-              animate={{ y: [4, -4, 4] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute top-0 right-2"
-            >
-              <ChessPiece piece="bN" size={32} />
-            </motion.div>
-            <motion.div
-              animate={{ y: [-3, 3, -3], rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              className="relative z-10"
-            >
-              <div className="w-20 h-20 rounded-2xl bg-primary/10 border-2 border-primary/30 flex items-center justify-center glow-primary">
-                <Crown className="w-10 h-10 text-primary" />
-              </div>
-            </motion.div>
-            <motion.div
-              animate={{ y: [3, -3, 3] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute bottom-0 left-6"
-            >
-              <ChessPiece piece="wR" size={28} />
-            </motion.div>
-            <motion.div
-              animate={{ y: [-3, 3, -3] }}
-              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute bottom-0 right-6"
-            >
-              <ChessPiece piece="bQ" size={28} />
-            </motion.div>
-          </div>
-
-          <div className="text-center">
-            <h1 className="text-3xl font-display font-bold text-foreground">
-              Chess<span className="text-primary">Vault</span>
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Master chess through play
-            </p>
-          </div>
-        </motion.div>
-
-        {/* Features */}
-        <motion.div variants={item} className="w-full grid grid-cols-2 gap-2.5">
-          {features.map((feature) => (
-            <div
-              key={feature.label}
-              className="glass-card p-3 flex flex-col items-center gap-2 text-center"
-            >
-              <div className="text-primary">{feature.icon}</div>
-              <div>
-                <p className="text-[11px] font-semibold text-foreground">{feature.label}</p>
-                <p className="text-[9px] text-muted-foreground leading-relaxed">{feature.description}</p>
-              </div>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Login/Register Form */}
-        <motion.div variants={item} className="w-full flex flex-col gap-4">
+        <div className="max-w-sm mx-auto">
           {/* Mode Toggle */}
           {isBackendEnabled && (
-            <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="flex items-center bg-secondary rounded-xl p-1 mb-6">
               <button
-                onClick={() => setMode('login')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                onClick={() => { setMode('login'); playSound('click'); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   mode === 'login'
-                    ? 'bg-primary/10 text-primary border border-primary/20'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground'
                 }`}
               >
-                <LogIn className="w-3.5 h-3.5" />
+                <LogIn className="w-4 h-4" />
                 Sign In
               </button>
               <button
-                onClick={() => setMode('register')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                onClick={() => { setMode('register'); playSound('click'); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   mode === 'register'
-                    ? 'bg-primary/10 text-primary border border-primary/20'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground'
                 }`}
               >
-                <UserPlus className="w-3.5 h-3.5" />
+                <UserPlus className="w-4 h-4" />
                 Sign Up
               </button>
             </div>
           )}
 
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="username" className="text-xs font-medium text-muted-foreground">
+          {/* Form */}
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-foreground mb-2">
                 Username
               </label>
               <input
@@ -203,17 +143,16 @@ export function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (password || !isBackendEnabled) && handleSubmit()}
-                placeholder="Enter your username..."
+                placeholder="Enter username"
                 maxLength={20}
-                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                className="w-full px-4 py-3.5 rounded-xl bg-secondary border border-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
                 autoFocus
               />
             </div>
 
-            {/* Password field - only shown when backend is enabled */}
             {isBackendEnabled && (
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="password" className="text-xs font-medium text-muted-foreground">
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -223,68 +162,75 @@ export function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                    placeholder="Enter your password..."
+                    placeholder="Enter password"
                     minLength={4}
-                    className="w-full px-4 py-3 pr-10 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                    className="w-full px-4 py-3.5 pr-12 rounded-xl bg-secondary border border-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
             )}
+
+            <AnimatePresence>
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="text-sm text-destructive"
+                >
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            <motion.button
+              onClick={handleSubmit}
+              disabled={!username.trim() || isSubmitting || (isBackendEnabled && !password)}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-amber-500/25 transition-all active:scale-[0.98]"
+              whileTap={{ scale: 0.98 }}
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  {isBackendEnabled ? (mode === 'register' ? 'Create Account' : 'Sign In') : 'Continue'}
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </motion.button>
+
+            {!isBackendEnabled && (
+              <p className="text-xs text-center text-muted-foreground">
+                Demo mode – enter any username to start
+              </p>
+            )}
           </div>
 
-          {/* Error message */}
-          <AnimatePresence>
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                className="text-xs text-destructive text-center"
-              >
-                {error}
-              </motion.p>
-            )}
-          </AnimatePresence>
-
-          <button
-            onClick={handleSubmit}
-            disabled={!username.trim() || isSubmitting || (isBackendEnabled && !password)}
-            className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-40 transition-all hover:bg-primary/90 active:scale-[0.98]"
-          >
-            {isSubmitting ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full"
-              />
-            ) : (
-              <>
-                {isBackendEnabled ? (mode === 'register' ? 'Create Account' : 'Sign In') : 'Start Learning'}
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-
-          {/* Demo mode note */}
-          {!isBackendEnabled && (
-            <p className="text-[10px] text-muted-foreground text-center">
-              Demo mode - progress won&apos;t be saved between sessions
-            </p>
-          )}
-        </motion.div>
-
-        {/* XP tease */}
-        <motion.div variants={item} className="flex items-center gap-2 text-muted-foreground">
-          <Zap className="w-3.5 h-3.5 text-primary" />
-          <span className="text-xs">Earn XP, level up, and track your progress</span>
-        </motion.div>
+          {/* Features */}
+          <div className="mt-10 pt-8 border-t border-border">
+            <p className="text-xs text-muted-foreground text-center mb-4">What you'll get</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { emoji: '🧩', label: 'Tactical puzzles' },
+                { emoji: '📚', label: 'Opening theory' },
+                { emoji: '🤖', label: 'AI opponents' },
+                { emoji: '🏆', label: 'Achievements' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2 p-3 rounded-xl bg-secondary/50">
+                  <span className="text-lg">{item.emoji}</span>
+                  <span className="text-sm text-foreground">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </motion.div>
     </div>
   )
