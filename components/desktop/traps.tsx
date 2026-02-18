@@ -295,7 +295,7 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
                 onMove={() => false}
                 orientation="white"
                 interactive={false}
-                size={520}
+                size={560}
               />
             </div>
 

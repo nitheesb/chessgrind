@@ -495,7 +495,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                 onMove={handleMove}
                 orientation={puzzle.playerColor || 'white'}
                 interactive={status === 'playing'}
-                size={520}
+                size={560}
                 highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
                 showHint={hintArrow}
               />

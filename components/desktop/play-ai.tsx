@@ -413,7 +413,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 onMove={handleMove}
                 orientation={playerColor}
                 interactive={gameStatus === 'playing' && !thinking}
-                size={520}
+                size={560}
                 highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
               />
             </div>
