@@ -1,11 +1,15 @@
 import { Redis } from '@upstash/redis'
 
-// Initialize Redis client with environment variables
-// Support both Vercel KV naming and Upstash naming
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN!,
-})
+// Check if Redis is configured
+const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
+
+export const isRedisConfigured = !!(redisUrl && redisToken)
+
+// Initialize Redis client only if configured
+const redis = isRedisConfigured 
+  ? new Redis({ url: redisUrl!, token: redisToken! })
+  : null as unknown as Redis // Type assertion for when not configured
 
 export default redis
 

@@ -39,12 +39,12 @@ const GameContext = createContext<GameContextType | null>(null)
 
 // Check if backend is configured
 const isBackendConfigured = () => {
-  // In production, assume backend is always available
+  // On Vercel deployment, backend should be available
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
     return true
   }
-  // For local development, we'll try to use backend but fall back gracefully
-  return true
+  // For localhost, default to demo mode
+  return false
 }
 
 function mapApiUserToProfile(apiUser: UserProfileResponse): UserProfile {
