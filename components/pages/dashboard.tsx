@@ -16,22 +16,21 @@ import {
   Target,
   ChevronRight,
   Zap,
-  Crown,
-  Shield,
   TrendingUp,
   Calendar,
+  Settings,
 } from 'lucide-react'
 
 const container = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.06 },
+    transition: { staggerChildren: 0.05 },
   },
 }
 
 const item = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0 },
 }
 
@@ -44,7 +43,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const { currentLevel, progress } = getLevelInfo(profile.xp)
 
-  // Get today's daily puzzle
   const dailyPuzzleIndex = getDailyPuzzleIndex(PUZZLES.length)
   const dailyPuzzle = PUZZLES[dailyPuzzleIndex]
 
@@ -58,33 +56,29 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     {
       id: 'puzzles',
       label: 'Puzzles',
-      description: 'Train your tactics',
       icon: <Puzzle className="w-5 h-5" />,
-      color: 'bg-primary/10 text-primary border-primary/20',
+      gradient: 'from-amber-500 to-orange-500',
       page: 'puzzles',
     },
     {
       id: 'openings',
-      label: 'Openings',
-      description: 'Learn new lines',
+      label: 'Learn',
       icon: <BookOpen className="w-5 h-5" />,
-      color: 'bg-blue-400/10 text-blue-400 border-blue-400/20',
+      gradient: 'from-blue-500 to-cyan-500',
       page: 'openings',
     },
     {
       id: 'play',
       label: 'Play AI',
-      description: 'Test your skills',
       icon: <Swords className="w-5 h-5" />,
-      color: 'bg-accent/10 text-accent border-accent/20',
+      gradient: 'from-emerald-500 to-green-500',
       page: 'play',
     },
     {
       id: 'traps',
       label: 'Traps',
-      description: 'Learn sneaky tricks',
       icon: <Target className="w-5 h-5" />,
-      color: 'bg-red-400/10 text-red-400 border-red-400/20',
+      gradient: 'from-red-500 to-pink-500',
       page: 'traps',
     },
   ]
@@ -94,82 +88,161 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       variants={container}
       initial="hidden"
       animate="show"
-      className="flex flex-col gap-5 pb-8"
+      className="flex flex-col gap-4 pb-6"
     >
-      {/* Header / Welcome */}
+      {/* Header */}
       <motion.div variants={item} className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground font-medium">Welcome back</p>
-          <h1 className="text-2xl font-display font-bold text-foreground">
-            {profile.username}
-          </h1>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+            <span className="text-xl font-bold text-white">{profile.username.charAt(0).toUpperCase()}</span>
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">{profile.username}</h1>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Level {currentLevel.level}</span>
+              <span className="text-xs text-muted-foreground">•</span>
+              <span className="text-xs text-primary font-medium">{currentLevel.title}</span>
+            </div>
+          </div>
         </div>
         <button
-          onClick={() => handleNavigate('profile')}
-          className="relative w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center hover:border-primary/60 transition-colors"
+          onClick={() => handleNavigate('settings')}
+          className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
         >
-          <Crown className="w-6 h-6 text-primary" />
-          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-card border border-border flex items-center justify-center text-[10px] font-bold text-foreground">
-            {currentLevel.level}
-          </span>
+          <Settings className="w-5 h-5" />
         </button>
       </motion.div>
 
-      {/* XP Progress */}
-      <motion.div variants={item} className="glass-card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-              <Zap className="w-4 h-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{currentLevel.title}</p>
-              <p className="text-xs text-muted-foreground">Level {currentLevel.level}</p>
-            </div>
+      {/* Stats Row */}
+      <motion.div variants={item} className="grid grid-cols-3 gap-2">
+        <div className="bg-secondary rounded-xl p-3 text-center">
+          <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
+            <Zap className="w-4 h-4" />
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20">
-              <Flame className="w-3.5 h-3.5 text-accent" />
-              <span className="text-xs font-bold text-accent">{profile.streak}</span>
-            </div>
+          <p className="text-lg font-bold text-foreground">{profile.xp}</p>
+          <p className="text-[10px] text-muted-foreground">XP</p>
+        </div>
+        <div className="bg-secondary rounded-xl p-3 text-center">
+          <div className="flex items-center justify-center gap-1 text-green-500 mb-1">
+            <Flame className="w-4 h-4" />
           </div>
+          <p className="text-lg font-bold text-foreground">{profile.streak}</p>
+          <p className="text-[10px] text-muted-foreground">Day Streak</p>
+        </div>
+        <div className="bg-secondary rounded-xl p-3 text-center">
+          <div className="flex items-center justify-center gap-1 text-blue-500 mb-1">
+            <TrendingUp className="w-4 h-4" />
+          </div>
+          <p className="text-lg font-bold text-foreground">{profile.rating}</p>
+          <p className="text-[10px] text-muted-foreground">Rating</p>
+        </div>
+      </motion.div>
+
+      {/* Level Progress */}
+      <motion.div variants={item} className="bg-secondary rounded-xl p-4">
+        <div className="flex items-center justify-between text-xs mb-2">
+          <span className="text-muted-foreground">Level {currentLevel.level}</span>
+          <span className="text-primary font-medium">{Math.round(progress)}%</span>
         </div>
         <XPBar />
-        <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-          <span>{profile.xp} total XP</span>
-          <span className="text-primary">{Math.round(progress)}% to next level</span>
-        </div>
       </motion.div>
 
-      {/* Quick Actions Grid */}
-      <motion.div variants={item}>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Start Learning
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          {quickActions.map((action) => (
-            <motion.button
-              key={action.id}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => handleNavigate(action.page)}
-              className={`flex flex-col items-start gap-2 p-4 rounded-xl border ${action.color} text-left transition-all active:scale-95`}
-            >
+      {/* Quick Actions */}
+      <motion.div variants={item} className="grid grid-cols-4 gap-2">
+        {quickActions.map((action) => (
+          <motion.button
+            key={action.id}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleNavigate(action.page)}
+            className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary active:bg-secondary/70 transition-colors"
+          >
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white shadow-sm`}>
               {action.icon}
-              <div>
-                <p className="text-sm font-semibold">{action.label}</p>
-                <p className="text-[10px] opacity-70">{action.description}</p>
-              </div>
-            </motion.button>
-          ))}
-        </div>
+            </div>
+            <span className="text-[11px] font-medium text-foreground">{action.label}</span>
+          </motion.button>
+        ))}
       </motion.div>
 
-      {/* Stats Row */}
+      {/* Daily Challenge */}
       <motion.div variants={item}>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Your Progress
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold text-foreground">Daily Challenge</h2>
+          {profile.dailyChallengeCompleted && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 font-medium">
+              Completed ✓
+            </span>
+          )}
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => handleNavigate('puzzles')}
+          className="w-full bg-secondary rounded-xl p-3 flex items-center gap-3 text-left"
+        >
+          <div className="relative overflow-hidden rounded-lg flex-shrink-0" style={{ width: 64, height: 64 }}>
+            <MiniChessboard fen={dailyPuzzle.fen} size={64} />
+            {profile.dailyChallengeCompleted && (
+              <div className="absolute inset-0 bg-green-500/30 backdrop-blur-[1px] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-xs font-medium text-amber-500">Today's Puzzle</span>
+            </div>
+            <p className="text-sm font-semibold text-foreground truncate">{dailyPuzzle.title}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <Zap className="w-3 h-3 text-amber-500" />
+              <span className="text-xs text-amber-500">+{dailyPuzzle.xpReward} XP</span>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+        </motion.button>
+      </motion.div>
+
+      {/* Continue Learning */}
+      <motion.div variants={item}>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold text-foreground">Continue Learning</h2>
+          <button
+            onClick={() => handleNavigate('openings')}
+            className="text-xs text-primary font-medium"
+          >
+            See all
+          </button>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => handleNavigate('openings')}
+          className="w-full bg-secondary rounded-xl p-3 flex items-center gap-3 text-left"
+        >
+          <div className="overflow-hidden rounded-lg flex-shrink-0" style={{ width: 64, height: 64 }}>
+            <MiniChessboard fen={OPENINGS[0].fen} size={64} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">{OPENINGS[0].name}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{OPENINGS[0].description}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-500">
+                {OPENINGS[0].eco}
+              </span>
+              <span className="text-[10px] text-muted-foreground capitalize">{OPENINGS[0].difficulty}</span>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+        </motion.button>
+      </motion.div>
+
+      {/* Progress Stats */}
+      <motion.div variants={item}>
+        <h2 className="text-sm font-semibold text-foreground mb-2">Your Progress</h2>
+        <div className="grid grid-cols-2 gap-2">
           <StatCard
             label="Games Played"
             value={profile.gamesPlayed}
@@ -180,150 +253,31 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             value={profile.puzzlesSolved}
             icon={<Puzzle className="w-4 h-4" />}
           />
-          <StatCard
-            label="Rating"
-            value={profile.rating}
-            icon={<TrendingUp className="w-4 h-4" />}
-            trend="+0"
-          />
-          <StatCard
-            label="Achievements"
-            value={`${profile.achievements.filter(a => a.earned).length}/${profile.achievements.length}`}
-            icon={<Trophy className="w-4 h-4" />}
-          />
         </div>
       </motion.div>
 
-      {/* Daily Challenge */}
+      {/* Achievements */}
       <motion.div variants={item}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Daily Challenge
-          </h2>
-          {profile.streak > 0 && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 border border-accent/20">
-              <Flame className="w-3 h-3 text-accent" />
-              <span className="text-[10px] font-bold text-accent">{profile.streak} day streak</span>
-            </div>
-          )}
-        </div>
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => handleNavigate('puzzles')}
-          className={`w-full glass-card-hover p-4 flex items-center gap-4 text-left ${
-            profile.dailyChallengeCompleted ? 'opacity-75' : ''
-          }`}
-        >
-          <div className="relative overflow-hidden rounded-lg" style={{ width: 80, height: 80 }}>
-            <MiniChessboard fen={dailyPuzzle.fen} size={80} />
-            {profile.dailyChallengeCompleted && (
-              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent/10 text-accent border border-accent/20">
-                <Calendar className="w-3 h-3 inline mr-1" />
-                DAILY
-              </span>
-              {profile.dailyChallengeCompleted && (
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
-                  COMPLETED
-                </span>
-              )}
-            </div>
-            <p className="text-sm font-semibold text-foreground truncate">{dailyPuzzle.title}</p>
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{dailyPuzzle.description}</p>
-            <div className="flex items-center gap-2 mt-1.5">
-              <div className="flex items-center gap-1">
-                <Zap className="w-3 h-3 text-primary" />
-                <span className="text-xs text-primary font-medium">+{dailyPuzzle.xpReward} XP</span>
-              </div>
-              {!profile.dailyChallengeCompleted && profile.streak > 0 && (
-                <span className="text-[10px] text-muted-foreground">• Keep your streak!</span>
-              )}
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-        </motion.button>
-      </motion.div>
-
-      {/* Featured Opening */}
-      <motion.div variants={item}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Featured Opening
-          </h2>
-          <button
-            onClick={() => handleNavigate('openings')}
-            className="text-xs text-primary font-medium flex items-center gap-1 hover:underline"
-          >
-            View all <ChevronRight className="w-3 h-3" />
-          </button>
-        </div>
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => handleNavigate('openings')}
-          className="w-full glass-card-hover p-4 flex items-center gap-4 text-left"
-        >
-          <div className="relative overflow-hidden rounded-lg" style={{ width: 80, height: 80 }}>
-            <MiniChessboard fen={OPENINGS[0].fen} size={80} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">{OPENINGS[0].name}</p>
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{OPENINGS[0].description}</p>
-            <div className="flex items-center gap-2 mt-1.5">
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
-                {OPENINGS[0].eco}
-              </span>
-              <span className="text-[10px] text-muted-foreground capitalize">{OPENINGS[0].difficulty}</span>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-        </motion.button>
-      </motion.div>
-
-      {/* Achievements Preview */}
-      <motion.div variants={item}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Achievements
-          </h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold text-foreground">Achievements</h2>
           <button
             onClick={() => handleNavigate('profile')}
-            className="text-xs text-primary font-medium flex items-center gap-1 hover:underline"
+            className="text-xs text-primary font-medium"
           >
-            View all <ChevronRight className="w-3 h-3" />
+            {profile.achievements.filter(a => a.earned).length}/{profile.achievements.length}
           </button>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-          {profile.achievements.slice(0, 6).map((achievement) => (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {profile.achievements.slice(0, 5).map((achievement) => (
             <div
               key={achievement.id}
-              className={`flex-shrink-0 w-20 flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
+              className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center text-xl ${
                 achievement.earned
-                  ? 'bg-primary/5 border-primary/20'
-                  : 'bg-secondary/50 border-border/30 opacity-40'
+                  ? 'bg-amber-500/10'
+                  : 'bg-secondary opacity-40'
               }`}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
-                achievement.earned ? 'bg-primary/20' : 'bg-secondary'
-              }`}>
-                {achievement.earned ? (
-                  <span>{achievement.icon}</span>
-                ) : (
-                  <Shield className="w-5 h-5 text-muted-foreground" />
-                )}
-              </div>
-              <p className="text-[10px] font-medium text-center text-foreground leading-tight line-clamp-2">
-                {achievement.name}
-              </p>
+              {achievement.earned ? achievement.icon : '🔒'}
             </div>
           ))}
         </div>

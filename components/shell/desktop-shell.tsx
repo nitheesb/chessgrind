@@ -7,7 +7,6 @@ import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
 import { SplashScreen } from '@/components/ui/splash-screen'
-import { Onboarding } from '@/components/ui/onboarding'
 import {
   Home,
   Puzzle,
@@ -20,7 +19,6 @@ import {
   Crown,
   Trophy,
   Flame,
-  ChevronRight,
 } from 'lucide-react'
 
 // Desktop pages
@@ -39,15 +37,14 @@ interface NavItem {
   id: Page
   label: string
   icon: React.ReactNode
-  description?: string
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" />, description: 'Home' },
-  { id: 'puzzles', label: 'Puzzles', icon: <Puzzle className="w-5 h-5" />, description: 'Tactical training' },
-  { id: 'openings', label: 'Openings', icon: <BookOpen className="w-5 h-5" />, description: 'Learn theory' },
-  { id: 'play', label: 'Play AI', icon: <Swords className="w-5 h-5" />, description: 'Practice games' },
-  { id: 'traps', label: 'Traps', icon: <Target className="w-5 h-5" />, description: 'Opening traps' },
+  { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
+  { id: 'puzzles', label: 'Puzzles', icon: <Puzzle className="w-5 h-5" /> },
+  { id: 'openings', label: 'Openings', icon: <BookOpen className="w-5 h-5" /> },
+  { id: 'play', label: 'Play AI', icon: <Swords className="w-5 h-5" /> },
+  { id: 'traps', label: 'Traps', icon: <Target className="w-5 h-5" /> },
 ]
 
 const SECONDARY_NAV: NavItem[] = [
@@ -62,14 +59,11 @@ export function DesktopShell() {
     logout,
     achievementAnimation,
     dismissAchievement,
-    hasSeenOnboarding,
-    setHasSeenOnboarding,
     checkAndUpdateStreak,
   } = useGame()
-  const { playSound, triggerHaptic } = useSoundAndHaptics()
+  const { playSound } = useSoundAndHaptics()
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
   const [showSplash, setShowSplash] = useState(true)
-  const [showOnboarding, setShowOnboarding] = useState(false)
   const [sidebarHovered, setSidebarHovered] = useState(false)
 
   useEffect(() => {
@@ -78,15 +72,7 @@ export function DesktopShell() {
 
   const handleSplashComplete = useCallback(() => {
     setShowSplash(false)
-    if (!hasSeenOnboarding) {
-      setShowOnboarding(true)
-    }
-  }, [hasSeenOnboarding])
-
-  const handleOnboardingComplete = useCallback(() => {
-    setShowOnboarding(false)
-    setHasSeenOnboarding(true)
-  }, [setHasSeenOnboarding])
+  }, [])
 
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
@@ -117,10 +103,6 @@ export function DesktopShell() {
 
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />
-  }
-
-  if (showOnboarding) {
-    return <Onboarding onComplete={handleOnboardingComplete} />
   }
 
   if (!isLoggedIn) {

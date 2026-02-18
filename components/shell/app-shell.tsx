@@ -15,7 +15,6 @@ import { SettingsPage } from '@/components/pages/settings'
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
 import { SplashScreen } from '@/components/ui/splash-screen'
-import { Onboarding } from '@/components/ui/onboarding'
 import {
   Home,
   Puzzle,
@@ -23,7 +22,6 @@ import {
   Swords,
   Target,
   User,
-  Settings,
 } from 'lucide-react'
 
 type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings'
@@ -32,40 +30,14 @@ interface NavItem {
   id: Page
   label: string
   icon: React.ReactNode
-  activeIcon: React.ReactNode
 }
 
 const NAV_ITEMS: NavItem[] = [
-  {
-    id: 'dashboard',
-    label: 'Home',
-    icon: <Home className="w-5 h-5" />,
-    activeIcon: <Home className="w-5 h-5" />,
-  },
-  {
-    id: 'puzzles',
-    label: 'Puzzles',
-    icon: <Puzzle className="w-5 h-5" />,
-    activeIcon: <Puzzle className="w-5 h-5" />,
-  },
-  {
-    id: 'openings',
-    label: 'Learn',
-    icon: <BookOpen className="w-5 h-5" />,
-    activeIcon: <BookOpen className="w-5 h-5" />,
-  },
-  {
-    id: 'play',
-    label: 'Play',
-    icon: <Swords className="w-5 h-5" />,
-    activeIcon: <Swords className="w-5 h-5" />,
-  },
-  {
-    id: 'traps',
-    label: 'Traps',
-    icon: <Target className="w-5 h-5" />,
-    activeIcon: <Target className="w-5 h-5" />,
-  },
+  { id: 'dashboard', label: 'Home', icon: <Home className="w-5 h-5" /> },
+  { id: 'puzzles', label: 'Puzzles', icon: <Puzzle className="w-5 h-5" /> },
+  { id: 'openings', label: 'Learn', icon: <BookOpen className="w-5 h-5" /> },
+  { id: 'play', label: 'Play', icon: <Swords className="w-5 h-5" /> },
+  { id: 'traps', label: 'Traps', icon: <Target className="w-5 h-5" /> },
 ]
 
 export function AppShell() {
@@ -73,32 +45,19 @@ export function AppShell() {
     isLoggedIn, 
     achievementAnimation, 
     dismissAchievement,
-    hasSeenOnboarding,
-    setHasSeenOnboarding,
     checkAndUpdateStreak,
   } = useGame()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
   const [showSplash, setShowSplash] = useState(true)
-  const [showOnboarding, setShowOnboarding] = useState(false)
 
-  // Check streak on mount
   useEffect(() => {
     checkAndUpdateStreak()
   }, [checkAndUpdateStreak])
 
-  // Show onboarding after splash for first-time users
   const handleSplashComplete = useCallback(() => {
     setShowSplash(false)
-    if (!hasSeenOnboarding) {
-      setShowOnboarding(true)
-    }
-  }, [hasSeenOnboarding])
-
-  const handleOnboardingComplete = useCallback(() => {
-    setShowOnboarding(false)
-    setHasSeenOnboarding(true)
-  }, [setHasSeenOnboarding])
+  }, [])
 
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
@@ -118,14 +77,8 @@ export function AppShell() {
     setCurrentPage(pageId)
   }, [playSound, triggerHaptic])
 
-  // Splash screen
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />
-  }
-
-  // Onboarding
-  if (showOnboarding) {
-    return <Onboarding onComplete={handleOnboardingComplete} />
   }
 
   if (!isLoggedIn) {
@@ -144,7 +97,7 @@ export function AppShell() {
       />
 
       {/* Main content area */}
-      <main className="flex-1 overflow-y-auto px-5 pt-4 pb-24">
+      <main className="flex-1 overflow-y-auto px-4 pt-3 pb-20">
         <AnimatePresence mode="wait">
           {currentPage === 'dashboard' && (
             <motion.div
@@ -227,52 +180,55 @@ export function AppShell() {
       </main>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-t border-border/50 safe-bottom">
-        <div className="max-w-lg mx-auto flex items-center justify-around px-2 pt-2 pb-1">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom">
+        <div className="max-w-lg mx-auto flex items-stretch justify-around">
           {NAV_ITEMS.map((navItem) => {
             const isActive = currentPage === navItem.id
             return (
               <button
                 key={navItem.id}
                 onClick={() => handleNavClick(navItem.id)}
-                className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all ${
+                className={`relative flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors ${
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute -top-2 w-8 h-0.5 rounded-full bg-primary"
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 rounded-full bg-primary"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                <span className={isActive ? 'text-primary' : 'text-muted-foreground'}>
-                  {isActive ? navItem.activeIcon : navItem.icon}
-                </span>
-                <span className={`text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {navItem.label}
-                </span>
+                <motion.span 
+                  animate={{ scale: isActive ? 1.1 : 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                >
+                  {navItem.icon}
+                </motion.span>
+                <span className="text-[10px] font-medium">{navItem.label}</span>
               </button>
             )
           })}
-          {/* Profile button */}
           <button
             onClick={() => handleNavClick('profile')}
-            className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all ${
+            className={`relative flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors ${
               currentPage === 'profile' ? 'text-primary' : 'text-muted-foreground'
             }`}
           >
             {currentPage === 'profile' && (
               <motion.div
                 layoutId="nav-indicator"
-                className="absolute -top-2 w-8 h-0.5 rounded-full bg-primary"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 rounded-full bg-primary"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
-            <User className="w-5 h-5" />
-            <span className={`text-[10px] font-medium ${currentPage === 'profile' ? 'text-primary' : 'text-muted-foreground'}`}>
-              Profile
-            </span>
+            <motion.span 
+              animate={{ scale: currentPage === 'profile' ? 1.1 : 1 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            >
+              <User className="w-5 h-5" />
+            </motion.span>
+            <span className="text-[10px] font-medium">Profile</span>
           </button>
         </div>
       </nav>
