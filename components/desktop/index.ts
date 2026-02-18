@@ -1,0 +1,8 @@
+export { DesktopLogin } from './login'
+export { DesktopDashboard } from './dashboard'
+export { DesktopPuzzles } from './puzzles'
+export { DesktopOpenings } from './openings'
+export { DesktopPlayAI } from './play-ai'
+export { DesktopTraps } from './traps'
+export { DesktopProfile } from './profile'
+export { DesktopSettings } from './settings'
