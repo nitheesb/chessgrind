@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
+import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { getLevelInfo, LEVELS } from '@/lib/chess-store'
 import { getRarityColor } from '@/lib/chess-data'
 import { XPBar } from '@/components/ui/xp-animations'
@@ -19,6 +20,8 @@ import {
   Star,
   LogOut,
   Medal,
+  Settings,
+  ChevronRight,
 } from 'lucide-react'
 
 const container = {
@@ -33,10 +36,12 @@ const item = {
 
 interface ProfilePageProps {
   onBack: () => void
+  onNavigate: (page: string) => void
 }
 
-export function ProfilePage({ onBack }: ProfilePageProps) {
+export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
   const { profile, logout } = useGame()
+  const { playSound, triggerHaptic } = useSoundAndHaptics()
   const { currentLevel, progress } = getLevelInfo(profile.xp)
 
   const stats = [
@@ -46,12 +51,18 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
     { label: 'Traps Mastered', value: profile.trapsLearned, icon: <Target className="w-4 h-4" /> },
     { label: 'Current Streak', value: `${profile.streak} days`, icon: <Flame className="w-4 h-4" /> },
     { label: 'Best Streak', value: `${profile.bestStreak} days`, icon: <Star className="w-4 h-4" /> },
-    { label: 'Rating', value: profile.rating, icon: <TrendingUp className="w-4 h-4" /> },
+    { label: 'Puzzle Rating', value: profile.puzzleRating, icon: <TrendingUp className="w-4 h-4" /> },
     { label: 'Total XP', value: profile.xp.toLocaleString(), icon: <Trophy className="w-4 h-4" /> },
   ]
 
   const earnedAchievements = profile.achievements.filter(a => a.earned)
   const lockedAchievements = profile.achievements.filter(a => !a.earned)
+
+  const handleLogout = () => {
+    playSound('click')
+    triggerHaptic('medium')
+    logout()
+  }
 
   return (
     <motion.div
@@ -61,14 +72,22 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
       className="flex flex-col gap-5 pb-8"
     >
       {/* Header */}
-      <motion.div variants={item} className="flex items-center gap-3">
+      <motion.div variants={item} className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"
+          >
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <h1 className="text-xl font-display font-bold text-foreground">Profile</h1>
+        </div>
         <button
-          onClick={onBack}
+          onClick={() => onNavigate('settings')}
           className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"
         >
-          <ArrowLeft className="w-5 h-5 text-foreground" />
+          <Settings className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-xl font-display font-bold text-foreground">Profile</h1>
       </motion.div>
 
       {/* Profile Card */}
@@ -203,7 +222,7 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
       {/* Logout */}
       <motion.div variants={item}>
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="w-full py-3 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive text-sm font-medium flex items-center justify-center gap-2"
         >
           <LogOut className="w-4 h-4" />

@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react'
 import { ChessPiece, parseFEN } from './chess-pieces'
+import { getGlobalSoundHaptics } from '@/lib/use-sound-haptics'
 
 interface ChessboardProps {
   fen: string
@@ -14,6 +15,8 @@ interface ChessboardProps {
   showCoordinates?: boolean
   hintArrow?: { from: string; to: string } | null
   showHintArrow?: boolean
+  onPieceSelect?: () => void
+  onPieceMove?: (captured: boolean) => void
 }
 
 // Chess.com inspired colors
@@ -335,6 +338,7 @@ export function Chessboard({
     const { row, col } = getActualCoords(displayRow, displayCol)
     const square = indexToSquare(row, col)
     const piece = board[row]?.[col]
+    const soundHaptics = getGlobalSoundHaptics()
 
     if (selectedSquare) {
       if (square === selectedSquare) {
@@ -342,14 +346,28 @@ export function Chessboard({
         return
       }
       if (onMove) {
+        const targetPiece = board[row]?.[col]
         const success = onMove(selectedSquare, square)
-        if (!success && piece) {
+        if (success) {
+          // Play appropriate sound
+          soundHaptics.playSound(targetPiece ? 'capture' : 'move')
+          soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
+        } else if (piece) {
+          // Selecting a different piece
+          soundHaptics.playSound('click')
+          soundHaptics.triggerHaptic('selection')
           setSelectedSquare(square)
           return
+        } else {
+          // Invalid move
+          soundHaptics.playSound('illegal')
+          soundHaptics.triggerHaptic('error')
         }
       }
       setSelectedSquare(null)
     } else if (piece) {
+      soundHaptics.playSound('click')
+      soundHaptics.triggerHaptic('selection')
       setSelectedSquare(square)
     }
   }, [interactive, selectedSquare, board, onMove, getActualCoords])
@@ -361,13 +379,23 @@ export function Chessboard({
     const { row, col } = getActualCoords(displayRow, displayCol)
     const piece = board[row]?.[col]
     const square = indexToSquare(row, col)
+    const soundHaptics = getGlobalSoundHaptics()
 
     if (piece) {
       const touch = e.touches[0]
+      soundHaptics.playSound('click')
+      soundHaptics.triggerHaptic('selection')
       setDragPiece({ piece, from: square, x: touch.clientX, y: touch.clientY })
       setSelectedSquare(square)
     } else if (selectedSquare) {
-      if (onMove) onMove(selectedSquare, square)
+      const targetPiece = board[row]?.[col]
+      if (onMove) {
+        const success = onMove(selectedSquare, square)
+        if (success) {
+          soundHaptics.playSound(targetPiece ? 'capture' : 'move')
+          soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
+        }
+      }
       setSelectedSquare(null)
     }
   }, [interactive, board, selectedSquare, onMove, getActualCoords])
@@ -392,18 +420,24 @@ export function Chessboard({
     const y = touch.clientY - rect.top
     const displayCol = Math.floor(x / squareSize)
     const displayRow = Math.floor(y / squareSize)
+    const soundHaptics = getGlobalSoundHaptics()
 
     if (displayCol >= 0 && displayCol < 8 && displayRow >= 0 && displayRow < 8) {
       const { row, col } = getActualCoords(displayRow, displayCol)
       const targetSquare = indexToSquare(row, col)
+      const targetPiece = board[row]?.[col]
       if (targetSquare !== dragPiece.from && onMove) {
-        onMove(dragPiece.from, targetSquare)
+        const success = onMove(dragPiece.from, targetSquare)
+        if (success) {
+          soundHaptics.playSound(targetPiece ? 'capture' : 'move')
+          soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
+        }
       }
     }
 
     setDragPiece(null)
     setSelectedSquare(null)
-  }, [dragPiece, squareSize, onMove, getActualCoords])
+  }, [dragPiece, squareSize, onMove, getActualCoords, board])
 
   // Pre-compute square states for performance
   const highlightSet = useMemo(() => new Set(highlightSquares), [highlightSquares])
