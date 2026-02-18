@@ -39,8 +39,12 @@ const GameContext = createContext<GameContextType | null>(null)
 
 // Check if backend is configured
 const isBackendConfigured = () => {
+  // Only check on client side
+  if (typeof window === 'undefined') {
+    return false // Will be updated in useEffect
+  }
   // On Vercel deployment, backend should be available
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+  if (window.location.hostname !== 'localhost') {
     return true
   }
   // For localhost, default to demo mode
@@ -79,9 +83,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [xpAnimation, setXPAnimation] = useState({ show: false, amount: 0 })
   const [levelUpAnimation, setLevelUpAnimation] = useState({ show: false, level: 0, title: '' })
   const [achievementAnimation, setAchievementAnimation] = useState<{ show: boolean; achievement: { name: string; icon: string; rarity: string } | null }>({ show: false, achievement: null })
-  const [isBackendEnabled, setIsBackendEnabled] = useState(isBackendConfigured())
+  const [isBackendEnabled, setIsBackendEnabled] = useState(false)
   const [pendingSync, setPendingSync] = useState(false)
   const [hasSeenOnboarding, setHasSeenOnboardingState] = useState(true) // Default true to avoid flash
+
+  // Detect backend availability on client side
+  useEffect(() => {
+    setIsBackendEnabled(isBackendConfigured())
+  }, [])
 
   // Load onboarding state
   useEffect(() => {
