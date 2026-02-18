@@ -152,12 +152,14 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   const { addXP, incrementPuzzlesSolved } = useGame()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
-  const [status, setStatus] = useState<'playing' | 'correct' | 'wrong' | 'complete'>('playing')
+  const [status, setStatus] = useState<'playing' | 'correct' | 'wrong' | 'complete' | 'opponent-moving'>('playing')
   const [showHint, setShowHint] = useState(false)
   const [timer, setTimer] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [highlightSquares, setHighlightSquares] = useState<string[]>([])
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
+  const [hintArrow, setHintArrow] = useState<{ from: string; to: string } | null>(null)
+  const processingRef = useRef(false)
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -168,61 +170,104 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     }
   }, [])
 
+  // Play opponent's move automatically
+  const playOpponentMove = useCallback((currentGame: Chess, currentMoveIndex: number) => {
+    const opponentMoveStr = puzzle.moves[currentMoveIndex]
+    if (!opponentMoveStr) {
+      setStatus('playing')
+      return
+    }
+
+    setStatus('opponent-moving')
+    
+    setTimeout(() => {
+      try {
+        const opponentGame = new Chess(currentGame.fen())
+        const opMove = opponentGame.move(opponentMoveStr)
+        
+        if (opMove) {
+          setGame(opponentGame)
+          setLastMove({ from: opMove.from, to: opMove.to })
+          setMoveIndex(currentMoveIndex + 1)
+          
+          // Check if this was the last move
+          if (currentMoveIndex + 1 >= puzzle.moves.length) {
+            setStatus('complete')
+            if (timerRef.current) clearInterval(timerRef.current)
+            addXP(puzzle.xpReward)
+            incrementPuzzlesSolved()
+          } else {
+            setStatus('playing')
+          }
+        } else {
+          console.error('Failed to play opponent move:', opponentMoveStr)
+          setStatus('playing')
+        }
+      } catch (error) {
+        console.error('Error playing opponent move:', error)
+        setStatus('playing')
+      }
+      processingRef.current = false
+    }, 600)
+  }, [puzzle.moves, puzzle.xpReward, addXP, incrementPuzzlesSolved])
+
   const handleMove = useCallback((from: string, to: string): boolean => {
-    if (status !== 'playing') return false
+    if (status !== 'playing' || processingRef.current) return false
+    processingRef.current = true
 
     const expectedMove = puzzle.moves[moveIndex]
-    if (!expectedMove) return false
+    if (!expectedMove) {
+      processingRef.current = false
+      return false
+    }
 
     try {
       const gameCopy = new Chess(game.fen())
       const move = gameCopy.move({ from, to, promotion: 'q' })
 
-      if (!move) return false
+      if (!move) {
+        processingRef.current = false
+        return false
+      }
 
       // Check if this is the expected move (compare SAN)
       if (move.san === expectedMove) {
         setGame(gameCopy)
         setLastMove({ from, to })
-        setMoveIndex(prev => prev + 1)
+        setHintArrow(null)
+        
+        const nextMoveIndex = moveIndex + 1
 
-        // Check if puzzle is complete
-        if (moveIndex >= puzzle.moves.length - 1) {
+        // Check if puzzle is complete (player made the last move)
+        if (nextMoveIndex >= puzzle.moves.length) {
+          setMoveIndex(nextMoveIndex)
           setStatus('complete')
           if (timerRef.current) clearInterval(timerRef.current)
           addXP(puzzle.xpReward)
           incrementPuzzlesSolved()
+          processingRef.current = false
         } else {
+          // Show correct feedback briefly, then play opponent's move
           setStatus('correct')
-          // Auto-play opponent response after a delay
+          setMoveIndex(nextMoveIndex)
+          
+          // Opponent needs to respond
           setTimeout(() => {
-            const nextMove = puzzle.moves[moveIndex + 1]
-            if (nextMove) {
-              const opponentGame = new Chess(gameCopy.fen())
-              try {
-                const opMove = opponentGame.move(nextMove)
-                if (opMove) {
-                  setGame(opponentGame)
-                  setLastMove({ from: opMove.from, to: opMove.to })
-                  setMoveIndex(prev => prev + 1)
-                  setStatus('playing')
-                }
-              } catch {
-                setStatus('playing')
-              }
-            }
-          }, 500)
+            playOpponentMove(gameCopy, nextMoveIndex)
+          }, 400)
         }
         return true
       } else {
         setStatus('wrong')
+        processingRef.current = false
         setTimeout(() => setStatus('playing'), 1500)
         return false
       }
     } catch {
+      processingRef.current = false
       return false
     }
-  }, [game, moveIndex, puzzle, status, addXP, incrementPuzzlesSolved])
+  }, [game, moveIndex, puzzle, status, addXP, incrementPuzzlesSolved, playOpponentMove])
 
   const handleHint = useCallback(() => {
     const expectedMove = puzzle.moves[moveIndex]
@@ -234,12 +279,13 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       const hintMove = legalMoves.find(m => m.san === expectedMove)
 
       if (hintMove) {
+        setHintArrow({ from: hintMove.from, to: hintMove.to })
         setHighlightSquares([hintMove.from, hintMove.to])
         setShowHint(true)
         setTimeout(() => {
           setHighlightSquares([])
           setShowHint(false)
-        }, 2000)
+        }, 3000)
       }
     } catch {
       // ignore
@@ -253,6 +299,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   }
 
   const isWhiteToMove = game.turn() === 'w'
+  const canInteract = status === 'playing'
 
   return (
     <motion.div
@@ -265,7 +312,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
-            className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"
+            className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
@@ -288,23 +335,39 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       </div>
 
       {/* Turn indicator */}
-      <div className="flex items-center justify-center gap-2">
-        <div className={`w-3 h-3 rounded-full ${isWhiteToMove ? 'bg-foreground/90' : 'bg-muted-foreground/30'}`} />
+      <motion.div 
+        className="flex items-center justify-center gap-2"
+        animate={{ 
+          opacity: status === 'opponent-moving' ? 0.6 : 1,
+        }}
+      >
+        <motion.div 
+          className={`w-3 h-3 rounded-full ${isWhiteToMove ? 'bg-white border border-gray-300' : 'bg-gray-800'}`}
+          animate={status === 'opponent-moving' ? { scale: [1, 1.2, 1] } : {}}
+          transition={{ repeat: Infinity, duration: 0.8 }}
+        />
         <span className="text-sm font-medium text-muted-foreground">
-          {status === 'complete' ? 'Puzzle Complete!' : `${isWhiteToMove ? 'White' : 'Black'} to move`}
+          {status === 'complete' 
+            ? 'Puzzle Complete!' 
+            : status === 'opponent-moving'
+              ? 'Opponent moving...'
+              : `${isWhiteToMove ? 'White' : 'Black'} to move`
+          }
         </span>
-      </div>
+      </motion.div>
 
       {/* Board */}
       <div className="flex justify-center">
         <Chessboard
           fen={game.fen()}
           size={Math.min(360, typeof window !== 'undefined' ? window.innerWidth - 48 : 360)}
-          interactive={status === 'playing'}
+          interactive={canInteract}
           onMove={handleMove}
           highlightSquares={highlightSquares}
           lastMove={lastMove || undefined}
           showCoordinates
+          hintArrow={hintArrow}
+          showHintArrow={!!hintArrow}
         />
       </div>
 
@@ -313,12 +376,17 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         {status === 'correct' && (
           <motion.div
             key="correct"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             className="flex items-center justify-center gap-2 py-2"
           >
-            <Check className="w-5 h-5 text-primary" />
+            <motion.div
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ duration: 0.3 }}
+            >
+              <Check className="w-5 h-5 text-primary" />
+            </motion.div>
             <span className="text-sm font-semibold text-primary">Correct! Keep going...</span>
           </motion.div>
         )}
@@ -326,8 +394,9 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
           <motion.div
             key="wrong"
             initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 1, scale: 1, x: [0, -5, 5, -5, 5, 0] }}
             exit={{ opacity: 0 }}
+            transition={{ x: { duration: 0.4 } }}
             className="flex items-center justify-center gap-2 py-2"
           >
             <X className="w-5 h-5 text-destructive" />
@@ -337,13 +406,14 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         {status === 'complete' && (
           <motion.div
             key="complete"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             className="glass-card p-5 flex flex-col items-center gap-3 glow-primary"
           >
             <motion.div
-              animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 0.6 }}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
               className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center"
             >
               <Trophy className="w-8 h-8 text-primary" />
@@ -353,37 +423,65 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
               <p className="text-sm text-muted-foreground mt-1">
                 Solved in {formatTime(timer)}
               </p>
-              <div className="flex items-center justify-center gap-1 mt-2">
+              <motion.div 
+                className="flex items-center justify-center gap-1 mt-2"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
                 <Zap className="w-4 h-4 text-primary" />
                 <span className="text-sm font-bold text-primary">+{puzzle.xpReward} XP</span>
-              </div>
+              </motion.div>
             </div>
-            <button
+            <motion.button
               onClick={onNext}
               className="flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Next Puzzle <SkipForward className="w-4 h-4" />
-            </button>
+            </motion.button>
           </motion.div>
         )}
-        {status === 'playing' && (
+        {(status === 'playing' || status === 'opponent-moving') && status !== 'complete' && (
           <motion.div
             key="playing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex items-center justify-center"
           >
-            <button
+            <motion.button
               onClick={handleHint}
-              disabled={showHint}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/10 border border-accent/20 text-accent text-sm font-medium disabled:opacity-40 transition-opacity"
+              disabled={showHint || status === 'opponent-moving'}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/10 border border-accent/20 text-accent text-sm font-medium disabled:opacity-40 transition-all"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               <Lightbulb className="w-4 h-4" />
               Show Hint
-            </button>
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Move progress indicator */}
+      <div className="flex items-center justify-center gap-1">
+        {puzzle.moves.map((_, idx) => (
+          <motion.div
+            key={idx}
+            className={`h-1.5 rounded-full transition-all ${
+              idx < moveIndex 
+                ? 'bg-primary w-4' 
+                : idx === moveIndex 
+                  ? 'bg-primary/50 w-3' 
+                  : 'bg-secondary w-2'
+            }`}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: idx * 0.05 }}
+          />
+        ))}
+      </div>
 
       {/* Description */}
       <div className="glass-card p-4">
