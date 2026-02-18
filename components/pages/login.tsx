@@ -36,12 +36,12 @@ export function LoginPage() {
 
     try {
       if (isBackendEnabled && password) {
-        const success = mode === 'register' 
+        const result = mode === 'register' 
           ? await register(username.trim(), password)
           : await login(username.trim(), password)
         
-        if (!success) {
-          setLocalError(authError || 'Authentication failed')
+        if (!result.success) {
+          setLocalError(result.error || 'Authentication failed')
           playSound('fail')
         } else {
           playSound('success')

@@ -9,8 +9,8 @@ interface GameContextType {
   isLoggedIn: boolean
   isLoading: boolean
   authError: string | null
-  login: (username: string, password?: string) => Promise<boolean>
-  register: (username: string, password: string) => Promise<boolean>
+  login: (username: string, password?: string) => Promise<{ success: boolean; error?: string }>
+  register: (username: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   addXP: (amount: number) => void
   incrementStreak: () => void
@@ -168,14 +168,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timeout)
   }, [pendingSync, syncToBackend, isBackendEnabled, isLoggedIn])
 
-  const register = useCallback(async (username: string, password: string): Promise<boolean> => {
+  const register = useCallback(async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setAuthError(null)
 
     if (!isBackendEnabled) {
       // Local mode: just set username
       setProfile(prev => ({ ...prev, username }))
       setIsLoggedIn(true)
-      return true
+      return { success: true }
     }
 
     try {
@@ -183,23 +183,24 @@ export function GameProvider({ children }: { children: ReactNode }) {
       if (response.success && response.user) {
         setProfile(mapApiUserToProfile(response.user))
         setIsLoggedIn(true)
-        return true
+        return { success: true }
       }
-      return false
+      return { success: false, error: 'Registration failed' }
     } catch (error) {
-      setAuthError(error instanceof Error ? error.message : 'Registration failed')
-      return false
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed'
+      setAuthError(errorMessage)
+      return { success: false, error: errorMessage }
     }
   }, [isBackendEnabled])
 
-  const login = useCallback(async (username: string, password?: string): Promise<boolean> => {
+  const login = useCallback(async (username: string, password?: string): Promise<{ success: boolean; error?: string }> => {
     setAuthError(null)
 
     if (!isBackendEnabled || !password) {
       // Local demo mode: just set username
       setProfile(prev => ({ ...prev, username }))
       setIsLoggedIn(true)
-      return true
+      return { success: true }
     }
 
     try {
@@ -207,12 +208,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
       if (response.success && response.user) {
         setProfile(mapApiUserToProfile(response.user))
         setIsLoggedIn(true)
-        return true
+        return { success: true }
       }
-      return false
+      return { success: false, error: 'Login failed' }
     } catch (error) {
-      setAuthError(error instanceof Error ? error.message : 'Login failed')
-      return false
+      const errorMessage = error instanceof Error ? error.message : 'Login failed'
+      setAuthError(errorMessage)
+      return { success: false, error: errorMessage }
     }
   }, [isBackendEnabled])
 
