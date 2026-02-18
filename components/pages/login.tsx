@@ -138,7 +138,7 @@ export function LoginPage() {
 
           <div className="text-center">
             <h1 className="text-3xl font-display font-bold text-foreground">
-              Chess<span className="text-primary">Mind</span>
+              Chess<span className="text-primary">Vault</span>
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Master chess through play

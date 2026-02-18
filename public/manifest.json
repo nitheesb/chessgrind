@@ -1,6 +1,6 @@
 {
-  "name": "ChessMind - Master Chess",
-  "short_name": "ChessMind",
+  "name": "ChessVault - Master Chess",
+  "short_name": "ChessVault",
   "description": "The ultimate gamified chess learning platform",
   "start_url": "/",
   "display": "standalone",
