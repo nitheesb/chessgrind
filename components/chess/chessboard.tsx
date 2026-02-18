@@ -9,11 +9,13 @@ interface ChessboardProps {
   onMove?: (from: string, to: string) => boolean
   interactive?: boolean
   flipped?: boolean
+  orientation?: 'white' | 'black'
   size?: number
   highlightSquares?: string[]
   lastMove?: { from: string; to: string }
   showCoordinates?: boolean
   hintArrow?: { from: string; to: string } | null
+  showHint?: { from: string; to: string } | null
   showHintArrow?: boolean
   onPieceSelect?: () => void
   onPieceMove?: (captured: boolean) => void
@@ -298,19 +300,27 @@ export function Chessboard({
   onMove,
   interactive = false,
   flipped = false,
+  orientation,
   size = 360,
   highlightSquares = [],
   lastMove,
   showCoordinates = true,
   hintArrow,
+  showHint,
   showHintArrow = false,
 }: ChessboardProps) {
+  // Support both flipped and orientation props
+  const isFlipped = orientation ? orientation === 'black' : flipped
+  
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [dragPiece, setDragPiece] = useState<{ piece: string; from: string; x: number; y: number } | null>(null)
   const [animating, setAnimating] = useState<{ piece: string; from: string; to: string } | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
   const prevFenRef = useRef(fen)
   const squareSize = size / 8
+
+  // Use either hintArrow or showHint
+  const activeHint = hintArrow || showHint
 
   const board = useMemo(() => parseFEN(fen), [fen])
 
@@ -328,9 +338,9 @@ export function Chessboard({
   }, [fen, lastMove])
 
   const getActualCoords = useCallback((displayRow: number, displayCol: number) => ({
-    row: flipped ? 7 - displayRow : displayRow,
-    col: flipped ? 7 - displayCol : displayCol,
-  }), [flipped])
+    row: isFlipped ? 7 - displayRow : displayRow,
+    col: isFlipped ? 7 - displayCol : displayCol,
+  }), [isFlipped])
 
   const handleSquareClick = useCallback((displayRow: number, displayCol: number) => {
     if (!interactive) return
@@ -493,7 +503,7 @@ export function Chessboard({
           <>
             {Array.from({ length: 8 }, (_, i) => {
               const { row } = getActualCoords(i, 0)
-              const isLight = (row + (flipped ? 7 : 0)) % 2 === 0
+              const isLight = (row + (isFlipped ? 7 : 0)) % 2 === 0
               return (
                 <span
                   key={`rank-${i}`}
@@ -504,13 +514,13 @@ export function Chessboard({
                     color: isLight ? DARK : LIGHT,
                   }}
                 >
-                  {flipped ? i + 1 : 8 - i}
+                  {isFlipped ? i + 1 : 8 - i}
                 </span>
               )
             })}
             {Array.from({ length: 8 }, (_, i) => {
               const { col } = getActualCoords(7, i)
-              const isLight = ((flipped ? 7 : 0) + col) % 2 === 0
+              const isLight = ((isFlipped ? 7 : 0) + col) % 2 === 0
               return (
                 <span
                   key={`file-${i}`}
@@ -535,21 +545,21 @@ export function Chessboard({
             from={animating.from}
             to={animating.to}
             squareSize={squareSize}
-            flipped={flipped}
+            flipped={isFlipped}
             onComplete={() => setAnimating(null)}
           />
         )}
 
         {/* Hint arrow */}
-        {showHintArrow && hintArrow && (
+        {(showHintArrow && hintArrow) || activeHint ? (
           <HintArrow
-            from={hintArrow.from}
-            to={hintArrow.to}
+            from={(activeHint || hintArrow)!.from}
+            to={(activeHint || hintArrow)!.to}
             squareSize={squareSize}
-            flipped={flipped}
+            flipped={isFlipped}
             boardSize={size}
           />
-        )}
+        ) : null}
       </div>
 
       {/* Dragged piece */}
