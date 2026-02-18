@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
-import { type UserProfile, DEFAULT_PROFILE, getLevelInfo, LEVELS, ALL_ACHIEVEMENTS } from './chess-store'
+import { type UserProfile, DEFAULT_PROFILE, getLevelInfo, LEVELS, ALL_ACHIEVEMENTS, calculatePuzzleRating } from './chess-store'
 import { authApi, userApi, type UserProfileResponse } from './api-client'
 
 interface GameContextType {
@@ -20,12 +20,19 @@ interface GameContextType {
   incrementTrapsLearned: () => void
   completeDaily: () => void
   earnAchievement: (id: string) => void
+  updateAchievementProgress: (id: string, progress: number) => void
+  updatePuzzleRating: (puzzleRating: number, solved: boolean, timeSeconds: number) => void
+  checkAndUpdateStreak: () => void
   xpAnimation: { show: boolean; amount: number }
   levelUpAnimation: { show: boolean; level: number; title: string }
+  achievementAnimation: { show: boolean; achievement: { name: string; icon: string; rarity: string } | null }
   dismissXPAnimation: () => void
   dismissLevelUp: () => void
+  dismissAchievement: () => void
   syncToBackend: () => Promise<void>
   isBackendEnabled: boolean
+  hasSeenOnboarding: boolean
+  setHasSeenOnboarding: (seen: boolean) => void
 }
 
 const GameContext = createContext<GameContextType | null>(null)
@@ -56,7 +63,11 @@ function mapApiUserToProfile(apiUser: UserProfileResponse): UserProfile {
     trapsLearned: apiUser.trapsLearned,
     achievements: apiUser.achievements,
     dailyChallengeCompleted: apiUser.dailyChallengeCompleted,
+    lastDailyDate: apiUser.lastDailyDate || '',
     joinDate: apiUser.joinDate,
+    puzzleRating: apiUser.puzzleRating || 800,
+    puzzlesAttempted: apiUser.puzzlesAttempted || 0,
+    puzzlesCorrect: apiUser.puzzlesCorrect || 0,
   }
 }
 
@@ -67,8 +78,25 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null)
   const [xpAnimation, setXPAnimation] = useState({ show: false, amount: 0 })
   const [levelUpAnimation, setLevelUpAnimation] = useState({ show: false, level: 0, title: '' })
+  const [achievementAnimation, setAchievementAnimation] = useState<{ show: boolean; achievement: { name: string; icon: string; rarity: string } | null }>({ show: false, achievement: null })
   const [isBackendEnabled, setIsBackendEnabled] = useState(isBackendConfigured())
   const [pendingSync, setPendingSync] = useState(false)
+  const [hasSeenOnboarding, setHasSeenOnboardingState] = useState(true) // Default true to avoid flash
+
+  // Load onboarding state
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const seen = localStorage.getItem('chessvault_onboarding_seen')
+      setHasSeenOnboardingState(seen === 'true')
+    }
+  }, [])
+
+  const setHasSeenOnboarding = useCallback((seen: boolean) => {
+    setHasSeenOnboardingState(seen)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('chessvault_onboarding_seen', String(seen))
+    }
+  }, [])
 
   // Check for existing session on mount
   useEffect(() => {
@@ -252,22 +280,116 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const completeDaily = useCallback(() => {
-    setProfile(prev => ({ ...prev, dailyChallengeCompleted: true }))
+    const today = new Date().toDateString()
+    setProfile(prev => ({ 
+      ...prev, 
+      dailyChallengeCompleted: true,
+      lastDailyDate: today,
+    }))
     setPendingSync(true)
   }, [])
 
+  const checkAndUpdateStreak = useCallback(() => {
+    const today = new Date().toDateString()
+    const yesterday = new Date(Date.now() - 86400000).toDateString()
+    
+    setProfile(prev => {
+      if (prev.lastDailyDate === today) {
+        return prev // Already updated today
+      }
+      if (prev.lastDailyDate === yesterday) {
+        // Continuing streak
+        return {
+          ...prev,
+          streak: prev.streak + 1,
+          bestStreak: Math.max(prev.bestStreak, prev.streak + 1),
+          dailyChallengeCompleted: false,
+        }
+      }
+      // Streak broken
+      return {
+        ...prev,
+        streak: 0,
+        dailyChallengeCompleted: false,
+      }
+    })
+  }, [])
+
   const earnAchievement = useCallback((id: string) => {
-    setProfile(prev => ({
-      ...prev,
-      achievements: prev.achievements.map(a =>
-        a.id === id ? { ...a, earned: true, earnedDate: new Date().toISOString() } : a
-      ),
-    }))
+    setProfile(prev => {
+      const achievement = prev.achievements.find(a => a.id === id)
+      if (!achievement || achievement.earned) return prev
+      
+      // Show achievement animation
+      setTimeout(() => {
+        setAchievementAnimation({
+          show: true,
+          achievement: { name: achievement.name, icon: achievement.icon, rarity: achievement.rarity },
+        })
+        setTimeout(() => setAchievementAnimation({ show: false, achievement: null }), 3000)
+      }, 500)
+      
+      return {
+        ...prev,
+        achievements: prev.achievements.map(a =>
+          a.id === id ? { ...a, earned: true, earnedDate: new Date().toISOString() } : a
+        ),
+      }
+    })
+    setPendingSync(true)
+  }, [])
+
+  const updateAchievementProgress = useCallback((id: string, progress: number) => {
+    setProfile(prev => {
+      const achievement = prev.achievements.find(a => a.id === id)
+      if (!achievement || achievement.earned) return prev
+      
+      const newProgress = Math.max(achievement.progress || 0, progress)
+      const shouldEarn = achievement.target && newProgress >= achievement.target
+      
+      if (shouldEarn) {
+        setTimeout(() => {
+          setAchievementAnimation({
+            show: true,
+            achievement: { name: achievement.name, icon: achievement.icon, rarity: achievement.rarity },
+          })
+          setTimeout(() => setAchievementAnimation({ show: false, achievement: null }), 3000)
+        }, 500)
+      }
+      
+      return {
+        ...prev,
+        achievements: prev.achievements.map(a =>
+          a.id === id 
+            ? { 
+                ...a, 
+                progress: newProgress, 
+                earned: shouldEarn || a.earned,
+                earnedDate: shouldEarn ? new Date().toISOString() : a.earnedDate,
+              } 
+            : a
+        ),
+      }
+    })
+    setPendingSync(true)
+  }, [])
+
+  const updatePuzzleRating = useCallback((puzzleRating: number, solved: boolean, timeSeconds: number) => {
+    setProfile(prev => {
+      const newRating = calculatePuzzleRating(prev.puzzleRating, puzzleRating, solved, timeSeconds)
+      return {
+        ...prev,
+        puzzleRating: newRating,
+        puzzlesAttempted: prev.puzzlesAttempted + 1,
+        puzzlesCorrect: solved ? prev.puzzlesCorrect + 1 : prev.puzzlesCorrect,
+      }
+    })
     setPendingSync(true)
   }, [])
 
   const dismissXPAnimation = useCallback(() => setXPAnimation({ show: false, amount: 0 }), [])
   const dismissLevelUp = useCallback(() => setLevelUpAnimation({ show: false, level: 0, title: '' }), [])
+  const dismissAchievement = useCallback(() => setAchievementAnimation({ show: false, achievement: null }), [])
 
   return (
     <GameContext.Provider
@@ -287,12 +409,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
         incrementTrapsLearned,
         completeDaily,
         earnAchievement,
+        updateAchievementProgress,
+        updatePuzzleRating,
+        checkAndUpdateStreak,
         xpAnimation,
         levelUpAnimation,
+        achievementAnimation,
         dismissXPAnimation,
         dismissLevelUp,
+        dismissAchievement,
         syncToBackend,
         isBackendEnabled,
+        hasSeenOnboarding,
+        setHasSeenOnboarding,
       }}
     >
       {children}
