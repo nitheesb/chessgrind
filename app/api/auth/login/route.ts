@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { getUserByUsername } from '@/lib/redis'
+import { getUserByUsername, isRedisConfigured } from '@/lib/redis'
 import { signToken, setSessionCookie } from '@/lib/auth'
 import { ALL_ACHIEVEMENTS, LEVELS, getLevelInfo } from '@/lib/chess-store'
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Redis is configured
+    if (!isRedisConfigured) {
+      return NextResponse.json(
+        { error: 'Backend not configured. Use demo mode.' },
+        { status: 503 }
+      )
+    }
+
     const { username, password } = await request.json()
 
     // Validate input

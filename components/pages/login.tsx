@@ -69,27 +69,34 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#121212]">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#1a1a1a] to-background">
       {/* Header */}
-      <div className="flex-shrink-0 pt-12 pb-8 px-6 text-center">
+      <div className="flex-shrink-0 pt-16 pb-10 px-6 text-center">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex items-center justify-center gap-2.5 mb-3"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="inline-flex items-center justify-center gap-3 mb-4"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-            <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-              <path d="M12 2L13.09 8.26L18 6L15.74 10.91L22 12L15.74 13.09L18 18L13.09 15.74L12 22L10.91 15.74L6 18L8.26 13.09L2 12L8.26 10.91L6 6L10.91 8.26L12 2Z"/>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-xl shadow-amber-500/30">
+            <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
+              <path d="M19 22H5v-2h14v2M12 2c-1.1 0-2 .9-2 2v4h4V4c0-1.1-.9-2-2-2m4 6H8v2H7v8h2v-6h6v6h2v-8h-1V8z"/>
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">ChessVault</h1>
         </motion.div>
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+          className="text-3xl font-bold text-white tracking-tight mb-2"
+        >
+          ChessVault
+        </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-sm text-white/60"
+          transition={{ delay: 0.2, duration: 0.4 }}
+          className="text-base text-white/50"
         >
           Master chess through practice
         </motion.p>
@@ -97,20 +104,20 @@ export function LoginPage() {
 
       {/* Main content */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-        className="flex-1 bg-background rounded-t-3xl px-6 pt-8 pb-safe"
+        transition={{ delay: 0.2, duration: 0.4 }}
+        className="flex-1 bg-background rounded-t-[2rem] px-6 pt-8 pb-8 shadow-2xl"
       >
-        <div className="max-w-sm mx-auto">
+        <div className="max-w-sm mx-auto space-y-6">
           {/* Mode Toggle */}
           {isBackendEnabled && (
-            <div className="flex items-center bg-secondary rounded-xl p-1 mb-6">
+            <div className="flex bg-secondary rounded-2xl p-1.5">
               <button
                 onClick={() => { setMode('login'); playSound('click'); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all ${
                   mode === 'login'
-                    ? 'bg-background text-foreground shadow-sm'
+                    ? 'bg-card text-foreground shadow-md'
                     : 'text-muted-foreground'
                 }`}
               >
@@ -119,9 +126,9 @@ export function LoginPage() {
               </button>
               <button
                 onClick={() => { setMode('register'); playSound('click'); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all ${
                   mode === 'register'
-                    ? 'bg-background text-foreground shadow-sm'
+                    ? 'bg-card text-foreground shadow-md'
                     : 'text-muted-foreground'
                 }`}
               >
@@ -132,9 +139,9 @@ export function LoginPage() {
           )}
 
           {/* Form */}
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="username" className="block text-sm font-semibold text-foreground mb-2.5">
                 Username
               </label>
               <input
@@ -143,16 +150,16 @@ export function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (password || !isBackendEnabled) && handleSubmit()}
-                placeholder="Enter username"
+                placeholder="Enter your username"
                 maxLength={20}
-                className="w-full px-4 py-3.5 rounded-xl bg-secondary border border-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full h-14 px-4 rounded-2xl bg-secondary text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                 autoFocus
               />
             </div>
 
             {isBackendEnabled && (
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-2.5">
                   Password
                 </label>
                 <div className="relative">
@@ -162,14 +169,14 @@ export function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                    placeholder="Enter password"
+                    placeholder="Enter your password"
                     minLength={4}
-                    className="w-full px-4 py-3.5 pr-12 rounded-xl bg-secondary border border-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full h-14 px-4 pr-14 rounded-2xl bg-secondary text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -179,53 +186,54 @@ export function LoginPage() {
 
             <AnimatePresence>
               {error && (
-                <motion.p
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="text-sm text-destructive"
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20"
                 >
-                  {error}
-                </motion.p>
+                  <p className="text-sm text-destructive font-medium">{error}</p>
+                </motion.div>
               )}
             </AnimatePresence>
 
-            <motion.button
+            <button
               onClick={handleSubmit}
               disabled={!username.trim() || isSubmitting || (isBackendEnabled && !password)}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-amber-500/25 transition-all active:scale-[0.98]"
-              whileTap={{ scale: 0.98 }}
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-base flex items-center justify-center gap-2.5 disabled:opacity-40 shadow-xl shadow-amber-500/25 active:scale-[0.98] transition-transform"
             >
               {isSubmitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  {isBackendEnabled ? (mode === 'register' ? 'Create Account' : 'Sign In') : 'Continue'}
+                  {isBackendEnabled ? (mode === 'register' ? 'Create Account' : 'Sign In') : 'Get Started'}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
-            </motion.button>
+            </button>
 
             {!isBackendEnabled && (
-              <p className="text-xs text-center text-muted-foreground">
-                Demo mode – enter any username to start
+              <p className="text-sm text-center text-muted-foreground">
+                Demo mode – your progress saves locally
               </p>
             )}
           </div>
 
           {/* Features */}
-          <div className="mt-10 pt-8 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center mb-4">What you'll get</p>
+          <div className="pt-6">
+            <p className="text-xs font-semibold text-muted-foreground text-center uppercase tracking-wider mb-4">
+              Features
+            </p>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { emoji: '🧩', label: 'Tactical puzzles' },
-                { emoji: '📚', label: 'Opening theory' },
-                { emoji: '🤖', label: 'AI opponents' },
+                { emoji: '🧩', label: 'Tactical Puzzles' },
+                { emoji: '📖', label: 'Opening Theory' },
+                { emoji: '🤖', label: 'Play vs AI' },
                 { emoji: '🏆', label: 'Achievements' },
               ].map((item) => (
-                <div key={item.label} className="flex items-center gap-2 p-3 rounded-xl bg-secondary/50">
-                  <span className="text-lg">{item.emoji}</span>
-                  <span className="text-sm text-foreground">{item.label}</span>
+                <div key={item.label} className="flex items-center gap-3 p-4 rounded-2xl bg-secondary">
+                  <span className="text-xl">{item.emoji}</span>
+                  <span className="text-sm font-medium text-foreground">{item.label}</span>
                 </div>
               ))}
             </div>
