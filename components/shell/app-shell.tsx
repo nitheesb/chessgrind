@@ -98,14 +98,14 @@ export function AppShell() {
 
       {/* Main content area */}
       <main className="flex-1 overflow-y-auto px-4 pt-3 pb-20">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {currentPage === 'dashboard' && (
             <motion.div
               key="dashboard"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
             >
               <Dashboard onNavigate={handleNavigate} />
             </motion.div>
@@ -113,10 +113,10 @@ export function AppShell() {
           {currentPage === 'puzzles' && (
             <motion.div
               key="puzzles"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
             >
               <PuzzlesPage onBack={handleBack} />
             </motion.div>
@@ -124,10 +124,10 @@ export function AppShell() {
           {currentPage === 'openings' && (
             <motion.div
               key="openings"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
             >
               <OpeningsPage onBack={handleBack} />
             </motion.div>
@@ -135,10 +135,10 @@ export function AppShell() {
           {currentPage === 'play' && (
             <motion.div
               key="play"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
             >
               <PlayAIPage onBack={handleBack} />
             </motion.div>
@@ -146,10 +146,10 @@ export function AppShell() {
           {currentPage === 'traps' && (
             <motion.div
               key="traps"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
             >
               <TrapsPage onBack={handleBack} />
             </motion.div>
@@ -157,10 +157,10 @@ export function AppShell() {
           {currentPage === 'profile' && (
             <motion.div
               key="profile"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
             >
               <ProfilePage onBack={handleBack} onNavigate={handleNavigate} />
             </motion.div>
@@ -168,10 +168,10 @@ export function AppShell() {
           {currentPage === 'settings' && (
             <motion.div
               key="settings"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
             >
               <SettingsPage onBack={handleBack} />
             </motion.div>
