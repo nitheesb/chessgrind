@@ -88,7 +88,8 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Current Level</p>
-              <p className="text-2xl font-bold text-foreground">Level {currentLevel}</p>
+              <p className="text-2xl font-bold text-foreground">Level {currentLevel.level}</p>
+              <p className="text-xs text-muted-foreground">{currentLevel.title}</p>
             </div>
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
               <Crown className="w-8 h-8 text-white" />

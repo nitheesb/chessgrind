@@ -66,7 +66,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
               {/* Avatar */}
               <div className="relative">
                 <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border-2 border-primary/30">
-                  <span className="text-4xl font-bold text-primary">{currentLevel}</span>
+                  <span className="text-4xl font-bold text-primary">{currentLevel.level}</span>
                 </div>
                 <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shadow-lg">
                   <Crown className="w-4 h-4 text-white" />
@@ -111,7 +111,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
           {/* XP Progress */}
           <div className="mt-8">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">Level {currentLevel}</span>
+              <span className="text-sm font-medium text-foreground">Level {currentLevel.level} - {currentLevel.title}</span>
               <span className="text-sm text-muted-foreground">{profile.xp} / {profile.xp + xpForNext} XP</span>
             </div>
             <div className="h-3 bg-secondary rounded-full overflow-hidden">
@@ -123,7 +123,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
               />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              {xpForNext} XP to reach Level {currentLevel + 1}
+              {xpForNext} XP to reach Level {currentLevel.level + 1}
             </p>
           </div>
         </div>
