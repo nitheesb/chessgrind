@@ -45,14 +45,21 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
   }, [filterDifficulty])
 
   if (activePuzzle) {
-    return <PuzzleSolver puzzle={activePuzzle} onBack={() => setActivePuzzle(null)} onNext={() => {
-      const idx = PUZZLES.findIndex(p => p.id === activePuzzle.id)
-      if (idx < PUZZLES.length - 1) {
-        setActivePuzzle(PUZZLES[idx + 1])
-      } else {
-        setActivePuzzle(null)
-      }
-    }} />
+    return (
+      <PuzzleSolver 
+        key={activePuzzle.id}
+        puzzle={activePuzzle} 
+        onBack={() => setActivePuzzle(null)} 
+        onNext={() => {
+          const idx = PUZZLES.findIndex(p => p.id === activePuzzle.id)
+          if (idx < PUZZLES.length - 1) {
+            setActivePuzzle(PUZZLES[idx + 1])
+          } else {
+            setActivePuzzle(null)
+          }
+        }} 
+      />
+    )
   }
 
   return (
