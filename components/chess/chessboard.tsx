@@ -1,7 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react'
 import { ChessPiece, parseFEN } from './chess-pieces'
 
 interface ChessboardProps {
@@ -13,41 +12,282 @@ interface ChessboardProps {
   highlightSquares?: string[]
   lastMove?: { from: string; to: string }
   showCoordinates?: boolean
-  animationSpeed?: number
   hintArrow?: { from: string; to: string } | null
   showHintArrow?: boolean
 }
 
-// Board colors - clean and professional
-const COLORS = {
-  lightSquare: '#ebecd0',
-  darkSquare: '#739552',
-  selectedLight: '#f7f683',
-  selectedDark: '#bbcc44',
-  lastMoveLight: '#f7f683',
-  lastMoveDark: '#bbcc44',
-  highlightLight: '#ffff33',
-  highlightDark: '#cccc00',
-}
+// Chess.com inspired colors
+const LIGHT = '#ebecd0'
+const DARK = '#739552'
+const SELECTED_LIGHT = '#f7f769'
+const SELECTED_DARK = '#bbcb2b'
+const LAST_MOVE_LIGHT = '#f7f769'
+const LAST_MOVE_DARK = '#bbcb2b'
 
-function squareToIndex(square: string): { row: number; col: number } {
-  const col = square.charCodeAt(0) - 97
-  const row = 8 - parseInt(square[1])
-  return { row, col }
-}
+const squareToIndex = (square: string) => ({
+  row: 8 - parseInt(square[1]),
+  col: square.charCodeAt(0) - 97
+})
 
-function indexToSquare(row: number, col: number): string {
-  return String.fromCharCode(97 + col) + (8 - row)
-}
+const indexToSquare = (row: number, col: number) => 
+  String.fromCharCode(97 + col) + (8 - row)
 
-function getSquarePosition(square: string, squareSize: number, flipped: boolean): { x: number; y: number } {
-  const { row, col } = squareToIndex(square)
-  const displayCol = flipped ? 7 - col : col
-  const displayRow = flipped ? 7 - row : row
-  return {
-    x: displayCol * squareSize + squareSize / 2,
-    y: displayRow * squareSize + squareSize / 2,
+// Memoized square component for performance
+const Square = memo(function Square({
+  row,
+  col,
+  piece,
+  isLight,
+  isSelected,
+  isLastMove,
+  isHighlighted,
+  squareSize,
+  onClick,
+  onTouchStart,
+  interactive,
+}: {
+  row: number
+  col: number
+  piece: string | null
+  isLight: boolean
+  isSelected: boolean
+  isLastMove: boolean
+  isHighlighted: boolean
+  squareSize: number
+  onClick: () => void
+  onTouchStart: (e: React.TouchEvent) => void
+  interactive: boolean
+}) {
+  // Determine background color
+  let bg = isLight ? LIGHT : DARK
+  if (isSelected || isLastMove) {
+    bg = isLight ? SELECTED_LIGHT : SELECTED_DARK
   }
+
+  return (
+    <div
+      className={interactive ? 'cursor-pointer' : ''}
+      style={{
+        position: 'absolute',
+        left: col * squareSize,
+        top: row * squareSize,
+        width: squareSize,
+        height: squareSize,
+        backgroundColor: bg,
+      }}
+      onClick={onClick}
+      onTouchStart={onTouchStart}
+    >
+      {/* Move indicator - dot for empty, ring for capture */}
+      {isHighlighted && (
+        <div 
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {piece ? (
+            // Capture ring
+            <div style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              border: `${squareSize * 0.08}px solid rgba(0,0,0,0.14)`,
+              boxSizing: 'border-box',
+            }} />
+          ) : (
+            // Move dot
+            <div style={{
+              width: squareSize * 0.33,
+              height: squareSize * 0.33,
+              borderRadius: '50%',
+              backgroundColor: 'rgba(0,0,0,0.14)',
+            }} />
+          )}
+        </div>
+      )}
+
+      {/* Piece */}
+      {piece && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+        }}>
+          <ChessPiece piece={piece} size={squareSize * 0.85} />
+        </div>
+      )}
+    </div>
+  )
+})
+
+// Animated piece during movement
+function AnimatedPiece({
+  piece,
+  from,
+  to,
+  squareSize,
+  flipped,
+  onComplete,
+}: {
+  piece: string
+  from: string
+  to: string
+  squareSize: number
+  flipped: boolean
+  onComplete: () => void
+}) {
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const rafRef = useRef<number>()
+  const startTimeRef = useRef<number>()
+
+  const getPos = useCallback((square: string) => {
+    const { row, col } = squareToIndex(square)
+    const displayCol = flipped ? 7 - col : col
+    const displayRow = flipped ? 7 - row : row
+    return {
+      x: displayCol * squareSize,
+      y: displayRow * squareSize,
+    }
+  }, [squareSize, flipped])
+
+  useEffect(() => {
+    const fromPos = getPos(from)
+    const toPos = getPos(to)
+    const duration = 120 // ms - fast and snappy
+
+    const animate = (timestamp: number) => {
+      if (!startTimeRef.current) startTimeRef.current = timestamp
+      const elapsed = timestamp - startTimeRef.current
+      const progress = Math.min(elapsed / duration, 1)
+      
+      // Ease out cubic for snappy feel
+      const eased = 1 - Math.pow(1 - progress, 3)
+      
+      setPosition({
+        x: fromPos.x + (toPos.x - fromPos.x) * eased,
+        y: fromPos.y + (toPos.y - fromPos.y) * eased,
+      })
+
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(animate)
+      } else {
+        onComplete()
+      }
+    }
+
+    setPosition(fromPos)
+    rafRef.current = requestAnimationFrame(animate)
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [from, to, getPos, onComplete])
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: position.x,
+        top: position.y,
+        width: squareSize,
+        height: squareSize,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 50,
+        pointerEvents: 'none',
+      }}
+    >
+      <ChessPiece piece={piece} size={squareSize * 0.85} />
+    </div>
+  )
+}
+
+// Hint arrow component
+function HintArrow({
+  from,
+  to,
+  squareSize,
+  flipped,
+  boardSize,
+}: {
+  from: string
+  to: string
+  squareSize: number
+  flipped: boolean
+  boardSize: number
+}) {
+  const getCenter = (square: string) => {
+    const { row, col } = squareToIndex(square)
+    const displayCol = flipped ? 7 - col : col
+    const displayRow = flipped ? 7 - row : row
+    return {
+      x: displayCol * squareSize + squareSize / 2,
+      y: displayRow * squareSize + squareSize / 2,
+    }
+  }
+
+  const fromPos = getCenter(from)
+  const toPos = getCenter(to)
+  const dx = toPos.x - fromPos.x
+  const dy = toPos.y - fromPos.y
+  const length = Math.sqrt(dx * dx + dy * dy)
+  
+  const arrowColor = 'rgba(255, 170, 0, 0.85)'
+  const strokeWidth = squareSize * 0.22
+  const headSize = squareSize * 0.4
+  
+  // Shorten line to account for arrowhead
+  const shortenBy = headSize * 0.5
+  const endX = toPos.x - (dx / length) * shortenBy
+  const endY = toPos.y - (dy / length) * shortenBy
+
+  return (
+    <svg
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: boardSize,
+        height: boardSize,
+        pointerEvents: 'none',
+        zIndex: 40,
+      }}
+    >
+      <defs>
+        <marker
+          id="arrowhead"
+          markerWidth={headSize}
+          markerHeight={headSize}
+          refX={headSize * 0.5}
+          refY={headSize * 0.5}
+          orient="auto"
+        >
+          <polygon
+            points={`0 0, ${headSize} ${headSize * 0.5}, 0 ${headSize}`}
+            fill={arrowColor}
+          />
+        </marker>
+      </defs>
+      <line
+        x1={fromPos.x}
+        y1={fromPos.y}
+        x2={endX}
+        y2={endY}
+        stroke={arrowColor}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        markerEnd="url(#arrowhead)"
+        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+      />
+    </svg>
+  )
 }
 
 export function Chessboard({
@@ -59,43 +299,42 @@ export function Chessboard({
   highlightSquares = [],
   lastMove,
   showCoordinates = true,
-  animationSpeed = 0.15,
   hintArrow,
   showHintArrow = false,
 }: ChessboardProps) {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [dragPiece, setDragPiece] = useState<{ piece: string; from: string; x: number; y: number } | null>(null)
+  const [animating, setAnimating] = useState<{ piece: string; from: string; to: string } | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
-  const squareSize = size / 8
   const prevFenRef = useRef(fen)
-  const [movingPiece, setMovingPiece] = useState<{ piece: string; from: string; to: string } | null>(null)
+  const squareSize = size / 8
 
   const board = useMemo(() => parseFEN(fen), [fen])
 
-  // Detect piece movement for animation
+  // Detect moves and animate
   useEffect(() => {
     if (prevFenRef.current !== fen && lastMove) {
       const prevBoard = parseFEN(prevFenRef.current)
-      const { row: fromRow, col: fromCol } = squareToIndex(lastMove.from)
-      const piece = prevBoard[fromRow]?.[fromCol]
+      const { row, col } = squareToIndex(lastMove.from)
+      const piece = prevBoard[row]?.[col]
       if (piece) {
-        setMovingPiece({ piece, from: lastMove.from, to: lastMove.to })
-        setTimeout(() => setMovingPiece(null), animationSpeed * 1000 + 50)
+        setAnimating({ piece, from: lastMove.from, to: lastMove.to })
       }
     }
     prevFenRef.current = fen
-  }, [fen, lastMove, animationSpeed])
+  }, [fen, lastMove])
 
-  const getDisplayRow = useCallback((row: number) => flipped ? 7 - row : row, [flipped])
-  const getDisplayCol = useCallback((col: number) => flipped ? 7 - col : col, [flipped])
+  const getActualCoords = useCallback((displayRow: number, displayCol: number) => ({
+    row: flipped ? 7 - displayRow : displayRow,
+    col: flipped ? 7 - displayCol : displayCol,
+  }), [flipped])
 
-  const handleSquareClick = useCallback((row: number, col: number) => {
+  const handleSquareClick = useCallback((displayRow: number, displayCol: number) => {
     if (!interactive) return
-
-    const actualRow = getDisplayRow(row)
-    const actualCol = getDisplayCol(col)
-    const square = indexToSquare(actualRow, actualCol)
-    const piece = board[actualRow]?.[actualCol]
+    
+    const { row, col } = getActualCoords(displayRow, displayCol)
+    const square = indexToSquare(row, col)
+    const piece = board[row]?.[col]
 
     if (selectedSquare) {
       if (square === selectedSquare) {
@@ -113,16 +352,15 @@ export function Chessboard({
     } else if (piece) {
       setSelectedSquare(square)
     }
-  }, [interactive, selectedSquare, board, onMove, getDisplayRow, getDisplayCol])
+  }, [interactive, selectedSquare, board, onMove, getActualCoords])
 
-  const handleTouchStart = useCallback((e: React.TouchEvent, row: number, col: number) => {
+  const handleTouchStart = useCallback((e: React.TouchEvent, displayRow: number, displayCol: number) => {
     if (!interactive) return
     e.preventDefault()
 
-    const actualRow = getDisplayRow(row)
-    const actualCol = getDisplayCol(col)
-    const piece = board[actualRow]?.[actualCol]
-    const square = indexToSquare(actualRow, actualCol)
+    const { row, col } = getActualCoords(displayRow, displayCol)
+    const piece = board[row]?.[col]
+    const square = indexToSquare(row, col)
 
     if (piece) {
       const touch = e.touches[0]
@@ -132,7 +370,7 @@ export function Chessboard({
       if (onMove) onMove(selectedSquare, square)
       setSelectedSquare(null)
     }
-  }, [interactive, board, selectedSquare, onMove, getDisplayRow, getDisplayCol])
+  }, [interactive, board, selectedSquare, onMove, getActualCoords])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!dragPiece) return
@@ -152,13 +390,12 @@ export function Chessboard({
     const touch = e.changedTouches[0]
     const x = touch.clientX - rect.left
     const y = touch.clientY - rect.top
-    const col = Math.floor(x / squareSize)
-    const row = Math.floor(y / squareSize)
+    const displayCol = Math.floor(x / squareSize)
+    const displayRow = Math.floor(y / squareSize)
 
-    if (col >= 0 && col < 8 && row >= 0 && row < 8) {
-      const actualRow = getDisplayRow(row)
-      const actualCol = getDisplayCol(col)
-      const targetSquare = indexToSquare(actualRow, actualCol)
+    if (displayCol >= 0 && displayCol < 8 && displayRow >= 0 && displayRow < 8) {
+      const { row, col } = getActualCoords(displayRow, displayCol)
+      const targetSquare = indexToSquare(row, col)
       if (targetSquare !== dragPiece.from && onMove) {
         onMove(dragPiece.from, targetSquare)
       }
@@ -166,235 +403,136 @@ export function Chessboard({
 
     setDragPiece(null)
     setSelectedSquare(null)
-  }, [dragPiece, squareSize, onMove, getDisplayRow, getDisplayCol])
+  }, [dragPiece, squareSize, onMove, getActualCoords])
 
-  const isHighlighted = useCallback((row: number, col: number) => {
-    const square = indexToSquare(row, col)
-    return highlightSquares.includes(square)
-  }, [highlightSquares])
-
-  const isLastMove = useCallback((row: number, col: number) => {
-    if (!lastMove) return false
-    const square = indexToSquare(row, col)
-    return square === lastMove.from || square === lastMove.to
+  // Pre-compute square states for performance
+  const highlightSet = useMemo(() => new Set(highlightSquares), [highlightSquares])
+  const lastMoveSet = useMemo(() => {
+    if (!lastMove) return new Set<string>()
+    return new Set([lastMove.from, lastMove.to])
   }, [lastMove])
 
-  const isSelected = useCallback((row: number, col: number) => {
-    if (!selectedSquare) return false
-    const square = indexToSquare(row, col)
-    return square === selectedSquare
-  }, [selectedSquare])
-
-  // Render move arrow
-  const renderArrow = useCallback((from: string, to: string, color: string = 'rgba(255, 170, 0, 0.8)') => {
-    const fromPos = getSquarePosition(from, squareSize, flipped)
-    const toPos = getSquarePosition(to, squareSize, flipped)
-    
-    const dx = toPos.x - fromPos.x
-    const dy = toPos.y - fromPos.y
-    const length = Math.sqrt(dx * dx + dy * dy)
-    const arrowHeadSize = squareSize * 0.4
-    const lineWidth = squareSize * 0.2
-    
-    return (
-      <motion.svg
-        key={`arrow-${from}-${to}`}
-        className="absolute inset-0 pointer-events-none"
-        style={{ width: size, height: size }}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 0.9, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        transition={{ duration: 0.2 }}
-      >
-        <defs>
-          <marker
-            id="arrowhead"
-            markerWidth={arrowHeadSize}
-            markerHeight={arrowHeadSize}
-            refX={arrowHeadSize * 0.6}
-            refY={arrowHeadSize * 0.5}
-            orient="auto"
-          >
-            <polygon
-              points={`0 0, ${arrowHeadSize} ${arrowHeadSize * 0.5}, 0 ${arrowHeadSize}`}
-              fill={color}
-            />
-          </marker>
-        </defs>
-        <line
-          x1={fromPos.x}
-          y1={fromPos.y}
-          x2={toPos.x - (dx / length) * arrowHeadSize * 0.8}
-          y2={toPos.y - (dy / length) * arrowHeadSize * 0.8}
-          stroke={color}
-          strokeWidth={lineWidth}
-          strokeLinecap="round"
-          markerEnd="url(#arrowhead)"
-          style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }}
-        />
-      </motion.svg>
-    )
-  }, [squareSize, flipped, size])
-
-  // Calculate position for animated piece
-  const getAnimatedPiecePosition = useCallback((from: string, to: string) => {
-    const fromPos = getSquarePosition(from, squareSize, flipped)
-    const toPos = getSquarePosition(to, squareSize, flipped)
-    return { fromPos, toPos }
-  }, [squareSize, flipped])
-
   return (
-    <div className="relative inline-block select-none">
+    <div className="relative inline-block select-none touch-none">
       <div
         ref={boardRef}
-        className="relative overflow-hidden rounded-sm"
+        className="relative overflow-hidden rounded"
         style={{ 
           width: size, 
           height: size,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
         }}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Board squares */}
-        {Array.from({ length: 8 }, (_, row) => (
-          Array.from({ length: 8 }, (_, col) => {
-            const actualRow = getDisplayRow(row)
-            const actualCol = getDisplayCol(col)
-            const isLight = (actualRow + actualCol) % 2 === 0
-            const piece = board[actualRow]?.[actualCol]
-            const square = indexToSquare(actualRow, actualCol)
-            const highlighted = isHighlighted(actualRow, actualCol)
-            const lastMoveSquare = isLastMove(actualRow, actualCol)
-            const selected = isSelected(actualRow, actualCol)
-            const isDragging = dragPiece?.from === square
-            const isMovingFrom = movingPiece?.from === square
-            const isMovingTo = movingPiece?.to === square
+        {/* Render squares */}
+        {Array.from({ length: 64 }, (_, i) => {
+          const displayRow = Math.floor(i / 8)
+          const displayCol = i % 8
+          const { row, col } = getActualCoords(displayRow, displayCol)
+          const square = indexToSquare(row, col)
+          const piece = board[row]?.[col]
+          const isLight = (row + col) % 2 === 0
+          const isDragging = dragPiece?.from === square
+          const isAnimatingFrom = animating?.from === square
 
-            // Determine square color
-            let bgColor = isLight ? COLORS.lightSquare : COLORS.darkSquare
-            if (selected) {
-              bgColor = isLight ? COLORS.selectedLight : COLORS.selectedDark
-            } else if (lastMoveSquare) {
-              bgColor = isLight ? COLORS.lastMoveLight : COLORS.lastMoveDark
-            }
+          return (
+            <Square
+              key={square}
+              row={displayRow}
+              col={displayCol}
+              piece={isDragging || isAnimatingFrom ? null : piece}
+              isLight={isLight}
+              isSelected={selectedSquare === square}
+              isLastMove={lastMoveSet.has(square) && !animating}
+              isHighlighted={highlightSet.has(square)}
+              squareSize={squareSize}
+              onClick={() => handleSquareClick(displayRow, displayCol)}
+              onTouchStart={(e) => handleTouchStart(e, displayRow, displayCol)}
+              interactive={interactive}
+            />
+          )
+        })}
 
-            return (
-              <div
-                key={`${row}-${col}`}
-                className={`absolute ${interactive ? 'cursor-pointer' : ''}`}
-                style={{
-                  left: col * squareSize,
-                  top: row * squareSize,
-                  width: squareSize,
-                  height: squareSize,
-                  backgroundColor: bgColor,
-                  transition: 'background-color 0.15s ease',
-                }}
-                onClick={() => handleSquareClick(row, col)}
-                onTouchStart={(e) => handleTouchStart(e, row, col)}
-              >
-                {/* Move indicator dot */}
-                {highlighted && !piece && (
-                  <motion.div 
-                    className="absolute inset-0 flex items-center justify-center"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                  >
-                    <div
-                      className="rounded-full opacity-40"
-                      style={{ 
-                        width: squareSize * 0.33, 
-                        height: squareSize * 0.33,
-                        backgroundColor: '#000',
-                      }}
-                    />
-                  </motion.div>
-                )}
+        {/* Coordinates */}
+        {showCoordinates && (
+          <>
+            {Array.from({ length: 8 }, (_, i) => {
+              const { row } = getActualCoords(i, 0)
+              const isLight = (row + (flipped ? 7 : 0)) % 2 === 0
+              return (
+                <span
+                  key={`rank-${i}`}
+                  className="absolute text-[11px] font-bold pointer-events-none"
+                  style={{
+                    left: 2,
+                    top: i * squareSize + 2,
+                    color: isLight ? DARK : LIGHT,
+                  }}
+                >
+                  {flipped ? i + 1 : 8 - i}
+                </span>
+              )
+            })}
+            {Array.from({ length: 8 }, (_, i) => {
+              const { col } = getActualCoords(7, i)
+              const isLight = ((flipped ? 7 : 0) + col) % 2 === 0
+              return (
+                <span
+                  key={`file-${i}`}
+                  className="absolute text-[11px] font-bold pointer-events-none"
+                  style={{
+                    right: (7 - i) * squareSize + 2,
+                    bottom: 1,
+                    color: isLight ? DARK : LIGHT,
+                  }}
+                >
+                  {String.fromCharCode(97 + col)}
+                </span>
+              )
+            })}
+          </>
+        )}
 
-                {/* Capture indicator ring */}
-                {highlighted && piece && (
-                  <motion.div 
-                    className="absolute inset-[5%] rounded-full"
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                    style={{
-                      border: `${squareSize * 0.08}px solid rgba(0,0,0,0.35)`,
-                    }}
-                  />
-                )}
-
-                {/* Static piece (not being dragged or animated) */}
-                {piece && !isDragging && !isMovingFrom && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <ChessPiece piece={piece} size={squareSize * 0.9} />
-                  </div>
-                )}
-
-                {/* Piece arriving (animated) */}
-                {isMovingTo && movingPiece && (
-                  <motion.div
-                    className="absolute inset-0 flex items-center justify-center z-10"
-                    initial={{ 
-                      x: getAnimatedPiecePosition(movingPiece.from, movingPiece.to).fromPos.x - 
-                         getAnimatedPiecePosition(movingPiece.from, movingPiece.to).toPos.x,
-                      y: getAnimatedPiecePosition(movingPiece.from, movingPiece.to).fromPos.y - 
-                         getAnimatedPiecePosition(movingPiece.from, movingPiece.to).toPos.y,
-                    }}
-                    animate={{ x: 0, y: 0 }}
-                    transition={{ 
-                      duration: animationSpeed, 
-                      ease: [0.25, 0.1, 0.25, 1],
-                    }}
-                  >
-                    <ChessPiece piece={movingPiece.piece} size={squareSize * 0.9} />
-                  </motion.div>
-                )}
-
-                {/* Coordinates */}
-                {showCoordinates && col === 0 && (
-                  <span
-                    className="absolute top-0.5 left-1 text-[11px] font-bold select-none pointer-events-none"
-                    style={{ color: isLight ? COLORS.darkSquare : COLORS.lightSquare }}
-                  >
-                    {8 - actualRow}
-                  </span>
-                )}
-                {showCoordinates && row === 7 && (
-                  <span
-                    className="absolute bottom-0 right-1 text-[11px] font-bold select-none pointer-events-none"
-                    style={{ color: isLight ? COLORS.darkSquare : COLORS.lightSquare }}
-                  >
-                    {String.fromCharCode(97 + actualCol)}
-                  </span>
-                )}
-              </div>
-            )
-          })
-        ))}
+        {/* Animated piece */}
+        {animating && (
+          <AnimatedPiece
+            piece={animating.piece}
+            from={animating.from}
+            to={animating.to}
+            squareSize={squareSize}
+            flipped={flipped}
+            onComplete={() => setAnimating(null)}
+          />
+        )}
 
         {/* Hint arrow */}
-        <AnimatePresence>
-          {showHintArrow && hintArrow && renderArrow(hintArrow.from, hintArrow.to)}
-        </AnimatePresence>
+        {showHintArrow && hintArrow && (
+          <HintArrow
+            from={hintArrow.from}
+            to={hintArrow.to}
+            squareSize={squareSize}
+            flipped={flipped}
+            boardSize={size}
+          />
+        )}
       </div>
 
-      {/* Dragging piece */}
+      {/* Dragged piece */}
       {dragPiece && (
-        <motion.div
-          className="fixed pointer-events-none z-50"
-          initial={{ scale: 1 }}
-          animate={{ scale: 1.1 }}
+        <div
           style={{
-            left: dragPiece.x - squareSize * 0.5,
-            top: dragPiece.y - squareSize * 0.6,
-            filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.5))',
+            position: 'fixed',
+            left: dragPiece.x - squareSize * 0.45,
+            top: dragPiece.y - squareSize * 0.55,
+            zIndex: 100,
+            pointerEvents: 'none',
+            transform: 'scale(1.1)',
+            filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.4))',
           }}
         >
-          <ChessPiece piece={dragPiece.piece} size={squareSize * 0.95} />
-        </motion.div>
+          <ChessPiece piece={dragPiece.piece} size={squareSize * 0.85} />
+        </div>
       )}
     </div>
   )
@@ -407,39 +545,45 @@ export function MiniChessboard({ fen, size = 120 }: { fen: string; size?: number
 
   return (
     <div
-      className="relative rounded-sm overflow-hidden"
+      className="relative rounded overflow-hidden"
       style={{ 
         width: size, 
         height: size,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
       }}
     >
-      {Array.from({ length: 8 }, (_, row) => (
-        Array.from({ length: 8 }, (_, col) => {
-          const isLight = (row + col) % 2 === 0
-          const piece = board[row]?.[col]
+      {Array.from({ length: 64 }, (_, i) => {
+        const row = Math.floor(i / 8)
+        const col = i % 8
+        const isLight = (row + col) % 2 === 0
+        const piece = board[row]?.[col]
 
-          return (
-            <div
-              key={`${row}-${col}`}
-              className="absolute"
-              style={{
-                left: col * squareSize,
-                top: row * squareSize,
-                width: squareSize,
-                height: squareSize,
-                backgroundColor: isLight ? COLORS.lightSquare : COLORS.darkSquare,
-              }}
-            >
-              {piece && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <ChessPiece piece={piece} size={squareSize * 0.88} />
-                </div>
-              )}
-            </div>
-          )
-        })
-      ))}
+        return (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: col * squareSize,
+              top: row * squareSize,
+              width: squareSize,
+              height: squareSize,
+              backgroundColor: isLight ? LIGHT : DARK,
+            }}
+          >
+            {piece && (
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <ChessPiece piece={piece} size={squareSize * 0.85} />
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
