@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard, MiniChessboard } from '@/components/chess/chessboard'
@@ -36,12 +36,12 @@ interface DesktopOpeningsProps {
 export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
   const { playSound } = useSoundAndHaptics()
   const [activeOpening, setActiveOpening] = useState<Opening | null>(null)
-  const [filterColor, setFilterColor] = useState<'all' | 'white' | 'black'>('all')
+  const [filterCategory, setFilterCategory] = useState<'all' | 'e4' | 'd4' | 'other'>('all')
 
   const filteredOpenings = useMemo(() => {
-    if (filterColor === 'all') return OPENINGS
-    return OPENINGS.filter(o => o.color === filterColor)
-  }, [filterColor])
+    if (filterCategory === 'all') return OPENINGS
+    return OPENINGS.filter(o => o.category === filterCategory)
+  }, [filterCategory])
 
   const groupedOpenings = useMemo(() => {
     const groups: Record<string, Opening[]> = {}
@@ -77,23 +77,20 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
 
       {/* Filter */}
       <motion.div variants={item} className="flex gap-2 mb-8">
-        {(['all', 'white', 'black'] as const).map((color) => (
+        {(['all', 'e4', 'd4', 'other'] as const).map((cat) => (
           <button
-            key={color}
+            key={cat}
             onClick={() => {
               playSound('click')
-              setFilterColor(color)
+              setFilterCategory(cat)
             }}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-              filterColor === color
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              filterCategory === cat
                 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
                 : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
             }`}
           >
-            {color !== 'all' && (
-              <span className={`w-3 h-3 rounded-full ${color === 'white' ? 'bg-white border border-gray-300' : 'bg-gray-800'}`} />
-            )}
-            {color === 'all' ? 'All Openings' : `Play as ${color.charAt(0).toUpperCase() + color.slice(1)}`}
+            {cat === 'all' ? 'All Openings' : cat === 'e4' ? '1.e4 Openings' : cat === 'd4' ? '1.d4 Openings' : 'Other'}
           </button>
         ))}
       </motion.div>
@@ -128,7 +125,9 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
                         <span className="px-2 py-0.5 rounded text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                           {opening.eco}
                         </span>
-                        <span className={`w-3 h-3 rounded-full ${opening.color === 'white' ? 'bg-white border border-gray-300' : 'bg-gray-800'}`} />
+                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-secondary text-muted-foreground">
+                          {opening.category}
+                        </span>
                       </div>
                       <h3 className="text-base font-semibold text-foreground mb-1 truncate">{opening.name}</h3>
                       <p className="text-xs text-muted-foreground line-clamp-2">{opening.description}</p>
@@ -169,6 +168,9 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
     return game.fen()
   }, [currentMoveIndex, opening.moves])
 
+  // Determine board orientation based on first move or category
+  const orientation = opening.category === 'e4' || opening.category === 'd4' || opening.category === 'other' ? 'white' : 'white'
+
   const handleNext = () => {
     if (currentMoveIndex < opening.moves.length - 1) {
       playSound('move')
@@ -189,8 +191,8 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
     setIsPlaying(false)
   }
 
-  // Auto-play
-  useState(() => {
+  // Auto-play effect
+  useEffect(() => {
     if (!isPlaying) return
     const interval = setInterval(() => {
       setCurrentMoveIndex(prev => {
@@ -203,7 +205,7 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
       })
     }, 1000)
     return () => clearInterval(interval)
-  })
+  }, [isPlaying, opening.moves.length, playSound])
 
   return (
     <motion.div
@@ -314,9 +316,9 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
               <Chessboard
                 fen={currentFen}
                 onMove={() => false}
-                orientation={opening.color}
+                orientation={orientation}
                 interactive={false}
-                size={520}
+                size={560}
               />
             </div>
 
