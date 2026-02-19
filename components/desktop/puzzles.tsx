@@ -181,7 +181,8 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
   const [status, setStatus] = useState<'playing' | 'correct' | 'wrong' | 'complete' | 'opponent-moving'>('playing')
-  const [showHint, setShowHint] = useState(false)
+  const [hintActive, setHintActive] = useState(false)
+  const hintActiveRef = useRef(false)
   const [timer, setTimer] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
@@ -248,7 +249,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
           } else {
             setStatus('playing')
             // If hint was showing, update it for the next move
-            if (showHint) {
+            if (hintActiveRef.current) {
               const newHint = calculateHint(opponentGame, nextIndex)
               setHintArrow(newHint)
             }
@@ -261,7 +262,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
       }
       processingRef.current = false
     }, 600)
-  }, [puzzle.moves, puzzle.xpReward, puzzle.rating, addXP, incrementPuzzlesSolved, updatePuzzleRating, timer, playSound, triggerHaptic, showHint, calculateHint])
+  }, [puzzle.moves, puzzle.xpReward, puzzle.rating, addXP, incrementPuzzlesSolved, updatePuzzleRating, timer, playSound, triggerHaptic, calculateHint])
 
   const handleMove = useCallback((from: string, to: string): boolean => {
     if (status !== 'playing' || processingRef.current) return false
@@ -330,7 +331,8 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     setStatus('playing')
     setLastMove(null)
     setHintArrow(null)
-    setShowHint(false)
+    setHintActive(false)
+    hintActiveRef.current = false
     setMoveHistory([])
     setTimer(0)
     processingRef.current = false
@@ -343,7 +345,8 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     const hint = calculateHint(game, moveIndex)
     if (hint) {
       setHintArrow(hint)
-      setShowHint(true)
+      setHintActive(true)
+      hintActiveRef.current = true
     }
   }, [game, moveIndex, calculateHint, playSound])
 

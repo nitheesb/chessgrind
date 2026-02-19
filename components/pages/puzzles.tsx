@@ -160,13 +160,14 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
   const [status, setStatus] = useState<'playing' | 'correct' | 'wrong' | 'complete' | 'opponent-moving'>('playing')
-  const [showHint, setShowHint] = useState(false)
   const [timer, setTimer] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [highlightSquares, setHighlightSquares] = useState<string[]>([])
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
   const [hintArrow, setHintArrow] = useState<{ from: string; to: string } | null>(null)
+  const [hintActive, setHintActive] = useState(false)
   const processingRef = useRef(false)
+  const hintActiveRef = useRef(false)
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -224,7 +225,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
           } else {
             setStatus('playing')
             // If hint was showing, update it for the next move
-            if (showHint) {
+            if (hintActiveRef.current) {
               const newHint = calculateHint(opponentGame, nextIndex)
               setHintArrow(newHint)
               if (newHint) {
@@ -242,7 +243,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       }
       processingRef.current = false
     }, 600)
-  }, [puzzle.moves, puzzle.xpReward, addXP, incrementPuzzlesSolved, showHint, calculateHint])
+  }, [puzzle.moves, puzzle.xpReward, addXP, incrementPuzzlesSolved, calculateHint])
 
   const handleMove = useCallback((from: string, to: string): boolean => {
     if (status !== 'playing' || processingRef.current) return false
@@ -308,7 +309,8 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     if (hint) {
       setHintArrow(hint)
       setHighlightSquares([hint.from, hint.to])
-      setShowHint(true)
+      setHintActive(true)
+      hintActiveRef.current = true
     }
   }, [game, moveIndex, calculateHint])
 
@@ -472,13 +474,13 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
           >
             <motion.button
               onClick={handleHint}
-              disabled={showHint || status === 'opponent-moving'}
+              disabled={hintActive || status === 'opponent-moving'}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/10 border border-accent/20 text-accent text-sm font-medium disabled:opacity-40 transition-all"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <Lightbulb className="w-4 h-4" />
-              Show Hint
+              {hintActive ? 'Hint Active' : 'Show Hint'}
             </motion.button>
           </motion.div>
         )}
