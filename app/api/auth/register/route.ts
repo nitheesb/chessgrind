@@ -14,17 +14,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { username, password } = await request.json()
+    const body = await request.json()
+    const username = typeof body.username === 'string' ? body.username.trim() : ''
+    const password = typeof body.password === 'string' ? body.password : ''
 
     // Validate input
-    if (!username || typeof username !== 'string' || username.length < 2 || username.length > 20) {
+    if (!username || username.length < 2 || username.length > 20) {
       return NextResponse.json(
         { error: 'Username must be between 2 and 20 characters' },
         { status: 400 }
       )
     }
 
-    if (!password || typeof password !== 'string' || password.length < 4) {
+    if (!password || password.length < 4) {
       return NextResponse.json(
         { error: 'Password must be at least 4 characters' },
         { status: 400 }

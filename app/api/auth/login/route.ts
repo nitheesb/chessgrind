@@ -14,7 +14,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { username, password } = await request.json()
+    const body = await request.json()
+    const username = typeof body.username === 'string' ? body.username.trim() : ''
+    const password = typeof body.password === 'string' ? body.password : ''
 
     // Validate input
     if (!username || !password) {
