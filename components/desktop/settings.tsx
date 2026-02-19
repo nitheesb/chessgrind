@@ -31,12 +31,12 @@ interface DesktopSettingsProps {
 }
 
 export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
-  const { settings, updateSettings } = useSettings()
+  const { settings, updateSetting } = useSettings()
   const { playSound } = useSoundAndHaptics()
 
   const toggleSetting = (key: keyof typeof settings) => {
     playSound('click')
-    updateSettings({ [key]: !settings[key] })
+    updateSetting(key, !settings[key] as any)
   }
 
   const settingsSections = [
@@ -50,7 +50,7 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
           icon: settings.soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />,
         },
         {
-          key: 'hapticsEnabled' as const,
+          key: 'hapticEnabled' as const,
           label: 'Haptic Feedback',
           description: 'Vibration feedback on mobile devices',
           icon: <Vibrate className="w-5 h-5" />,
@@ -67,15 +67,15 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
           icon: <Grid3X3 className="w-5 h-5" />,
         },
         {
-          key: 'showLegalMoves' as const,
-          label: 'Show Legal Moves',
-          description: 'Highlight available moves when selecting a piece',
+          key: 'showHints' as const,
+          label: 'Show Hints',
+          description: 'Show move hints when selecting a piece',
           icon: <Eye className="w-5 h-5" />,
         },
         {
-          key: 'moveConfirmation' as const,
-          label: 'Move Confirmation',
-          description: 'Require confirmation before making a move',
+          key: 'autoQueen' as const,
+          label: 'Auto Queen',
+          description: 'Automatically promote pawns to queen',
           icon: <MousePointer className="w-5 h-5" />,
         },
       ],
@@ -83,8 +83,8 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
   ]
 
   const boardStyles = [
-    { id: 'classic', name: 'Classic', light: '#f0d9b5', dark: '#b58863' },
-    { id: 'modern', name: 'Modern', light: '#eeeed2', dark: '#769656' },
+    { id: 'green', name: 'Classic', light: '#eeeed2', dark: '#769656' },
+    { id: 'brown', name: 'Wooden', light: '#f0d9b5', dark: '#b58863' },
     { id: 'blue', name: 'Ocean', light: '#dee3e6', dark: '#8ca2ad' },
     { id: 'purple', name: 'Royal', light: '#e8d0e8', dark: '#9070a0' },
   ]
@@ -123,9 +123,8 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                 className="flex items-center justify-between p-5"
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    settings[settingItem.key] ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${settings[settingItem.key] ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
+                    }`}>
                     {settingItem.icon}
                   </div>
                   <div>
@@ -135,9 +134,8 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                 </div>
                 <motion.button
                   onClick={() => toggleSetting(settingItem.key)}
-                  className={`relative w-14 h-8 rounded-full transition-colors ${
-                    settings[settingItem.key] ? 'bg-primary' : 'bg-secondary'
-                  }`}
+                  className={`relative w-14 h-8 rounded-full transition-colors ${settings[settingItem.key] ? 'bg-primary' : 'bg-secondary'
+                    }`}
                   whileTap={{ scale: 0.95 }}
                 >
                   <motion.div
@@ -161,13 +159,12 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
               key={style.id}
               onClick={() => {
                 playSound('click')
-                updateSettings({ boardStyle: style.id as any })
+                updateSetting('boardStyle', style.id as any)
               }}
-              className={`p-4 rounded-2xl border-2 transition-all ${
-                settings.boardStyle === style.id
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-border/80 bg-card'
-              }`}
+              className={`p-4 rounded-2xl border-2 transition-all ${settings.boardStyle === style.id
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-border/80 bg-card'
+                }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -178,17 +175,16 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                     <div
                       key={i}
                       style={{
-                        backgroundColor: (Math.floor(i / 4) + (i % 4)) % 2 === 0 
-                          ? style.light 
+                        backgroundColor: (Math.floor(i / 4) + (i % 4)) % 2 === 0
+                          ? style.light
                           : style.dark,
                       }}
                     />
                   ))}
                 </div>
               </div>
-              <p className={`text-sm font-medium ${
-                settings.boardStyle === style.id ? 'text-primary' : 'text-foreground'
-              }`}>
+              <p className={`text-sm font-medium ${settings.boardStyle === style.id ? 'text-primary' : 'text-foreground'
+                }`}>
                 {style.name}
               </p>
             </motion.button>
@@ -210,13 +206,12 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                 key={theme.id}
                 onClick={() => {
                   playSound('click')
-                  updateSettings({ theme: theme.id as any })
+                  updateSetting('theme', theme.id as any)
                 }}
-                className={`flex-1 py-4 rounded-xl flex flex-col items-center gap-2 transition-all ${
-                  settings.theme === theme.id
-                    ? 'bg-primary/10 text-primary border border-primary/30'
-                    : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
-                }`}
+                className={`flex-1 py-4 rounded-xl flex flex-col items-center gap-2 transition-all ${settings.theme === theme.id
+                  ? 'bg-primary/10 text-primary border border-primary/30'
+                  : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
+                  }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >

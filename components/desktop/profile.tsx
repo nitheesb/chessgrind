@@ -37,14 +37,14 @@ interface DesktopProfileProps {
 export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
   const { profile, logout } = useGame()
   const { playSound } = useSoundAndHaptics()
-  const { currentLevel, progress, xpForNext } = getLevelInfo(profile.xp)
+  const { currentLevel, nextLevel, progress, xpIntoLevel, xpForLevel } = getLevelInfo(profile.xp)
 
   const stats = [
     { label: 'Puzzles Solved', value: profile.puzzlesSolved, icon: <Puzzle className="w-5 h-5" />, color: 'emerald' },
     { label: 'Current Streak', value: profile.streak, icon: <Flame className="w-5 h-5" />, color: 'orange' },
     { label: 'Puzzle Rating', value: profile.puzzleRating || 800, icon: <TrendingUp className="w-5 h-5" />, color: 'blue' },
     { label: 'Total XP', value: profile.xp.toLocaleString(), icon: <Zap className="w-5 h-5" />, color: 'primary' },
-    { label: 'Games Won', value: profile.gamesWon || 0, icon: <Trophy className="w-5 h-5" />, color: 'amber' },
+    { label: 'Games Played', value: profile.gamesPlayed || 0, icon: <Trophy className="w-5 h-5" />, color: 'amber' },
     { label: 'Openings Learned', value: profile.openingsLearned || 0, icon: <BookOpen className="w-5 h-5" />, color: 'purple' },
   ]
 
@@ -76,7 +76,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
               {/* Info */}
               <div>
                 <h1 className="text-3xl font-bold text-foreground mb-1">{profile.username}</h1>
-                <p className="text-muted-foreground mb-3">{profile.email}</p>
+                <p className="text-muted-foreground mb-3">{currentLevel.title}</p>
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1.5 text-sm">
                     <Flame className="w-4 h-4 text-orange-500" />
@@ -85,7 +85,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
                   </span>
                   <span className="flex items-center gap-1.5 text-sm">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Member since {new Date().toLocaleDateString()}</span>
+                    <span className="text-muted-foreground">Member since {new Date(profile.joinDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                   </span>
                 </div>
               </div>
@@ -112,18 +112,18 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
           <div className="mt-8">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-foreground">Level {currentLevel.level} - {currentLevel.title}</span>
-              <span className="text-sm text-muted-foreground">{profile.xp} / {profile.xp + xpForNext} XP</span>
+              <span className="text-sm text-muted-foreground">{xpIntoLevel} / {xpForLevel} XP</span>
             </div>
             <div className="h-3 bg-secondary rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: `${progress * 100}%` }}
+                animate={{ width: `${Math.min(progress, 100)}%` }}
                 transition={{ duration: 1, ease: 'easeOut' }}
               />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              {xpForNext} XP to reach Level {currentLevel.level + 1}
+              {xpForLevel - xpIntoLevel} XP to reach {nextLevel.level !== currentLevel.level ? `Level ${nextLevel.level}` : 'Max Level'}
             </p>
           </div>
         </div>
