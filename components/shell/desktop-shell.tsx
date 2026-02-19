@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
+import { getLevelInfo } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
@@ -19,6 +20,7 @@ import {
   Crown,
   Trophy,
   Flame,
+  Zap,
 } from 'lucide-react'
 
 // Desktop pages
@@ -52,6 +54,24 @@ const SECONDARY_NAV: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
 ]
 
+function NavTooltip({ label, show }: { label: string; show: boolean }) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          className="sidebar-tooltip"
+          initial={{ opacity: 0, x: -4 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -4 }}
+          transition={{ duration: 0.15 }}
+        >
+          {label}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 export function DesktopShell() {
   const {
     isLoggedIn,
@@ -65,6 +85,8 @@ export function DesktopShell() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
   const [showSplash, setShowSplash] = useState(true)
   const [sidebarHovered, setSidebarHovered] = useState(false)
+  const [hoveredNavItem, setHoveredNavItem] = useState<string | null>(null)
+  const { currentLevel, progress } = getLevelInfo(profile.xp)
 
   useEffect(() => {
     checkAndUpdateStreak()
@@ -110,7 +132,11 @@ export function DesktopShell() {
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background relative">
+      {/* Ambient background effects */}
+      <div className="ambient-bg" />
+      <div className="noise-overlay" />
+
       {/* Global overlays */}
       <XPPopup />
       <LevelUpOverlay />
@@ -122,21 +148,26 @@ export function DesktopShell() {
 
       {/* Sidebar */}
       <motion.aside
-        className="fixed left-0 top-0 bottom-0 z-40 bg-card/95 backdrop-blur-xl border-r border-border/50 flex flex-col"
+        className="fixed left-0 top-0 bottom-0 z-40 flex flex-col"
         initial={{ width: 72 }}
-        animate={{ width: sidebarHovered ? 240 : 72 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        animate={{ width: sidebarHovered ? 260 : 72 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 35 }}
         onMouseEnter={() => setSidebarHovered(true)}
-        onMouseLeave={() => setSidebarHovered(false)}
+        onMouseLeave={() => { setSidebarHovered(false); setHoveredNavItem(null) }}
+        style={{
+          background: 'linear-gradient(180deg, hsl(222 22% 6%) 0%, hsl(222 22% 5%) 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.04)',
+        }}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center px-4 border-b border-border/50">
+        <div className="h-16 flex items-center px-4 border-b border-white/[0.04]">
           <motion.div
             className="flex items-center gap-3"
             initial={false}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg">
-              <Crown className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 relative overflow-hidden">
+              <Crown className="w-6 h-6 text-white relative z-10" />
+              <div className="absolute inset-0 bg-gradient-to-t from-amber-600/50 to-transparent" />
             </div>
             <AnimatePresence>
               {sidebarHovered && (
@@ -144,7 +175,8 @@ export function DesktopShell() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
-                  className="font-bold text-lg text-foreground whitespace-nowrap"
+                  transition={{ duration: 0.2 }}
+                  className="font-display font-bold text-lg text-foreground whitespace-nowrap"
                 >
                   ChessVault
                 </motion.span>
@@ -154,10 +186,12 @@ export function DesktopShell() {
         </div>
 
         {/* User Stats Summary */}
-        <div className="px-3 py-4 border-b border-border/50">
+        <div className="px-3 py-4 border-b border-white/[0.04]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20 relative">
               <span className="text-sm font-bold text-primary">{profile?.level || 1}</span>
+              {/* Subtle glow ring */}
+              <div className="absolute inset-0 rounded-full animate-glow-pulse" />
             </div>
             <AnimatePresence>
               {sidebarHovered && (
@@ -165,10 +199,11 @@ export function DesktopShell() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
                   className="flex-1 min-w-0"
                 >
                   <p className="text-sm font-medium text-foreground truncate">{profile?.username || 'Player'}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                     <span className="flex items-center gap-1">
                       <Flame className="w-3 h-3 text-orange-500" />
                       {profile?.streak || 0}
@@ -178,6 +213,18 @@ export function DesktopShell() {
                       {profile?.puzzleRating || 800}
                     </span>
                   </div>
+                  {/* Mini XP bar */}
+                  <div className="mt-2 h-1.5 rounded-full xp-bar-track overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full xp-bar-fill"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(progress, 100)}%` }}
+                      transition={{ duration: 0.8, ease: 'easeOut' }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Lv.{currentLevel.level} {currentLevel.title}
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -192,22 +239,24 @@ export function DesktopShell() {
               <motion.button
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative group ${
-                  isActive
+                onMouseEnter={() => !sidebarHovered && setHoveredNavItem(item.id)}
+                onMouseLeave={() => setHoveredNavItem(null)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative group ${isActive
                     ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                    : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
+                  }`}
+                whileHover={{ x: 2 }}
+                whileTap={{ scale: 0.97 }}
               >
                 {isActive && (
                   <motion.div
                     layoutId="desktop-nav-indicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-gradient-to-b from-primary to-emerald-400 rounded-r-full"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    style={{ boxShadow: '0 0 12px rgba(34, 197, 94, 0.4)' }}
                   />
                 )}
-                <span className={`flex-shrink-0 ${isActive ? 'text-primary' : ''}`}>
+                <span className={`flex-shrink-0 transition-transform duration-200 ${isActive ? 'text-primary' : 'group-hover:scale-110'}`}>
                   {item.icon}
                 </span>
                 <AnimatePresence>
@@ -216,32 +265,36 @@ export function DesktopShell() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.15 }}
                       className="flex-1 text-left min-w-0"
                     >
                       <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
+                {/* Tooltip when sidebar collapsed */}
+                {!sidebarHovered && <NavTooltip label={item.label} show={hoveredNavItem === item.id} />}
               </motion.button>
             )
           })}
         </nav>
 
         {/* Secondary Navigation */}
-        <div className="py-4 px-2 border-t border-border/50 space-y-1">
+        <div className="py-4 px-2 border-t border-white/[0.04] space-y-1">
           {SECONDARY_NAV.map((item) => {
             const isActive = currentPage === item.id
             return (
               <motion.button
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
-                  isActive
+                onMouseEnter={() => !sidebarHovered && setHoveredNavItem(item.id)}
+                onMouseLeave={() => setHoveredNavItem(null)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative ${isActive
                     ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                    : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
+                  }`}
+                whileHover={{ x: 2 }}
+                whileTap={{ scale: 0.97 }}
               >
                 {item.icon}
                 <AnimatePresence>
@@ -250,12 +303,14 @@ export function DesktopShell() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.15 }}
                       className="text-sm font-medium whitespace-nowrap"
                     >
                       {item.label}
                     </motion.span>
                   )}
                 </AnimatePresence>
+                {!sidebarHovered && <NavTooltip label={item.label} show={hoveredNavItem === item.id} />}
               </motion.button>
             )
           })}
@@ -263,9 +318,11 @@ export function DesktopShell() {
           {/* Logout button */}
           <motion.button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            onMouseEnter={() => !sidebarHovered && setHoveredNavItem('logout')}
+            onMouseLeave={() => setHoveredNavItem(null)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200 relative"
+            whileHover={{ x: 2 }}
+            whileTap={{ scale: 0.97 }}
           >
             <LogOut className="w-5 h-5" />
             <AnimatePresence>
@@ -274,28 +331,30 @@ export function DesktopShell() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.15 }}
                   className="text-sm font-medium whitespace-nowrap"
                 >
                   Logout
                 </motion.span>
               )}
             </AnimatePresence>
+            {!sidebarHovered && <NavTooltip label="Logout" show={hoveredNavItem === 'logout'} />}
           </motion.button>
         </div>
       </motion.aside>
 
       {/* Main Content */}
-      <main 
-        className="flex-1 transition-all duration-300"
-        style={{ marginLeft: sidebarHovered ? 240 : 72 }}
+      <main
+        className="flex-1 transition-all duration-300 relative z-10"
+        style={{ marginLeft: sidebarHovered ? 260 : 72 }}
       >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPage}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
             className="min-h-screen"
           >
             {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}

@@ -29,16 +29,39 @@ export function LoginPage() {
   }, [])
 
   const handleSubmit = async () => {
-    if (!username.trim()) return
+    const trimmedUsername = username.trim()
+    const trimmedPassword = password.trim()
+    
+    // Validate locally first
+    if (!trimmedUsername) {
+      setLocalError('Please enter a username')
+      return
+    }
+    
+    if (trimmedUsername.length < 2) {
+      setLocalError('Username must be at least 2 characters')
+      return
+    }
+    
+    if (isBackendEnabled && !trimmedPassword) {
+      setLocalError('Please enter a password')
+      return
+    }
+    
+    if (isBackendEnabled && trimmedPassword.length < 4) {
+      setLocalError('Password must be at least 4 characters')
+      return
+    }
+    
     setLocalError(null)
     setIsSubmitting(true)
     playSound('click')
 
     try {
-      if (isBackendEnabled && password) {
+      if (isBackendEnabled && trimmedPassword) {
         const result = mode === 'register' 
-          ? await register(username.trim(), password)
-          : await login(username.trim(), password)
+          ? await register(trimmedUsername, trimmedPassword)
+          : await login(trimmedUsername, trimmedPassword)
         
         if (!result.success) {
           setLocalError(result.error || 'Authentication failed')
@@ -47,7 +70,7 @@ export function LoginPage() {
           playSound('success')
         }
       } else {
-        await login(username.trim())
+        await login(trimmedUsername)
         playSound('success')
       }
     } catch {
