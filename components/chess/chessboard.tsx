@@ -215,83 +215,89 @@ function AnimatedPiece({
   )
 }
 
-// Hint arrow component
-function HintArrow({
+// Hint indicator component - subtle pulsing circles
+function HintIndicator({
   from,
   to,
   squareSize,
   flipped,
-  boardSize,
 }: {
   from: string
   to: string
   squareSize: number
   flipped: boolean
-  boardSize: number
 }) {
-  const getCenter = (square: string) => {
+  const getPos = (square: string) => {
     const { row, col } = squareToIndex(square)
     const displayCol = flipped ? 7 - col : col
     const displayRow = flipped ? 7 - row : row
     return {
-      x: displayCol * squareSize + squareSize / 2,
-      y: displayRow * squareSize + squareSize / 2,
+      x: displayCol * squareSize,
+      y: displayRow * squareSize,
     }
   }
 
-  const fromPos = getCenter(from)
-  const toPos = getCenter(to)
-  const dx = toPos.x - fromPos.x
-  const dy = toPos.y - fromPos.y
-  const length = Math.sqrt(dx * dx + dy * dy)
-  
-  const arrowColor = 'rgba(255, 170, 0, 0.8)'
-  const strokeWidth = squareSize * 0.12
-  const headSize = squareSize * 0.22
-  
-  // Shorten line to account for arrowhead
-  const shortenBy = headSize * 0.6
-  const endX = toPos.x - (dx / length) * shortenBy
-  const endY = toPos.y - (dy / length) * shortenBy
+  const fromPos = getPos(from)
+  const toPos = getPos(to)
 
   return (
-    <svg
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: boardSize,
-        height: boardSize,
-        pointerEvents: 'none',
-        zIndex: 40,
-      }}
-    >
-      <defs>
-        <marker
-          id="arrowhead"
-          markerWidth={headSize}
-          markerHeight={headSize}
-          refX={headSize * 0.5}
-          refY={headSize * 0.5}
-          orient="auto"
-        >
-          <polygon
-            points={`0 0, ${headSize} ${headSize * 0.5}, 0 ${headSize}`}
-            fill={arrowColor}
-          />
-        </marker>
-      </defs>
-      <line
-        x1={fromPos.x}
-        y1={fromPos.y}
-        x2={endX}
-        y2={endY}
-        stroke={arrowColor}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        markerEnd="url(#arrowhead)"
-        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
-      />
-    </svg>
+    <>
+      {/* Source square - pulsing ring */}
+      <div
+        style={{
+          position: 'absolute',
+          left: fromPos.x,
+          top: fromPos.y,
+          width: squareSize,
+          height: squareSize,
+          pointerEvents: 'none',
+          zIndex: 35,
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: squareSize * 0.1,
+            borderRadius: '50%',
+            border: `3px solid rgba(255, 170, 0, 0.9)`,
+            animation: 'hint-pulse 1.2s ease-in-out infinite',
+            boxShadow: '0 0 12px rgba(255, 170, 0, 0.5)',
+          }}
+        />
+      </div>
+      {/* Target square - filled dot */}
+      <div
+        style={{
+          position: 'absolute',
+          left: toPos.x,
+          top: toPos.y,
+          width: squareSize,
+          height: squareSize,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+          zIndex: 35,
+        }}
+      >
+        <div
+          style={{
+            width: squareSize * 0.35,
+            height: squareSize * 0.35,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 170, 0, 0.85)',
+            animation: 'hint-pulse 1.2s ease-in-out infinite',
+            boxShadow: '0 0 10px rgba(255, 170, 0, 0.6)',
+          }}
+        />
+      </div>
+      <style jsx>{`
+        @keyframes hint-pulse {
+          0%, 100% { opacity: 0.7; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.08); }
+        }
+      `}</style>
+    </>
   )
 }
 
@@ -550,14 +556,13 @@ export function Chessboard({
           />
         )}
 
-        {/* Hint arrow */}
+        {/* Hint indicator */}
         {(showHintArrow && hintArrow) || activeHint ? (
-          <HintArrow
+          <HintIndicator
             from={(activeHint || hintArrow)!.from}
             to={(activeHint || hintArrow)!.to}
             squareSize={squareSize}
             flipped={isFlipped}
-            boardSize={size}
           />
         ) : null}
       </div>
