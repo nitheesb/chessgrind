@@ -177,6 +177,23 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     }
   }, [])
 
+  // Helper to calculate hint for current move
+  const calculateHint = useCallback((currentGame: Chess, currentMoveIndex: number) => {
+    const expectedMove = puzzle.moves[currentMoveIndex]
+    if (!expectedMove) return null
+
+    try {
+      const legalMoves = currentGame.moves({ verbose: true })
+      const hintMove = legalMoves.find(m => m.san === expectedMove)
+      if (hintMove) {
+        return { from: hintMove.from, to: hintMove.to }
+      }
+    } catch {
+      // ignore
+    }
+    return null
+  }, [puzzle.moves])
+
   // Play opponent's move automatically
   const playOpponentMove = useCallback((currentGame: Chess, currentMoveIndex: number) => {
     const opponentMoveStr = puzzle.moves[currentMoveIndex]
@@ -195,16 +212,25 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         if (opMove) {
           setGame(opponentGame)
           setLastMove({ from: opMove.from, to: opMove.to })
-          setMoveIndex(currentMoveIndex + 1)
+          const nextIndex = currentMoveIndex + 1
+          setMoveIndex(nextIndex)
           
           // Check if this was the last move
-          if (currentMoveIndex + 1 >= puzzle.moves.length) {
+          if (nextIndex >= puzzle.moves.length) {
             setStatus('complete')
             if (timerRef.current) clearInterval(timerRef.current)
             addXP(puzzle.xpReward)
             incrementPuzzlesSolved()
           } else {
             setStatus('playing')
+            // If hint was showing, update it for the next move
+            if (showHint) {
+              const newHint = calculateHint(opponentGame, nextIndex)
+              setHintArrow(newHint)
+              if (newHint) {
+                setHighlightSquares([newHint.from, newHint.to])
+              }
+            }
           }
         } else {
           console.error('Failed to play opponent move:', opponentMoveStr)
@@ -216,7 +242,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       }
       processingRef.current = false
     }, 600)
-  }, [puzzle.moves, puzzle.xpReward, addXP, incrementPuzzlesSolved])
+  }, [puzzle.moves, puzzle.xpReward, addXP, incrementPuzzlesSolved, showHint, calculateHint])
 
   const handleMove = useCallback((from: string, to: string): boolean => {
     if (status !== 'playing' || processingRef.current) return false
@@ -242,6 +268,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         setGame(gameCopy)
         setLastMove({ from, to })
         setHintArrow(null)
+        setHighlightSquares([])
         
         const nextMoveIndex = moveIndex + 1
 
@@ -277,27 +304,13 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   }, [game, moveIndex, puzzle, status, addXP, incrementPuzzlesSolved, playOpponentMove])
 
   const handleHint = useCallback(() => {
-    const expectedMove = puzzle.moves[moveIndex]
-    if (!expectedMove) return
-
-    try {
-      const gameCopy = new Chess(game.fen())
-      const legalMoves = gameCopy.moves({ verbose: true })
-      const hintMove = legalMoves.find(m => m.san === expectedMove)
-
-      if (hintMove) {
-        setHintArrow({ from: hintMove.from, to: hintMove.to })
-        setHighlightSquares([hintMove.from, hintMove.to])
-        setShowHint(true)
-        setTimeout(() => {
-          setHighlightSquares([])
-          setShowHint(false)
-        }, 3000)
-      }
-    } catch {
-      // ignore
+    const hint = calculateHint(game, moveIndex)
+    if (hint) {
+      setHintArrow(hint)
+      setHighlightSquares([hint.from, hint.to])
+      setShowHint(true)
     }
-  }, [game, moveIndex, puzzle.moves])
+  }, [game, moveIndex, calculateHint])
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)

@@ -198,6 +198,23 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     }
   }, [])
 
+  // Helper to calculate hint for current move
+  const calculateHint = useCallback((currentGame: Chess, currentMoveIndex: number) => {
+    const expectedMove = puzzle.moves[currentMoveIndex]
+    if (!expectedMove) return null
+
+    try {
+      const gameCopy = new Chess(currentGame.fen())
+      const move = gameCopy.move(expectedMove)
+      if (move) {
+        return { from: move.from, to: move.to }
+      }
+    } catch {
+      // ignore
+    }
+    return null
+  }, [puzzle.moves])
+
   const playOpponentMove = useCallback((currentGame: Chess, currentMoveIndex: number) => {
     const opponentMoveStr = puzzle.moves[currentMoveIndex]
     if (!opponentMoveStr) {
@@ -216,10 +233,11 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
           setGame(opponentGame)
           setLastMove({ from: opMove.from, to: opMove.to })
           setMoveHistory(prev => [...prev, opMove.san])
-          setMoveIndex(currentMoveIndex + 1)
+          const nextIndex = currentMoveIndex + 1
+          setMoveIndex(nextIndex)
           playSound('move')
           
-          if (currentMoveIndex + 1 >= puzzle.moves.length) {
+          if (nextIndex >= puzzle.moves.length) {
             setStatus('complete')
             if (timerRef.current) clearInterval(timerRef.current)
             addXP(puzzle.xpReward)
@@ -229,6 +247,11 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
             triggerHaptic('success')
           } else {
             setStatus('playing')
+            // If hint was showing, update it for the next move
+            if (showHint) {
+              const newHint = calculateHint(opponentGame, nextIndex)
+              setHintArrow(newHint)
+            }
           }
         } else {
           setStatus('playing')
@@ -238,7 +261,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
       }
       processingRef.current = false
     }, 600)
-  }, [puzzle.moves, puzzle.xpReward, puzzle.rating, addXP, incrementPuzzlesSolved, updatePuzzleRating, timer, playSound, triggerHaptic])
+  }, [puzzle.moves, puzzle.xpReward, puzzle.rating, addXP, incrementPuzzlesSolved, updatePuzzleRating, timer, playSound, triggerHaptic, showHint, calculateHint])
 
   const handleMove = useCallback((from: string, to: string): boolean => {
     if (status !== 'playing' || processingRef.current) return false
@@ -307,6 +330,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     setStatus('playing')
     setLastMove(null)
     setHintArrow(null)
+    setShowHint(false)
     setMoveHistory([])
     setTimer(0)
     processingRef.current = false
@@ -316,18 +340,12 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
 
   const handleShowHint = useCallback(() => {
     playSound('click')
-    const expectedMove = puzzle.moves[moveIndex]
-    if (!expectedMove) return
-    
-    try {
-      const gameCopy = new Chess(game.fen())
-      const move = gameCopy.move(expectedMove)
-      if (move) {
-        setHintArrow({ from: move.from, to: move.to })
-        setShowHint(true)
-      }
-    } catch {}
-  }, [puzzle.moves, moveIndex, game, playSound])
+    const hint = calculateHint(game, moveIndex)
+    if (hint) {
+      setHintArrow(hint)
+      setShowHint(true)
+    }
+  }, [game, moveIndex, calculateHint, playSound])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
