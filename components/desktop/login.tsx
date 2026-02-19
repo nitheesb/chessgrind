@@ -1,52 +1,89 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
-import { Crown, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, Loader2 } from 'lucide-react'
+import { Crown, User, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
 
 export function DesktopLogin() {
-  const { login, register } = useGame()
+  const { login, register, isBackendEnabled } = useGame()
   const { playSound } = useSoundAndHaptics()
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    const trimmedUsername = username.trim()
+    const trimmedPassword = password.trim()
+    
+    // Client-side validation
+    if (!trimmedUsername) {
+      setError('Please enter a username')
+      return
+    }
+    
+    if (trimmedUsername.length < 2) {
+      setError('Username must be at least 2 characters')
+      return
+    }
+    
+    if (trimmedUsername.length > 20) {
+      setError('Username must be 20 characters or less')
+      return
+    }
+    
+    if (isBackendEnabled && !trimmedPassword) {
+      setError('Please enter a password')
+      return
+    }
+    
+    if (isBackendEnabled && trimmedPassword.length < 4) {
+      setError('Password must be at least 4 characters')
+      return
+    }
+    
     setError('')
     setIsLoading(true)
     playSound('click')
 
     try {
-      const success = isLogin 
-        ? await login(email, password)
-        : await register(email, password, username)
-      
-      if (success) {
-        playSound('success')
+      if (isBackendEnabled) {
+        const result = isLogin 
+          ? await login(trimmedUsername, trimmedPassword)
+          : await register(trimmedUsername, trimmedPassword)
+        
+        if (result.success) {
+          playSound('success')
+        } else {
+          setError(result.error || (isLogin ? 'Invalid credentials' : 'Registration failed'))
+          playSound('fail')
+        }
       } else {
-        setError(isLogin ? 'Invalid credentials' : 'Registration failed')
-        playSound('fail')
+        // Demo mode - just login with username
+        const result = await login(trimmedUsername)
+        if (result.success) {
+          playSound('success')
+        }
       }
     } catch {
-      setError('An error occurred')
+      setError('An error occurred. Please try again.')
       playSound('fail')
     } finally {
       setIsLoading(false)
     }
-  }, [isLogin, email, password, username, login, register, playSound])
+  }
 
-  const toggleMode = useCallback(() => {
+  const toggleMode = () => {
     playSound('click')
     setIsLogin(!isLogin)
     setError('')
-  }, [isLogin, playSound])
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -170,75 +207,62 @@ export function DesktopLogin() {
               onSubmit={handleSubmit}
               className="space-y-5"
             >
-              {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Username
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                    placeholder={isLogin ? "Enter your username" : "Choose a username (2-20 chars)"}
+                    maxLength={20}
+                    autoComplete="username"
+                  />
+                </div>
+              </div>
+
+              {isBackendEnabled && (
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    Username
+                    Password
                   </label>
                   <div className="relative">
-                    <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                      placeholder="Choose a username"
-                      required={!isLogin}
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-11 pr-12 py-3 rounded-xl bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                      placeholder={isLogin ? "Enter your password" : "Create a password (4+ chars)"}
+                      autoComplete={isLogin ? "current-password" : "new-password"}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
                   </div>
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                    placeholder="Enter your email"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-11 pr-12 py-3 rounded-xl bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                    placeholder="Enter your password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="p-3 rounded-xl bg-destructive/10 border border-destructive/20"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              {error && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-destructive"
-                >
-                  {error}
-                </motion.p>
-              )}
+                    <p className="text-sm text-destructive font-medium">{error}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <motion.button
                 type="submit"
@@ -251,7 +275,9 @@ export function DesktopLogin() {
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    {isLogin ? 'Sign In' : 'Create Account'}
+                    {isBackendEnabled 
+                      ? (isLogin ? 'Sign In' : 'Create Account')
+                      : 'Get Started'}
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
@@ -259,29 +285,32 @@ export function DesktopLogin() {
             </motion.form>
           </AnimatePresence>
 
-          <div className="mt-8 text-center">
-            <p className="text-muted-foreground">
-              {isLogin ? "Don't have an account?" : 'Already have an account?'}
-              <button
-                onClick={toggleMode}
-                className="ml-2 text-primary font-medium hover:underline"
-              >
-                {isLogin ? 'Sign up' : 'Sign in'}
-              </button>
-            </p>
-          </div>
+          {isBackendEnabled && (
+            <div className="mt-8 text-center">
+              <p className="text-muted-foreground">
+                {isLogin ? "Don't have an account?" : 'Already have an account?'}
+                <button
+                  onClick={toggleMode}
+                  className="ml-2 text-primary font-medium hover:underline"
+                >
+                  {isLogin ? 'Sign up' : 'Sign in'}
+                </button>
+              </p>
+            </div>
+          )}
 
-          {/* Demo login */}
-          <motion.div
-            className="mt-6 p-4 rounded-xl bg-secondary/50 border border-border/50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <p className="text-sm text-muted-foreground text-center">
-              <span className="font-medium text-foreground">Demo:</span> Use any email and password to explore
-            </p>
-          </motion.div>
+          {!isBackendEnabled && (
+            <motion.div
+              className="mt-6 p-4 rounded-xl bg-secondary/50 border border-border/50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <p className="text-sm text-muted-foreground text-center">
+                <span className="font-medium text-foreground">Demo Mode:</span> Your progress will be saved locally
+              </p>
+            </motion.div>
+          )}
         </div>
       </motion.div>
     </div>
