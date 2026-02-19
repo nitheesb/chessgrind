@@ -113,14 +113,14 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             </div>
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Next level in</p>
-              <p className="text-lg font-semibold text-foreground">{Math.round((1 - progress) * 100)}%</p>
+              <p className="text-lg font-semibold text-foreground">{Math.round(100 - progress)}%</p>
             </div>
           </div>
           <div className="h-3 bg-secondary rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full"
               initial={{ width: 0 }}
-              animate={{ width: `${progress * 100}%` }}
+              animate={{ width: `${Math.min(progress, 100)}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
             />
           </div>
@@ -239,11 +239,10 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 </div>
               </div>
               <div className="flex items-center justify-between mb-3">
-                <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                  dailyPuzzle?.difficulty === 'easy' ? 'bg-emerald-500/10 text-emerald-500' :
-                  dailyPuzzle?.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-500' :
-                  'bg-red-500/10 text-red-500'
-                }`}>
+                <span className={`px-2 py-1 rounded-lg text-xs font-medium ${dailyPuzzle?.difficulty === 'easy' ? 'bg-emerald-500/10 text-emerald-500' :
+                    dailyPuzzle?.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-500' :
+                      'bg-red-500/10 text-red-500'
+                  }`}>
                   {dailyPuzzle?.difficulty}
                 </span>
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -272,13 +271,11 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               {profile.achievements.slice(0, 4).map((achievement) => (
                 <div
                   key={achievement.id}
-                  className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
-                    achievement.earned ? 'bg-primary/5' : 'opacity-50'
-                  }`}
+                  className={`flex items-center gap-3 p-2 rounded-lg transition-all ${achievement.earned ? 'bg-primary/5' : 'opacity-50'
+                    }`}
                 >
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
-                    achievement.earned ? 'bg-primary/10' : 'bg-secondary'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${achievement.earned ? 'bg-primary/10' : 'bg-secondary'
+                    }`}>
                     {achievement.icon}
                   </div>
                   <div className="flex-1 min-w-0">

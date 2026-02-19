@@ -8,7 +8,7 @@ export interface AppSettings {
   showCoordinates: boolean
   autoQueen: boolean
   showHints: boolean
-  theme: 'dark' | 'light'
+  theme: 'dark' | 'light' | 'system'
   pieceStyle: 'standard' | 'neo' | 'classic'
   boardStyle: 'green' | 'brown' | 'blue' | 'purple'
 }
@@ -47,7 +47,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored)
         setSettings({ ...DEFAULT_SETTINGS, ...parsed })
       }
-    } catch {}
+    } catch { }
     setLoaded(true)
   }, [])
 
@@ -56,7 +56,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     if (!loaded || typeof window === 'undefined') return
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
-    } catch {}
+    } catch { }
   }, [settings, loaded])
 
   const updateSetting = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
