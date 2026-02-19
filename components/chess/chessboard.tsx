@@ -245,12 +245,12 @@ function HintArrow({
   const dy = toPos.y - fromPos.y
   const length = Math.sqrt(dx * dx + dy * dy)
   
-  const arrowColor = 'rgba(255, 170, 0, 0.85)'
-  const strokeWidth = squareSize * 0.22
-  const headSize = squareSize * 0.4
+  const arrowColor = 'rgba(255, 170, 0, 0.8)'
+  const strokeWidth = squareSize * 0.12
+  const headSize = squareSize * 0.22
   
   // Shorten line to account for arrowhead
-  const shortenBy = headSize * 0.5
+  const shortenBy = headSize * 0.6
   const endX = toPos.x - (dx / length) * shortenBy
   const endY = toPos.y - (dy / length) * shortenBy
 
@@ -289,7 +289,7 @@ function HintArrow({
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         markerEnd="url(#arrowhead)"
-        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
       />
     </svg>
   )
