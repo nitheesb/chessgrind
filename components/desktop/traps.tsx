@@ -6,6 +6,7 @@ import { Chess } from 'chess.js'
 import { Chessboard, MiniChessboard } from '@/components/chess/chessboard'
 import { TRAPS } from '@/lib/chess-data'
 import type { Trap } from '@/lib/chess-data'
+import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import {
   Target,
@@ -34,6 +35,7 @@ interface DesktopTrapsProps {
 }
 
 export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
+  const { settings } = useSettings()
   const { playSound } = useSoundAndHaptics()
   const [activeTrap, setActiveTrap] = useState<Trap | null>(null)
 
@@ -97,7 +99,7 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
           >
             <div className="flex gap-4">
               <div className="rounded-xl overflow-hidden shadow-md flex-shrink-0" style={{ width: 80, height: 80 }}>
-                <MiniChessboard fen={trap.fen} size={80} />
+                <MiniChessboard fen={trap.fen} size={80} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-base font-semibold text-foreground mb-1 truncate">{trap.name}</h3>
@@ -128,6 +130,7 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
 }
 
 function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
+  const { settings } = useSettings()
   const { playSound } = useSoundAndHaptics()
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1)
 
@@ -296,6 +299,8 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
                 orientation="white"
                 interactive={false}
                 size={560}
+                boardStyle={settings.boardStyle}
+                pieceStyle={settings.pieceStyle}
               />
             </div>
 

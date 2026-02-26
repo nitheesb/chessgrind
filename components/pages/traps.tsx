@@ -7,6 +7,7 @@ import { Chessboard, MiniChessboard } from '@/components/chess/chessboard'
 import { TRAPS, getDifficultyBg } from '@/lib/chess-data'
 import type { Trap } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
+import { useSettings } from '@/lib/settings-context'
 import {
   ArrowLeft,
   Target,
@@ -37,6 +38,7 @@ interface TrapsPageProps {
 }
 
 export function TrapsPage({ onBack }: TrapsPageProps) {
+  const { settings } = useSettings()
   const [activeTrap, setActiveTrap] = useState<Trap | null>(null)
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all')
 
@@ -129,7 +131,7 @@ export function TrapsPage({ onBack }: TrapsPageProps) {
             className="w-full glass-card-hover p-4 flex items-center gap-3 text-left"
           >
             <div className="relative overflow-hidden rounded-lg flex-shrink-0" style={{ width: 64, height: 64 }}>
-              <MiniChessboard fen={trap.fen} size={64} />
+              <MiniChessboard fen={trap.fen} size={64} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
@@ -159,6 +161,7 @@ export function TrapsPage({ onBack }: TrapsPageProps) {
 
 function TrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
   const { addXP, incrementTrapsLearned } = useGame()
+  const { settings } = useSettings()
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0)
   const [isCompleted, setIsCompleted] = useState(false)
   const [isAutoPlaying, setIsAutoPlaying] = useState(false)
@@ -263,6 +266,8 @@ function TrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
           size={boardSize}
           showCoordinates
           flipped={trap.side === 'black'}
+          boardStyle={settings.boardStyle}
+          pieceStyle={settings.pieceStyle}
         />
       </div>
 
