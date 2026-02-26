@@ -7,6 +7,7 @@ import { Chessboard } from '@/components/chess/chessboard'
 import { PUZZLES, getDifficultyBg } from '@/lib/chess-data'
 import type { Puzzle } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
+import { useSettings } from '@/lib/settings-context'
 import {
   ArrowLeft,
   Puzzle as PuzzleIcon,
@@ -157,6 +158,7 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
 
 function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
   const { addXP, incrementPuzzlesSolved } = useGame()
+  const { settings } = useSettings()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
   const [status, setStatus] = useState<'playing' | 'correct' | 'wrong' | 'complete' | 'opponent-moving'>('playing')
@@ -390,6 +392,8 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
           showCoordinates
           hintArrow={hintArrow}
           showHintArrow={!!hintArrow}
+          boardStyle={settings.boardStyle}
+          pieceStyle={settings.pieceStyle}
         />
       </div>
 

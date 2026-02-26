@@ -4,6 +4,15 @@ import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from '
 import { ChessPiece, parseFEN } from './chess-pieces'
 import { getGlobalSoundHaptics } from '@/lib/use-sound-haptics'
 
+export type BoardStyle = 'green' | 'brown' | 'blue' | 'purple'
+
+export const BOARD_THEMES: Record<BoardStyle, { light: string; dark: string; selectedLight: string; selectedDark: string }> = {
+  green: { light: '#ebecd0', dark: '#739552', selectedLight: '#f7f769', selectedDark: '#bbcb2b' },
+  brown: { light: '#f0d9b5', dark: '#b58863', selectedLight: '#f7ec59', selectedDark: '#daa520' },
+  blue:  { light: '#dee3e6', dark: '#8ca2ad', selectedLight: '#c3d9e6', selectedDark: '#6f9bb3' },
+  purple:{ light: '#e8dff0', dark: '#9068b0', selectedLight: '#d8c4f0', selectedDark: '#a87cd4' },
+}
+
 interface ChessboardProps {
   fen: string
   onMove?: (from: string, to: string) => boolean
@@ -19,15 +28,9 @@ interface ChessboardProps {
   showHintArrow?: boolean
   onPieceSelect?: () => void
   onPieceMove?: (captured: boolean) => void
+  boardStyle?: BoardStyle
+  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal'
 }
-
-// Chess.com inspired colors
-const LIGHT = '#ebecd0'
-const DARK = '#739552'
-const SELECTED_LIGHT = '#f7f769'
-const SELECTED_DARK = '#bbcb2b'
-const LAST_MOVE_LIGHT = '#f7f769'
-const LAST_MOVE_DARK = '#bbcb2b'
 
 const squareToIndex = (square: string) => ({
   row: 8 - parseInt(square[1]),
@@ -50,6 +53,8 @@ const Square = memo(function Square({
   onClick,
   onTouchStart,
   interactive,
+  theme,
+  pieceStyle,
 }: {
   row: number
   col: number
@@ -62,11 +67,13 @@ const Square = memo(function Square({
   onClick: () => void
   onTouchStart: (e: React.TouchEvent) => void
   interactive: boolean
+  theme: typeof BOARD_THEMES[BoardStyle]
+  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal'
 }) {
   // Determine background color
-  let bg = isLight ? LIGHT : DARK
+  let bg = isLight ? theme.light : theme.dark
   if (isSelected || isLastMove) {
-    bg = isLight ? SELECTED_LIGHT : SELECTED_DARK
+    bg = isLight ? theme.selectedLight : theme.selectedDark
   }
 
   return (
@@ -125,7 +132,7 @@ const Square = memo(function Square({
           justifyContent: 'center',
           pointerEvents: 'none',
         }}>
-          <ChessPiece piece={piece} size={squareSize * 0.85} />
+          <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
         </div>
       )}
     </div>
@@ -140,6 +147,7 @@ function AnimatedPiece({
   squareSize,
   flipped,
   onComplete,
+  pieceStyle,
 }: {
   piece: string
   from: string
@@ -147,6 +155,7 @@ function AnimatedPiece({
   squareSize: number
   flipped: boolean
   onComplete: () => void
+  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal'
 }) {
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const rafRef = useRef<number>()
@@ -210,7 +219,7 @@ function AnimatedPiece({
         pointerEvents: 'none',
       }}
     >
-      <ChessPiece piece={piece} size={squareSize * 0.85} />
+      <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
     </div>
   )
 }
@@ -314,9 +323,12 @@ export function Chessboard({
   hintArrow,
   showHint,
   showHintArrow = false,
+  boardStyle = 'green',
+  pieceStyle = 'standard',
 }: ChessboardProps) {
   // Support both flipped and orientation props
   const isFlipped = orientation ? orientation === 'black' : flipped
+  const theme = BOARD_THEMES[boardStyle]
   
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [dragPiece, setDragPiece] = useState<{ piece: string; from: string; x: number; y: number } | null>(null)
@@ -500,6 +512,8 @@ export function Chessboard({
               onClick={() => handleSquareClick(displayRow, displayCol)}
               onTouchStart={(e) => handleTouchStart(e, displayRow, displayCol)}
               interactive={interactive}
+              theme={theme}
+              pieceStyle={pieceStyle}
             />
           )
         })}
@@ -517,7 +531,7 @@ export function Chessboard({
                   style={{
                     left: 2,
                     top: i * squareSize + 2,
-                    color: isLight ? DARK : LIGHT,
+                    color: isLight ? theme.dark : theme.light,
                   }}
                 >
                   {isFlipped ? i + 1 : 8 - i}
@@ -534,7 +548,7 @@ export function Chessboard({
                   style={{
                     right: (7 - i) * squareSize + 2,
                     bottom: 1,
-                    color: isLight ? DARK : LIGHT,
+                    color: isLight ? theme.dark : theme.light,
                   }}
                 >
                   {String.fromCharCode(97 + col)}
@@ -553,6 +567,7 @@ export function Chessboard({
             squareSize={squareSize}
             flipped={isFlipped}
             onComplete={() => setAnimating(null)}
+            pieceStyle={pieceStyle}
           />
         )}
 
@@ -580,7 +595,7 @@ export function Chessboard({
             filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.4))',
           }}
         >
-          <ChessPiece piece={dragPiece.piece} size={squareSize * 0.85} />
+          <ChessPiece piece={dragPiece.piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
         </div>
       )}
     </div>
@@ -588,9 +603,10 @@ export function Chessboard({
 }
 
 // Mini chessboard for previews
-export function MiniChessboard({ fen, size = 120 }: { fen: string; size?: number }) {
+export function MiniChessboard({ fen, size = 120, boardStyle = 'green', pieceStyle = 'standard' }: { fen: string; size?: number; boardStyle?: BoardStyle; pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' }) {
   const board = useMemo(() => parseFEN(fen), [fen])
   const squareSize = size / 8
+  const miniTheme = BOARD_THEMES[boardStyle]
 
   return (
     <div
@@ -616,7 +632,7 @@ export function MiniChessboard({ fen, size = 120 }: { fen: string; size?: number
               top: row * squareSize,
               width: squareSize,
               height: squareSize,
-              backgroundColor: isLight ? LIGHT : DARK,
+              backgroundColor: isLight ? miniTheme.light : miniTheme.dark,
             }}
           >
             {piece && (
@@ -627,7 +643,7 @@ export function MiniChessboard({ fen, size = 120 }: { fen: string; size?: number
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
-                <ChessPiece piece={piece} size={squareSize * 0.85} />
+                <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
               </div>
             )}
           </div>

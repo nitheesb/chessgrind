@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard } from '@/components/chess/chessboard'
 import { useGame } from '@/lib/game-context'
+import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import {
   Swords,
@@ -33,6 +34,7 @@ const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; descr
 
 export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const { addXP } = useGame()
+  const { settings } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [gameStarted, setGameStarted] = useState(false)
   const [difficulty, setDifficulty] = useState<Difficulty>('intermediate')
@@ -415,6 +417,8 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 interactive={gameStatus === 'playing' && !thinking}
                 size={560}
                 highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
+                boardStyle={settings.boardStyle}
+                pieceStyle={settings.pieceStyle}
               />
             </div>
 

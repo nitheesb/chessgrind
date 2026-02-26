@@ -129,6 +129,41 @@ function BoardStylePreview({ style, selected, onSelect }: {
   )
 }
 
+// Piece style preview
+function PieceStylePreview({ style, label, selected, onSelect }: { 
+  style: 'standard' | 'neo' | 'classic' | 'minimal'
+  label: string
+  selected: boolean
+  onSelect: () => void 
+}) {
+  return (
+    <button
+      onClick={onSelect}
+      className={`relative flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all ${
+        selected ? 'border-primary bg-primary/10' : 'border-transparent bg-secondary/50'
+      }`}
+    >
+      <div className="w-10 h-10 flex items-center justify-center">
+        <svg viewBox="0 0 45 45" width={32} height={32}>
+          {style === 'standard' && (
+            <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#fff" stroke="#000" strokeWidth="1.5"/>
+          )}
+          {style === 'neo' && (
+            <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#f8f8f8" stroke="#555" strokeWidth="1.5"/>
+          )}
+          {style === 'classic' && (
+            <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#f5e6c8" stroke="#4a3728" strokeWidth="2"/>
+          )}
+          {style === 'minimal' && (
+            <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#fff" stroke="#999" strokeWidth="1"/>
+          )}
+        </svg>
+      </div>
+      <span className={`text-[10px] font-medium ${selected ? 'text-primary' : 'text-muted-foreground'}`}>{label}</span>
+    </button>
+  )
+}
+
 export function SettingsPage({ onBack }: SettingsPageProps) {
   const { settings, updateSetting, resetSettings } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
@@ -243,6 +278,34 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                 playSound('click')
                 triggerHaptic('selection')
                 updateSetting('boardStyle', style)
+              }}
+            />
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Piece Style */}
+      <motion.div variants={item} className="glass-card p-4">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+          Piece Style
+        </h2>
+        
+        <div className="grid grid-cols-4 gap-2 py-3">
+          {([
+            { id: 'standard', label: 'Standard' },
+            { id: 'neo', label: 'Neo' },
+            { id: 'classic', label: 'Classic' },
+            { id: 'minimal', label: 'Minimal' },
+          ] as const).map((ps) => (
+            <PieceStylePreview
+              key={ps.id}
+              style={ps.id}
+              label={ps.label}
+              selected={settings.pieceStyle === ps.id}
+              onSelect={() => {
+                playSound('click')
+                triggerHaptic('selection')
+                updateSetting('pieceStyle', ps.id)
               }}
             />
           ))}

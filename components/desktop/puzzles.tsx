@@ -7,6 +7,7 @@ import { Chessboard } from '@/components/chess/chessboard'
 import { PUZZLES, getDifficultyBg } from '@/lib/chess-data'
 import type { Puzzle } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
+import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import {
   Puzzle as PuzzleIcon,
@@ -177,6 +178,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
 
 function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
   const { addXP, incrementPuzzlesSolved, updatePuzzleRating } = useGame()
+  const { settings } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
@@ -519,6 +521,8 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                 size={560}
                 highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
                 showHint={hintArrow}
+                boardStyle={settings.boardStyle}
+                pieceStyle={settings.pieceStyle}
               />
             </div>
 
