@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard, MiniChessboard } from '@/components/chess/chessboard'
@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Eye,
   BookOpen,
+  FlipVertical,
 } from 'lucide-react'
 
 const container = {
@@ -166,6 +167,8 @@ function TrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
   const [isCompleted, setIsCompleted] = useState(false)
   const [isAutoPlaying, setIsAutoPlaying] = useState(false)
   const [showExplanation, setShowExplanation] = useState(false)
+  const [boardFlipOverride, setBoardFlipOverride] = useState(false)
+  const [showCoords, setShowCoords] = useState(true)
 
   const positions = useMemo(() => {
     const game = new Chess()
@@ -230,6 +233,26 @@ function TrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
     }, 1200)
   }, [isAutoPlaying, positions.length, addXP, incrementTrapsLearned, trap.xpReward])
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        handleNext()
+      } else if (e.key === 'ArrowLeft') {
+        handlePrev()
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault()
+        handleAutoPlay()
+      } else if (e.key === 'r' || e.key === 'R') {
+        handleReset()
+      } else if (e.key === 'Escape') {
+        onBack()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleNext, handlePrev, handleAutoPlay, handleReset, onBack])
+
   const boardSize = typeof window !== 'undefined' ? Math.min(360, window.innerWidth - 48) : 360
 
   return (
@@ -264,11 +287,30 @@ function TrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
         <Chessboard
           fen={currentFen}
           size={boardSize}
-          showCoordinates
-          flipped={trap.side === 'black'}
+          showCoordinates={showCoords}
+          flipped={trap.side === 'black' !== boardFlipOverride}
           boardStyle={settings.boardStyle}
           pieceStyle={settings.pieceStyle}
         />
+      </div>
+
+      {/* Board controls */}
+      <div className="flex items-center justify-center gap-2">
+        <button
+          onClick={() => setBoardFlipOverride(!boardFlipOverride)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-xs transition-colors"
+        >
+          <FlipVertical className="w-3.5 h-3.5" />
+          Flip
+        </button>
+        <button
+          onClick={() => setShowCoords(!showCoords)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${
+            showCoords ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
+          }`}
+        >
+          Coords
+        </button>
       </div>
 
       {/* Move controls */}
@@ -304,6 +346,13 @@ function TrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
         >
           <SkipForward className="w-4 h-4 text-foreground" />
         </button>
+      </div>
+
+      {/* Keyboard shortcuts */}
+      <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground/50">
+        <span><kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">←→</kbd> Navigate</span>
+        <span><kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">Space</kbd> Play</span>
+        <span><kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">R</kbd> Reset</span>
       </div>
 
       {/* Move progress bar */}
@@ -343,6 +392,20 @@ function TrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
             </button>
           ))}
         </div>
+        {/* Move annotation */}
+        {trap.moveAnnotations && currentMoveIndex > 0 && trap.moveAnnotations[currentMoveIndex - 1] && (
+          <div className="mt-3 pt-3 border-t border-border/30">
+            <div className="flex items-start gap-2">
+              <BookOpen className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-foreground/80 leading-relaxed">
+                <span className="font-mono font-semibold text-primary mr-1">
+                  {trap.moves[currentMoveIndex - 1]}
+                </span>
+                — {trap.moveAnnotations[currentMoveIndex - 1]}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Completion */}

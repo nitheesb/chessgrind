@@ -20,6 +20,7 @@ import {
   Timer,
   Star,
   Trophy,
+  FlipVertical,
 } from 'lucide-react'
 
 const container = {
@@ -39,11 +40,20 @@ interface PuzzlesPageProps {
 export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
   const [activePuzzle, setActivePuzzle] = useState<Puzzle | null>(null)
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all')
+  const [filterTheme, setFilterTheme] = useState<string>('all')
 
   const filteredPuzzles = useMemo(() => {
-    if (filterDifficulty === 'all') return PUZZLES
-    return PUZZLES.filter(p => p.difficulty === filterDifficulty)
-  }, [filterDifficulty])
+    let result = PUZZLES
+    if (filterDifficulty !== 'all') result = result.filter(p => p.difficulty === filterDifficulty)
+    if (filterTheme !== 'all') result = result.filter(p => p.themes.some(t => t.toLowerCase().includes(filterTheme.toLowerCase())))
+    return result
+  }, [filterDifficulty, filterTheme])
+
+  const uniqueThemes = useMemo(() => {
+    const themes = new Set<string>()
+    PUZZLES.forEach(p => p.themes.forEach(t => themes.add(t)))
+    return Array.from(themes).sort()
+  }, [])
 
   if (activePuzzle) {
     return (
@@ -120,6 +130,33 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
         ))}
       </motion.div>
 
+      {/* Theme filter */}
+      <motion.div variants={item} className="flex gap-2 overflow-x-auto pb-1">
+        <button
+          onClick={() => setFilterTheme('all')}
+          className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all border ${
+            filterTheme === 'all'
+              ? 'bg-accent/10 text-accent border-accent/30'
+              : 'bg-secondary/50 text-muted-foreground border-transparent'
+          }`}
+        >
+          All Themes
+        </button>
+        {uniqueThemes.map((theme) => (
+          <button
+            key={theme}
+            onClick={() => setFilterTheme(filterTheme === theme ? 'all' : theme)}
+            className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all border capitalize ${
+              filterTheme === theme
+                ? 'bg-accent/10 text-accent border-accent/30'
+                : 'bg-secondary/50 text-muted-foreground border-transparent'
+            }`}
+          >
+            {theme}
+          </button>
+        ))}
+      </motion.div>
+
       {/* Puzzle List */}
       <motion.div variants={item} className="flex flex-col gap-3">
         {filteredPuzzles.map((puzzle, idx) => (
@@ -157,7 +194,7 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
 }
 
 function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
-  const { addXP, incrementPuzzlesSolved } = useGame()
+  const { addXP, incrementPuzzlesSolved, trackPuzzleFailure } = useGame()
   const { settings } = useSettings()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
@@ -170,6 +207,8 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   const [hintActive, setHintActive] = useState(false)
   const processingRef = useRef(false)
   const hintActiveRef = useRef(false)
+  const [boardFlipped, setBoardFlipped] = useState(false)
+  const [showCoords, setShowCoords] = useState(true)
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -296,6 +335,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         return true
       } else {
         setStatus('wrong')
+        trackPuzzleFailure(puzzle.themes)
         processingRef.current = false
         setTimeout(() => setStatus('playing'), 1500)
         return false
@@ -304,7 +344,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       processingRef.current = false
       return false
     }
-  }, [game, moveIndex, puzzle, status, addXP, incrementPuzzlesSolved, playOpponentMove])
+  }, [game, moveIndex, puzzle, status, addXP, incrementPuzzlesSolved, playOpponentMove, trackPuzzleFailure])
 
   const handleHint = useCallback(() => {
     const hint = calculateHint(game, moveIndex)
@@ -321,6 +361,25 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     const s = seconds % 60
     return `${m}:${s.toString().padStart(2, '0')}`
   }
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'h' || e.key === 'H') {
+        if (status === 'playing' && !hintActive) {
+          handleHint()
+        }
+      } else if (e.key === 'n' || e.key === 'N') {
+        if (status === 'complete') {
+          onNext()
+        }
+      } else if (e.key === 'Escape') {
+        onBack()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [status, hintActive, handleHint, onNext, onBack])
 
   const isWhiteToMove = game.turn() === 'w'
   const canInteract = status === 'playing'
@@ -389,12 +448,32 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
           onMove={handleMove}
           highlightSquares={highlightSquares}
           lastMove={lastMove || undefined}
-          showCoordinates
+          showCoordinates={showCoords}
           hintArrow={hintArrow}
           showHintArrow={!!hintArrow}
           boardStyle={settings.boardStyle}
           pieceStyle={settings.pieceStyle}
+          flipped={boardFlipped}
         />
+      </div>
+
+      {/* Board controls */}
+      <div className="flex items-center justify-center gap-2">
+        <button
+          onClick={() => setBoardFlipped(!boardFlipped)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-xs transition-colors"
+        >
+          <FlipVertical className="w-3.5 h-3.5" />
+          Flip
+        </button>
+        <button
+          onClick={() => setShowCoords(!showCoords)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${
+            showCoords ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
+          }`}
+        >
+          Coords
+        </button>
       </div>
 
       {/* Status feedback */}
@@ -489,6 +568,13 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Keyboard shortcuts hint */}
+      <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground/50">
+        <span><kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">H</kbd> Hint</span>
+        <span><kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">N</kbd> Next</span>
+        <span><kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">Esc</kbd> Back</span>
+      </div>
 
       {/* Move progress indicator */}
       <div className="flex items-center justify-center gap-1">

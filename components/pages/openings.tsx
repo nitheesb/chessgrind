@@ -19,6 +19,7 @@ import {
   Lightbulb,
   Eye,
   EyeOff,
+  FlipVertical,
 } from 'lucide-react'
 
 interface OpeningsPageProps {
@@ -124,6 +125,8 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
   const [showHint, setShowHint] = useState(true)
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
   const [incorrectMove, setIncorrectMove] = useState(false)
+  const [boardFlipped, setBoardFlipped] = useState(false)
+  const [showCoords, setShowCoords] = useState(true)
 
   // Determine whose turn it is in the opening
   const isUserTurn = moveIndex % 2 === 0 // User plays white's moves
@@ -208,14 +211,27 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
     return false
   }, [isUserTurn, moveIndex, opening.moves.length, expectedMove, game, playSound, triggerHaptic])
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     playSound('click')
     setGame(new Chess())
     setMoveIndex(0)
     setLastMove(null)
     setIsCompleted(false)
     setIncorrectMove(false)
-  }
+  }, [playSound])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'r' || e.key === 'R') {
+        handleReset()
+      } else if (e.key === 'Escape') {
+        onBack()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleReset, onBack])
 
   const progress = (moveIndex / opening.moves.length) * 100
 
@@ -248,12 +264,32 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
             interactive={isUserTurn && !isCompleted}
             onMove={handleMove}
             lastMove={lastMove || undefined}
-            showCoordinates
+            showCoordinates={showCoords}
             showHint={showHint && isUserTurn && expectedMove ? expectedMove : undefined}
             boardStyle={settings.boardStyle}
             pieceStyle={settings.pieceStyle}
+            flipped={boardFlipped}
           />
         </div>
+      </div>
+
+      {/* Board controls */}
+      <div className="flex items-center justify-center gap-2">
+        <button
+          onClick={() => setBoardFlipped(!boardFlipped)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-xs transition-colors"
+        >
+          <FlipVertical className="w-3.5 h-3.5" />
+          Flip
+        </button>
+        <button
+          onClick={() => setShowCoords(!showCoords)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${
+            showCoords ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
+          }`}
+        >
+          Coords
+        </button>
       </div>
 
       {/* Status */}
@@ -341,6 +377,19 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
             )
           })}
         </div>
+        {opening.moveAnnotations && moveIndex > 0 && opening.moveAnnotations[moveIndex - 1] && (
+          <div className="mt-3 pt-3 border-t border-border/30">
+            <div className="flex items-start gap-2">
+              <Lightbulb className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-foreground/80 leading-relaxed">
+                <span className="font-mono font-semibold text-primary mr-1">
+                  {opening.moves[moveIndex - 1]}
+                </span>
+                — {opening.moveAnnotations[moveIndex - 1]}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Key Ideas */}

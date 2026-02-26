@@ -170,6 +170,105 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
         </div>
       </motion.div>
 
+      {/* Activity Overview */}
+      <motion.div variants={item}>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Activity Overview
+        </h2>
+        <div className="glass-card p-4 flex flex-col gap-4">
+          {/* Accuracy */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-muted-foreground">Puzzle Accuracy</span>
+              <span className="text-xs font-bold text-foreground">
+                {profile.puzzlesAttempted > 0 ? Math.round((profile.puzzlesCorrect / profile.puzzlesAttempted) * 100) : 0}%
+              </span>
+            </div>
+            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-green-500 rounded-full transition-all duration-500"
+                style={{ width: `${profile.puzzlesAttempted > 0 ? (profile.puzzlesCorrect / profile.puzzlesAttempted) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+          
+          {/* Content Progress */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-muted-foreground">Openings Mastered</span>
+              <span className="text-xs font-bold text-foreground">{profile.openingsLearned}/15</span>
+            </div>
+            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, (profile.openingsLearned / 15) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-muted-foreground">Traps Learned</span>
+              <span className="text-xs font-bold text-foreground">{profile.trapsLearned}/10</span>
+            </div>
+            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-red-500 rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, (profile.trapsLearned / 10) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Rating display */}
+          <div className="pt-2 border-t border-border/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Puzzle Rating</p>
+                <p className="text-lg font-bold text-foreground">{profile.puzzleRating}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Games Rating</p>
+                <p className="text-lg font-bold text-foreground">{profile.rating}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Weakness Analysis */}
+      {Object.keys(profile.failedPuzzleThemes).length > 0 && (
+        <motion.div variants={item}>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Areas to Improve
+          </h2>
+          <div className="glass-card p-4 flex flex-col gap-3">
+            {Object.entries(profile.failedPuzzleThemes)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 5)
+              .map(([theme, count]) => {
+                const maxCount = Math.max(...Object.values(profile.failedPuzzleThemes))
+                return (
+                  <div key={theme}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-foreground capitalize">{theme}</span>
+                      <span className="text-[10px] text-muted-foreground">{count} missed</span>
+                    </div>
+                    <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-orange-500 rounded-full transition-all duration-500"
+                        style={{ width: `${(count / maxCount) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Based on incorrect puzzle attempts. Practice these themes to improve!
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Achievements */}
       <motion.div variants={item}>
         <div className="flex items-center justify-between mb-3">

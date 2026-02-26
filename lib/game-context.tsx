@@ -22,6 +22,7 @@ interface GameContextType {
   earnAchievement: (id: string) => void
   updateAchievementProgress: (id: string, progress: number) => void
   updatePuzzleRating: (puzzleRating: number, solved: boolean, timeSeconds: number) => void
+  trackPuzzleFailure: (themes: string[]) => void
   checkAndUpdateStreak: () => void
   xpAnimation: { show: boolean; amount: number }
   levelUpAnimation: { show: boolean; level: number; title: string }
@@ -72,6 +73,7 @@ function mapApiUserToProfile(apiUser: UserProfileResponse): UserProfile {
     puzzleRating: apiUser.puzzleRating || 800,
     puzzlesAttempted: apiUser.puzzlesAttempted || 0,
     puzzlesCorrect: apiUser.puzzlesCorrect || 0,
+    failedPuzzleThemes: apiUser.failedPuzzleThemes || {},
   }
 }
 
@@ -398,6 +400,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setPendingSync(true)
   }, [])
 
+  const trackPuzzleFailure = useCallback((themes: string[]) => {
+    setProfile(prev => {
+      const updated = { ...prev.failedPuzzleThemes }
+      themes.forEach(t => {
+        updated[t] = (updated[t] || 0) + 1
+      })
+      return { ...prev, failedPuzzleThemes: updated }
+    })
+  }, [])
+
   const dismissXPAnimation = useCallback(() => setXPAnimation({ show: false, amount: 0 }), [])
   const dismissLevelUp = useCallback(() => setLevelUpAnimation({ show: false, level: 0, title: '' }), [])
   const dismissAchievement = useCallback(() => setAchievementAnimation({ show: false, achievement: null }), [])
@@ -422,6 +434,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         earnAchievement,
         updateAchievementProgress,
         updatePuzzleRating,
+        trackPuzzleFailure,
         checkAndUpdateStreak,
         xpAnimation,
         levelUpAnimation,
