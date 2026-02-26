@@ -7,6 +7,7 @@ import { Chessboard, MiniChessboard } from '@/components/chess/chessboard'
 import { OPENINGS, getDifficultyBg } from '@/lib/chess-data'
 import type { Opening } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
+import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import {
   ArrowLeft,
@@ -26,6 +27,7 @@ interface OpeningsPageProps {
 
 export function OpeningsPage({ onBack }: OpeningsPageProps) {
   const { playSound } = useSoundAndHaptics()
+  const { settings } = useSettings()
   const [selectedOpening, setSelectedOpening] = useState<Opening | null>(null)
   const [filter, setFilter] = useState<'all' | 'e4' | 'd4' | 'other'>('all')
 
@@ -90,7 +92,7 @@ export function OpeningsPage({ onBack }: OpeningsPageProps) {
             className="w-full bg-secondary rounded-xl p-3 flex items-center gap-3 text-left active:bg-secondary/70"
           >
             <div className="overflow-hidden rounded-lg flex-shrink-0" style={{ width: 56, height: 56 }}>
-              <MiniChessboard fen={opening.fen} size={56} />
+              <MiniChessboard fen={opening.fen} size={56} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
@@ -114,6 +116,7 @@ export function OpeningsPage({ onBack }: OpeningsPageProps) {
 
 function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => void }) {
   const { addXP, incrementOpeningsLearned } = useGame()
+  const { settings } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [game, setGame] = useState(() => new Chess())
   const [moveIndex, setMoveIndex] = useState(0)
@@ -247,6 +250,8 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
             lastMove={lastMove || undefined}
             showCoordinates
             showHint={showHint && isUserTurn && expectedMove ? expectedMove : undefined}
+            boardStyle={settings.boardStyle}
+            pieceStyle={settings.pieceStyle}
           />
         </div>
       </div>

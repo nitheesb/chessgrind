@@ -6,6 +6,7 @@ import { Chess } from 'chess.js'
 import { Chessboard } from '@/components/chess/chessboard'
 import { AI_LEVELS } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
+import { useSettings } from '@/lib/settings-context'
 import {
   ArrowLeft,
   Swords,
@@ -241,6 +242,7 @@ function GameSession({
   onBack: () => void
 }) {
   const { addXP, incrementGamesPlayed } = useGame()
+  const { settings } = useSettings()
   const [game, setGame] = useState(() => new Chess())
   const [gameOver, setGameOver] = useState(false)
   const [result, setResult] = useState<string>('')
@@ -539,6 +541,8 @@ function GameSession({
           onMove={handlePlayerMove}
           lastMove={lastMove || undefined}
           showCoordinates
+          boardStyle={settings.boardStyle}
+          pieceStyle={settings.pieceStyle}
         />
       </div>
 

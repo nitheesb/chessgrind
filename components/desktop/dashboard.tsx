@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
+import { useSettings } from '@/lib/settings-context'
 import { getLevelInfo, getDailyPuzzleIndex } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { MiniChessboard } from '@/components/chess/chessboard'
@@ -44,6 +45,7 @@ interface DesktopDashboardProps {
 
 export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
   const { profile } = useGame()
+  const { settings } = useSettings()
   const { playSound } = useSoundAndHaptics()
   const { currentLevel, nextLevel, progress, xpIntoLevel, xpForLevel } = getLevelInfo(profile.xp)
   const dailyPuzzleIndex = getDailyPuzzleIndex(PUZZLES.length)
@@ -233,7 +235,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               whileTap={{ scale: 0.99 }}
             >
               <div className="rounded-xl overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow ring-1 ring-white/5" style={{ width: 120, height: 120 }}>
-                <MiniChessboard fen={OPENINGS[0].fen} size={120} />
+                <MiniChessboard fen={OPENINGS[0].fen} size={120} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
@@ -276,7 +278,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               )}
               <div className="flex justify-center mb-4">
                 <div className="rounded-xl overflow-hidden shadow-lg ring-1 ring-white/5 group-hover:shadow-xl transition-shadow" style={{ width: 160, height: 160 }}>
-                  <MiniChessboard fen={dailyPuzzle?.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'} size={160} />
+                  <MiniChessboard fen={dailyPuzzle?.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'} size={160} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
                 </div>
               </div>
               <div className="flex items-center justify-between mb-3">

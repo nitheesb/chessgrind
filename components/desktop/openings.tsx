@@ -6,6 +6,7 @@ import { Chess } from 'chess.js'
 import { Chessboard, MiniChessboard } from '@/components/chess/chessboard'
 import { OPENINGS } from '@/lib/chess-data'
 import type { Opening } from '@/lib/chess-data'
+import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import {
   BookOpen,
@@ -34,6 +35,7 @@ interface DesktopOpeningsProps {
 }
 
 export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
+  const { settings } = useSettings()
   const { playSound } = useSoundAndHaptics()
   const [activeOpening, setActiveOpening] = useState<Opening | null>(null)
   const [filterCategory, setFilterCategory] = useState<'all' | 'e4' | 'd4' | 'other'>('all')
@@ -118,7 +120,7 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
                 >
                   <div className="flex gap-4">
                     <div className="rounded-xl overflow-hidden shadow-md flex-shrink-0" style={{ width: 80, height: 80 }}>
-                      <MiniChessboard fen={opening.fen} size={80} />
+                      <MiniChessboard fen={opening.fen} size={80} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -152,6 +154,7 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
 }
 
 function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: () => void }) {
+  const { settings } = useSettings()
   const { playSound } = useSoundAndHaptics()
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -319,6 +322,8 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
                 orientation={orientation}
                 interactive={false}
                 size={560}
+                boardStyle={settings.boardStyle}
+                pieceStyle={settings.pieceStyle}
               />
             </div>
 

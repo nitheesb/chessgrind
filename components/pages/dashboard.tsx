@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
+import { useSettings } from '@/lib/settings-context'
 import { getLevelInfo, getDailyPuzzleIndex } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { XPBar, StatCard } from '@/components/ui/xp-animations'
@@ -40,6 +41,7 @@ interface DashboardProps {
 
 export function Dashboard({ onNavigate }: DashboardProps) {
   const { profile } = useGame()
+  const { settings } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const { currentLevel, progress } = getLevelInfo(profile.xp)
 
@@ -180,7 +182,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           className="w-full bg-secondary rounded-xl p-3 flex items-center gap-3 text-left"
         >
           <div className="relative overflow-hidden rounded-lg flex-shrink-0" style={{ width: 64, height: 64 }}>
-            <MiniChessboard fen={dailyPuzzle.fen} size={64} />
+            <MiniChessboard fen={dailyPuzzle.fen} size={64} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
             {profile.dailyChallengeCompleted && (
               <div className="absolute inset-0 bg-green-500/30 backdrop-blur-[1px] flex items-center justify-center">
                 <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
@@ -223,7 +225,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           className="w-full bg-secondary rounded-xl p-3 flex items-center gap-3 text-left"
         >
           <div className="overflow-hidden rounded-lg flex-shrink-0" style={{ width: 64, height: 64 }}>
-            <MiniChessboard fen={OPENINGS[0].fen} size={64} />
+            <MiniChessboard fen={OPENINGS[0].fen} size={64} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">{OPENINGS[0].name}</p>
