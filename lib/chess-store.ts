@@ -21,6 +21,7 @@ export interface UserProfile {
   puzzleRating: number
   puzzlesAttempted: number
   puzzlesCorrect: number
+  failedPuzzleThemes: Record<string, number>
 }
 
 export interface Achievement {
@@ -103,6 +104,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   puzzleRating: 800,
   puzzlesAttempted: 0,
   puzzlesCorrect: 0,
+  failedPuzzleThemes: {},
 }
 
 // Calculate new puzzle rating using ELO formula

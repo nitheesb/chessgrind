@@ -166,6 +166,42 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         ))}
       </motion.div>
 
+      {/* Streak Widget */}
+      <motion.div variants={item} className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+              <Flame className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{profile.streak}</p>
+              <p className="text-xs text-muted-foreground">Day Streak</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-semibold text-foreground">{profile.bestStreak}</p>
+            <p className="text-[10px] text-muted-foreground">Best Streak</p>
+          </div>
+        </div>
+        {/* Streak dots for last 7 days */}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-amber-500/10">
+          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => {
+            const isActive = idx < profile.streak % 7 || (profile.streak >= 7 && true)
+            return (
+              <div key={idx} className="flex flex-col items-center gap-1">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  isActive
+                    ? 'bg-amber-500 text-white'
+                    : 'bg-secondary text-muted-foreground'
+                }`}>
+                  {isActive ? '✓' : day}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </motion.div>
+
       {/* Daily Challenge */}
       <motion.div variants={item}>
         <div className="flex items-center justify-between mb-2">
