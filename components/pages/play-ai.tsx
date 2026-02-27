@@ -7,7 +7,7 @@ import { Chessboard } from '@/components/chess/chessboard'
 import { AI_LEVELS } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
-import { Tilt3DCard, staggerContainer, staggerItem } from '@/components/ui/animated-components'
+import { staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
   Swords,
@@ -168,53 +168,52 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
         </h2>
         <div className="flex flex-col gap-2.5">
           {AI_LEVELS.map((level) => (
-            <Tilt3DCard key={level.level} className="w-full" intensity={6}>
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setSelectedLevel(level.level)
-                  setGameStarted(true)
+            <motion.button
+              key={level.level}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setSelectedLevel(level.level)
+                setGameStarted(true)
+              }}
+              className={`w-full p-4 rounded-xl border flex items-center gap-3 text-left transition-all glow-card ${
+                selectedLevel === level.level
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-card/50 hover:border-border/80'
+              }`}
+            >
+              {/* Level indicator */}
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border"
+                style={{
+                  backgroundColor: `${level.color}10`,
+                  borderColor: `${level.color}30`,
                 }}
-                className={`w-full p-4 rounded-xl border flex items-center gap-3 text-left transition-all glow-card ${
-                  selectedLevel === level.level
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border bg-card/50 hover:border-border/80'
-                }`}
               >
-                {/* Level indicator */}
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border"
-                  style={{
-                    backgroundColor: `${level.color}10`,
-                    borderColor: `${level.color}30`,
-                  }}
-                >
-                  <Cpu className="w-5 h-5" style={{ color: level.color }} />
-                </div>
+                <Cpu className="w-5 h-5" style={{ color: level.color }} />
+              </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-semibold text-foreground">{level.name}</span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary text-muted-foreground">
-                      {level.rating}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">{level.description}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-sm font-semibold text-foreground">{level.name}</span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary text-muted-foreground">
+                    {level.rating}
+                  </span>
                 </div>
+                <p className="text-[11px] text-muted-foreground">{level.description}</p>
+              </div>
 
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {Array.from({ length: Math.min(level.level, 5) }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-1.5 h-4 rounded-full"
-                      style={{ backgroundColor: level.color, opacity: 0.3 + (i * 0.15) }}
-                    />
-                  ))}
-                </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {Array.from({ length: Math.min(level.level, 5) }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-1.5 h-4 rounded-full"
+                    style={{ backgroundColor: level.color, opacity: 0.3 + (i * 0.15) }}
+                  />
+                ))}
+              </div>
 
-                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              </motion.button>
-            </Tilt3DCard>
+              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            </motion.button>
           ))}
         </div>
       </motion.div>

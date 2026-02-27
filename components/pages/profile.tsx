@@ -10,7 +10,6 @@ import {
   AnimatedCounter,
   ProgressRing,
   ScrollReveal,
-  ParticleField,
   staggerContainer,
   staggerItem,
 } from '@/components/ui/animated-components'
@@ -94,8 +93,7 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
 
       {/* Profile Card */}
       <ScrollReveal>
-        <motion.div variants={staggerItem} className="relative overflow-hidden glass-card p-6 flex flex-col items-center gap-4 glow-primary breathing-glow aurora-bg">
-          <ParticleField count={12} className="absolute inset-0 pointer-events-none" />
+        <motion.div variants={staggerItem} className="relative overflow-hidden glass-card p-6 flex flex-col items-center gap-4 glow-primary breathing-glow">
           <div className="relative z-10 flex flex-col items-center gap-4 w-full">
             <div className="relative">
               <div className="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
