@@ -334,33 +334,31 @@ export const staggerContainer = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.06,
+      staggerChildren: 0.04,
     },
   },
 }
 
 export const staggerItem = {
-  hidden: { opacity: 0, y: 16, filter: 'blur(4px)' },
+  hidden: { opacity: 0, y: 10 },
   show: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.45,
-      ease: [0.16, 1, 0.3, 1],
+      duration: 0.3,
+      ease: [0.25, 0.1, 0.25, 1],
     },
   },
 }
 
 export const fadeInScale = {
-  hidden: { opacity: 0, scale: 0.95, filter: 'blur(4px)' },
+  hidden: { opacity: 0, scale: 0.97 },
   show: {
     opacity: 1,
     scale: 1,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.5,
-      ease: [0.16, 1, 0.3, 1],
+      duration: 0.3,
+      ease: [0.25, 0.1, 0.25, 1],
     },
   },
 }

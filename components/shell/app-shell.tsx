@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { LoginPage } from '@/components/pages/login'
@@ -104,23 +104,15 @@ export function AppShell() {
 
       {/* Main content area */}
       <main className="flex-1 overflow-y-auto px-4 pt-3 pb-20 relative z-10">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={currentPage}
-            initial={{ opacity: 0, filter: 'blur(6px)', scale: 0.985 }}
-            animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
-            exit={{ opacity: 0, filter: 'blur(4px)' }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
-            {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}
-            {currentPage === 'openings' && <OpeningsPage onBack={handleBack} />}
-            {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
-            {currentPage === 'traps' && <TrapsPage onBack={handleBack} />}
-            {currentPage === 'profile' && <ProfilePage onBack={handleBack} onNavigate={handleNavigate} />}
-            {currentPage === 'settings' && <SettingsPage onBack={handleBack} />}
-          </motion.div>
-        </AnimatePresence>
+        <div key={currentPage} className="page-fade-in">
+          {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
+          {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}
+          {currentPage === 'openings' && <OpeningsPage onBack={handleBack} />}
+          {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
+          {currentPage === 'traps' && <TrapsPage onBack={handleBack} />}
+          {currentPage === 'profile' && <ProfilePage onBack={handleBack} onNavigate={handleNavigate} />}
+          {currentPage === 'settings' && <SettingsPage onBack={handleBack} />}
+        </div>
       </main>
 
       {/* Bottom Navigation Bar — Apple Tab Bar */}

@@ -28,29 +28,12 @@ import {
   Sparkles,
 } from 'lucide-react'
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 },
-  },
-}
 
-const item = {
-  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
-  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-}
 
 interface DesktopDashboardProps {
   onNavigate: (page: string) => void
 }
 
-// Mouse spotlight effect for cards
-function handleSpotlight(e: React.MouseEvent<HTMLElement>) {
-  const rect = e.currentTarget.getBoundingClientRect()
-  e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`)
-  e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
-}
 
 export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
   const { profile } = useGame()
@@ -80,15 +63,12 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
   ]
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
+    <div
       className="p-8 max-w-7xl mx-auto"
     >
       {/* Hero Header */}
-      <motion.div variants={item} className="mb-10">
-        <div className="glass-card card-spotlight p-10 relative overflow-hidden accent-line-top" onMouseMove={handleSpotlight}>
+      <div className="mb-10">
+        <div className="glass-card p-10 relative overflow-hidden accent-line-top" >
           {/* Background decoration orbs */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/[0.06] to-transparent rounded-full translate-x-1/3 -translate-y-1/3" />
           <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-gradient-to-tr from-blue-500/[0.04] to-transparent rounded-full -translate-x-1/4 translate-y-1/4" />
@@ -122,11 +102,8 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 Continue your chess mastery journey
               </motion.p>
             </div>
-            <motion.div
+            <div
               className="flex items-center gap-6"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="text-right">
                 <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Level</p>
@@ -137,13 +114,13 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 <Crown className="w-10 h-10 text-white relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* XP Progress */}
-      <motion.div variants={item} className="mb-10">
+      <div className="mb-10">
         <div className="glass-card p-7 relative overflow-hidden">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
@@ -165,14 +142,12 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             </div>
           </div>
           <div className="h-3 rounded-full xp-bar-track overflow-hidden">
-            <motion.div
-              className="h-full rounded-full xp-bar-fill relative"
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(progress, 100)}%` }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            <div
+              className="h-full rounded-full xp-bar-fill relative transition-all duration-700 ease-out"
+              style={{ width: `${Math.min(progress, 100)}%` }}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-            </motion.div>
+            </div>
           </div>
           <div className="flex items-center justify-between mt-2.5">
             <p className="text-xs text-muted-foreground">{xpIntoLevel} / {xpForLevel} XP</p>
@@ -181,18 +156,14 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Stats Grid */}
-      <motion.div variants={item} className="grid grid-cols-4 gap-5 mb-10">
+      <div className="grid grid-cols-4 gap-5 mb-10">
         {stats.map((stat, index) => (
-          <motion.div
+          <div
             key={stat.label}
-            className={`glass-card card-spotlight p-6 group cursor-default ${stat.hoverCard}`}
-            onMouseMove={handleSpotlight}
-            initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ delay: 0.05 * index, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className={`glass-card p-6 group cursor-default ${stat.hoverCard}`}
           >
             <div className="flex items-center gap-3 mb-4 relative z-10">
               <div className={`w-11 h-11 rounded-xl ${stat.bgClass} flex items-center justify-center ${stat.colorClass} transition-transform duration-300 group-hover:scale-110`}>
@@ -203,13 +174,13 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               <AnimatedCounter value={typeof stat.value === 'number' ? stat.value : 0} duration={1.2} />
             </p>
             <p className="text-sm text-muted-foreground relative z-10">{stat.label}</p>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
 
       <div className="grid grid-cols-3 gap-7">
         {/* Left Column - Quick Actions */}
-        <motion.div variants={item} className="col-span-2 space-y-7">
+        <div className="col-span-2 space-y-7">
           {/* Quick Actions */}
           <div>
             <h2 className="text-xl font-display font-semibold text-foreground mb-5">Quick Start</h2>
@@ -218,11 +189,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 <motion.button
                   key={action.id}
                   onClick={() => handleNavigate(action.id)}
-                  className="glass-card-hover card-spotlight p-7 text-left group relative overflow-hidden"
-                  onMouseMove={handleSpotlight}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  className="glass-card-hover p-7 text-left group relative overflow-hidden"
                 >
                   {/* Hover gradient overlay */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-500`} />
@@ -253,8 +220,8 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             </div>
             <motion.button
               onClick={() => handleNavigate('openings')}
-              className="w-full glass-card-hover card-spotlight p-6 flex items-center gap-6 text-left group"
-              onMouseMove={handleSpotlight}
+              className="w-full glass-card-hover p-6 flex items-center gap-6 text-left group"
+              
             >
               <div className="rounded-2xl overflow-hidden ring-1 ring-white/5 relative z-10" style={{ width: 120, height: 120 }}>
                 <MiniChessboard fen={OPENINGS[0].fen} size={120} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
@@ -274,10 +241,10 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all relative z-10" />
             </motion.button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Right Column */}
-        <motion.div variants={item} className="space-y-7">
+        <div className="space-y-7">
           {/* Daily Challenge */}
           <div>
             <div className="flex items-center justify-between mb-5">
@@ -289,8 +256,8 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             </div>
             <motion.button
               onClick={() => handleNavigate('puzzles')}
-              className="w-full glass-card-hover card-spotlight p-6 text-left relative overflow-hidden group"
-              onMouseMove={handleSpotlight}
+              className="w-full glass-card-hover p-6 text-left relative overflow-hidden group"
+              
             >
               {profile.dailyChallengeCompleted && (
                 <div className="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium flex items-center gap-1 border border-emerald-500/20 z-10">
@@ -355,8 +322,8 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               ))}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
