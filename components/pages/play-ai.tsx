@@ -7,6 +7,7 @@ import { Chessboard } from '@/components/chess/chessboard'
 import { AI_LEVELS } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
+import { Tilt3DCard, staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
   Swords,
@@ -23,16 +24,6 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react'
-
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0 },
-}
 
 interface PlayAIProps {
   onBack: () => void
@@ -73,13 +64,13 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
 
   return (
     <motion.div
-      variants={container}
+      variants={staggerContainer}
       initial="hidden"
       animate="show"
       className="flex flex-col gap-4 pb-8"
     >
       {/* Header */}
-      <motion.div variants={item} className="flex items-center gap-3">
+      <motion.div variants={staggerItem} className="flex items-center gap-3">
         <button
           onClick={onBack}
           className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"
@@ -87,19 +78,19 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div>
-          <h1 className="text-xl font-display font-bold text-foreground">Play vs AI</h1>
-          <p className="text-xs text-muted-foreground">Choose your opponent</p>
+          <h1 className="text-xl font-display font-bold text-foreground shimmer-text">Play vs AI</h1>
+          <p className="text-xs text-muted-foreground shimmer-text">Choose your opponent</p>
         </div>
       </motion.div>
 
       {/* Color Selection */}
-      <motion.div variants={item} className="glass-card p-4">
+      <motion.div variants={staggerItem} className="glass-card p-4">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Play as</p>
         <div className="grid grid-cols-3 gap-2">
           <button
             onClick={() => setPlayerColor('w')}
-            className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl border transition-all ${
-              playerColor === 'w' ? 'border-primary bg-primary/10' : 'border-border bg-secondary'
+            className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl border transition-all glow-card ${
+              playerColor === 'w' ? 'border-primary bg-primary/10 gradient-border-card' : 'border-border bg-secondary'
             }`}
           >
             <div className="w-8 h-8 rounded-full bg-foreground/90 border-2 border-foreground/20" />
@@ -107,8 +98,8 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
           </button>
           <button
             onClick={() => setPlayerColor('b')}
-            className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl border transition-all ${
-              playerColor === 'b' ? 'border-primary bg-primary/10' : 'border-border bg-secondary'
+            className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl border transition-all glow-card ${
+              playerColor === 'b' ? 'border-primary bg-primary/10 gradient-border-card' : 'border-border bg-secondary'
             }`}
           >
             <div className="w-8 h-8 rounded-full bg-muted-foreground/30 border-2 border-muted-foreground/10" />
@@ -116,7 +107,7 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
           </button>
           <button
             onClick={() => setPlayerColor(Math.random() > 0.5 ? 'w' : 'b')}
-            className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl border border-border bg-secondary"
+            className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl border border-border bg-secondary glow-card"
           >
             <div className="w-8 h-8 rounded-full overflow-hidden flex">
               <div className="w-4 h-8 bg-foreground/90" />
@@ -128,7 +119,7 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
       </motion.div>
 
       {/* Advanced Options */}
-      <motion.div variants={item}>
+      <motion.div variants={staggerItem}>
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="flex items-center justify-between w-full glass-card p-4"
@@ -171,58 +162,59 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
       </motion.div>
 
       {/* AI Level Selection */}
-      <motion.div variants={item}>
+      <motion.div variants={staggerItem}>
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Select Difficulty
         </h2>
         <div className="flex flex-col gap-2.5">
           {AI_LEVELS.map((level) => (
-            <motion.button
-              key={level.level}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                setSelectedLevel(level.level)
-                setGameStarted(true)
-              }}
-              className={`w-full p-4 rounded-xl border flex items-center gap-3 text-left transition-all ${
-                selectedLevel === level.level
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border bg-card/50 hover:border-border/80'
-              }`}
-            >
-              {/* Level indicator */}
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border"
-                style={{
-                  backgroundColor: `${level.color}10`,
-                  borderColor: `${level.color}30`,
+            <Tilt3DCard key={level.level} className="w-full" intensity={6}>
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setSelectedLevel(level.level)
+                  setGameStarted(true)
                 }}
+                className={`w-full p-4 rounded-xl border flex items-center gap-3 text-left transition-all glow-card ${
+                  selectedLevel === level.level
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border bg-card/50 hover:border-border/80'
+                }`}
               >
-                <Cpu className="w-5 h-5" style={{ color: level.color }} />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-sm font-semibold text-foreground">{level.name}</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary text-muted-foreground">
-                    {level.rating}
-                  </span>
+                {/* Level indicator */}
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border"
+                  style={{
+                    backgroundColor: `${level.color}10`,
+                    borderColor: `${level.color}30`,
+                  }}
+                >
+                  <Cpu className="w-5 h-5" style={{ color: level.color }} />
                 </div>
-                <p className="text-[11px] text-muted-foreground">{level.description}</p>
-              </div>
 
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {Array.from({ length: Math.min(level.level, 5) }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-4 rounded-full"
-                    style={{ backgroundColor: level.color, opacity: 0.3 + (i * 0.15) }}
-                  />
-                ))}
-              </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-sm font-semibold text-foreground">{level.name}</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary text-muted-foreground">
+                      {level.rating}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{level.description}</p>
+                </div>
 
-              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            </motion.button>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {Array.from({ length: Math.min(level.level, 5) }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-1.5 h-4 rounded-full"
+                      style={{ backgroundColor: level.color, opacity: 0.3 + (i * 0.15) }}
+                    />
+                  ))}
+                </div>
+
+                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              </motion.button>
+            </Tilt3DCard>
           ))}
         </div>
       </motion.div>

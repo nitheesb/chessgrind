@@ -8,6 +8,7 @@ import { PUZZLES, getDifficultyBg } from '@/lib/chess-data'
 import type { Puzzle } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
+import { AnimatedCounter, staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
   Puzzle as PuzzleIcon,
@@ -22,16 +23,6 @@ import {
   Trophy,
   FlipVertical,
 } from 'lucide-react'
-
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0 },
-}
 
 interface PuzzlesPageProps {
   onBack: () => void
@@ -75,13 +66,13 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
 
   return (
     <motion.div
-      variants={container}
+      variants={staggerContainer}
       initial="hidden"
       animate="show"
       className="flex flex-col gap-4 pb-8"
     >
       {/* Header */}
-      <motion.div variants={item} className="flex items-center gap-3">
+      <motion.div variants={staggerItem} className="flex items-center gap-3">
         <button
           onClick={onBack}
           className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"
@@ -89,35 +80,36 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div>
-          <h1 className="text-xl font-display font-bold text-foreground">Puzzle Rush</h1>
+          <h1 className="text-xl font-display font-bold text-foreground shimmer-text">Puzzle Rush</h1>
           <p className="text-xs text-muted-foreground">{PUZZLES.length} puzzles to solve</p>
         </div>
       </motion.div>
 
       {/* Puzzle stats */}
-      <motion.div variants={item} className="grid grid-cols-3 gap-3">
+      <motion.div variants={staggerItem} className="grid grid-cols-3 gap-3">
         <div className="glass-card p-3 text-center">
           <PuzzleIcon className="w-4 h-4 text-primary mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground">{PUZZLES.length}</p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={PUZZLES.length} /></p>
           <p className="text-[10px] text-muted-foreground">Total</p>
         </div>
         <div className="glass-card p-3 text-center">
           <Star className="w-4 h-4 text-accent mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground">0</p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={0} /></p>
           <p className="text-[10px] text-muted-foreground">Solved</p>
         </div>
         <div className="glass-card p-3 text-center">
           <Trophy className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground">0%</p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={0} suffix="%" /></p>
           <p className="text-[10px] text-muted-foreground">Accuracy</p>
         </div>
       </motion.div>
 
       {/* Filter */}
-      <motion.div variants={item} className="flex gap-2 overflow-x-auto pb-1">
+      <motion.div variants={staggerItem} className="flex gap-2 overflow-x-auto pb-1">
         {['all', 'easy', 'medium', 'hard', 'expert'].map((diff) => (
-          <button
+          <motion.button
             key={diff}
+            whileTap={{ scale: 0.92 }}
             onClick={() => setFilterDifficulty(diff)}
             className={`px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
               filterDifficulty === diff
@@ -126,12 +118,12 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
             }`}
           >
             {diff === 'all' ? 'All' : diff.charAt(0).toUpperCase() + diff.slice(1)}
-          </button>
+          </motion.button>
         ))}
       </motion.div>
 
       {/* Theme filter */}
-      <motion.div variants={item} className="flex gap-2 overflow-x-auto pb-1">
+      <motion.div variants={staggerItem} className="flex gap-2 overflow-x-auto pb-1">
         <button
           onClick={() => setFilterTheme('all')}
           className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all border ${
@@ -158,13 +150,13 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
       </motion.div>
 
       {/* Puzzle List */}
-      <motion.div variants={item} className="flex flex-col gap-3">
+      <motion.div variants={staggerItem} className="flex flex-col gap-3">
         {filteredPuzzles.map((puzzle, idx) => (
           <motion.button
             key={puzzle.id}
             whileTap={{ scale: 0.98 }}
             onClick={() => setActivePuzzle(puzzle)}
-            className="w-full glass-card-hover p-4 flex items-center gap-3 text-left"
+            className="w-full glass-card-hover glow-card p-4 flex items-center gap-3 text-left"
           >
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
               #{idx + 1}
@@ -441,20 +433,22 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
 
       {/* Board */}
       <div className="flex justify-center">
-        <Chessboard
-          fen={game.fen()}
-          size={Math.min(360, typeof window !== 'undefined' ? window.innerWidth - 48 : 360)}
-          interactive={canInteract}
-          onMove={handleMove}
-          highlightSquares={highlightSquares}
-          lastMove={lastMove || undefined}
-          showCoordinates={showCoords}
-          hintArrow={hintArrow}
-          showHintArrow={!!hintArrow}
-          boardStyle={settings.boardStyle}
-          pieceStyle={settings.pieceStyle}
-          flipped={boardFlipped}
-        />
+        <div className={`gradient-border-card ${canInteract ? 'breathing-glow' : ''}`}>
+          <Chessboard
+            fen={game.fen()}
+            size={Math.min(360, typeof window !== 'undefined' ? window.innerWidth - 48 : 360)}
+            interactive={canInteract}
+            onMove={handleMove}
+            highlightSquares={highlightSquares}
+            lastMove={lastMove || undefined}
+            showCoordinates={showCoords}
+            hintArrow={hintArrow}
+            showHintArrow={!!hintArrow}
+            boardStyle={settings.boardStyle}
+            pieceStyle={settings.pieceStyle}
+            flipped={boardFlipped}
+          />
+        </div>
       </div>
 
       {/* Board controls */}

@@ -21,19 +21,15 @@ import {
   Calendar,
   Settings,
 } from 'lucide-react'
-
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 },
-  },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0 },
-}
+import {
+  AnimatedCounter,
+  Tilt3DCard,
+  ProgressRing,
+  ParticleField,
+  TextReveal,
+  staggerContainer,
+  staggerItem,
+} from '@/components/ui/animated-components'
 
 interface DashboardProps {
   onNavigate: (page: string) => void
@@ -87,19 +83,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <motion.div
-      variants={container}
+      variants={staggerContainer}
       initial="hidden"
       animate="show"
       className="flex flex-col gap-4 pb-6"
     >
       {/* Header */}
-      <motion.div variants={item} className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <motion.div variants={staggerItem} className="relative flex items-center justify-between overflow-hidden rounded-2xl p-3 -mx-3">
+        <ParticleField count={12} className="absolute inset-0 pointer-events-none opacity-40" />
+        <div className="relative flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
             <span className="text-xl font-bold text-white">{profile.username.charAt(0).toUpperCase()}</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground">{profile.username}</h1>
+            <h1 className="text-lg font-bold text-foreground shimmer-text">
+              <TextReveal text={profile.username} />
+            </h1>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Level {currentLevel.level}</span>
               <span className="text-xs text-muted-foreground">•</span>
@@ -109,39 +108,39 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </div>
         <button
           onClick={() => handleNavigate('settings')}
-          className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          className="relative w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
         >
           <Settings className="w-5 h-5" />
         </button>
       </motion.div>
 
       {/* Stats Row */}
-      <motion.div variants={item} className="grid grid-cols-3 gap-2">
-        <div className="bg-secondary rounded-xl p-3 text-center">
+      <motion.div variants={staggerItem} className="grid grid-cols-3 gap-2">
+        <div className="glow-card bg-secondary rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
             <Zap className="w-4 h-4" />
           </div>
-          <p className="text-lg font-bold text-foreground">{profile.xp}</p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={profile.xp} /></p>
           <p className="text-[10px] text-muted-foreground">XP</p>
         </div>
-        <div className="bg-secondary rounded-xl p-3 text-center">
+        <div className="glow-card bg-secondary rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 text-green-500 mb-1">
             <Flame className="w-4 h-4" />
           </div>
-          <p className="text-lg font-bold text-foreground">{profile.streak}</p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={profile.streak} /></p>
           <p className="text-[10px] text-muted-foreground">Day Streak</p>
         </div>
-        <div className="bg-secondary rounded-xl p-3 text-center">
+        <div className="glow-card bg-secondary rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 text-blue-500 mb-1">
             <TrendingUp className="w-4 h-4" />
           </div>
-          <p className="text-lg font-bold text-foreground">{profile.rating}</p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={profile.rating} /></p>
           <p className="text-[10px] text-muted-foreground">Rating</p>
         </div>
       </motion.div>
 
       {/* Level Progress */}
-      <motion.div variants={item} className="bg-secondary rounded-xl p-4">
+      <motion.div variants={staggerItem} className="bg-secondary rounded-xl p-4">
         <div className="flex items-center justify-between text-xs mb-2">
           <span className="text-muted-foreground">Level {currentLevel.level}</span>
           <span className="text-primary font-medium">{Math.round(progress)}%</span>
@@ -150,31 +149,32 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </motion.div>
 
       {/* Quick Actions */}
-      <motion.div variants={item} className="grid grid-cols-4 gap-2">
+      <motion.div variants={staggerItem} className="grid grid-cols-4 gap-2">
         {quickActions.map((action) => (
-          <motion.button
-            key={action.id}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => handleNavigate(action.page)}
-            className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary active:bg-secondary/70 transition-colors"
-          >
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white shadow-sm`}>
-              {action.icon}
-            </div>
-            <span className="text-[11px] font-medium text-foreground">{action.label}</span>
-          </motion.button>
+          <Tilt3DCard key={action.id} intensity={8} className="rounded-xl">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleNavigate(action.page)}
+              className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary active:bg-secondary/70 transition-colors w-full"
+            >
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white shadow-sm`}>
+                {action.icon}
+              </div>
+              <span className="text-[11px] font-medium text-foreground">{action.label}</span>
+            </motion.button>
+          </Tilt3DCard>
         ))}
       </motion.div>
 
       {/* Streak Widget */}
-      <motion.div variants={item} className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl p-4">
+      <motion.div variants={staggerItem} className="breathing-glow bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-              <Flame className="w-6 h-6 text-white" />
+              <Flame className="w-6 h-6 text-white fire-flicker" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{profile.streak}</p>
+              <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={profile.streak} /></p>
               <p className="text-xs text-muted-foreground">Day Streak</p>
             </div>
           </div>
@@ -203,9 +203,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </motion.div>
 
       {/* Daily Challenge */}
-      <motion.div variants={item}>
+      <motion.div variants={staggerItem}>
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold text-foreground">Daily Challenge</h2>
+          <h2 className="text-sm font-semibold text-foreground shimmer-text">Daily Challenge</h2>
           {profile.dailyChallengeCompleted && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 font-medium">
               Completed ✓
@@ -215,7 +215,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => handleNavigate('puzzles')}
-          className="w-full bg-secondary rounded-xl p-3 flex items-center gap-3 text-left"
+          className="w-full gradient-border-card bg-secondary rounded-xl p-3 flex items-center gap-3 text-left"
         >
           <div className="relative overflow-hidden rounded-lg flex-shrink-0" style={{ width: 64, height: 64 }}>
             <MiniChessboard fen={dailyPuzzle.fen} size={64} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
@@ -240,14 +240,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <span className="text-xs text-amber-500">+{dailyPuzzle.xpReward} XP</span>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+          <ProgressRing
+            progress={profile.dailyChallengeCompleted ? 100 : 0}
+            size={36}
+            strokeWidth={3}
+            color="hsl(152, 76%, 46%)"
+            className="flex-shrink-0"
+          >
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </ProgressRing>
         </motion.button>
       </motion.div>
 
       {/* Continue Learning */}
-      <motion.div variants={item}>
+      <motion.div variants={staggerItem}>
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold text-foreground">Continue Learning</h2>
+          <h2 className="text-sm font-semibold text-foreground shimmer-text">Continue Learning</h2>
           <button
             onClick={() => handleNavigate('openings')}
             className="text-xs text-primary font-medium"
@@ -278,26 +286,30 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </motion.div>
 
       {/* Progress Stats */}
-      <motion.div variants={item}>
-        <h2 className="text-sm font-semibold text-foreground mb-2">Your Progress</h2>
+      <motion.div variants={staggerItem}>
+        <h2 className="text-sm font-semibold text-foreground shimmer-text mb-2">Your Progress</h2>
         <div className="grid grid-cols-2 gap-2">
-          <StatCard
-            label="Games Played"
-            value={profile.gamesPlayed}
-            icon={<Swords className="w-4 h-4" />}
-          />
-          <StatCard
-            label="Puzzles Solved"
-            value={profile.puzzlesSolved}
-            icon={<Puzzle className="w-4 h-4" />}
-          />
+          <div className="glow-card rounded-xl">
+            <StatCard
+              label="Games Played"
+              value={profile.gamesPlayed}
+              icon={<Swords className="w-4 h-4" />}
+            />
+          </div>
+          <div className="glow-card rounded-xl">
+            <StatCard
+              label="Puzzles Solved"
+              value={profile.puzzlesSolved}
+              icon={<Puzzle className="w-4 h-4" />}
+            />
+          </div>
         </div>
       </motion.div>
 
       {/* Achievements */}
-      <motion.div variants={item}>
+      <motion.div variants={staggerItem}>
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold text-foreground">Achievements</h2>
+          <h2 className="text-sm font-semibold text-foreground shimmer-text">Achievements</h2>
           <button
             onClick={() => handleNavigate('profile')}
             className="text-xs text-primary font-medium"
