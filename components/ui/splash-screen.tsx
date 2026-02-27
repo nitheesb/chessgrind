@@ -90,20 +90,18 @@ export function SplashScreen({ onComplete, minDuration = 1800 }: SplashScreenPro
           <motion.div
             initial={{ scale: 0.6, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.1 }}
+            transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
             className="flex items-center gap-4 relative z-10"
           >
             {/* Icon */}
             <motion.div
-              className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 flex items-center justify-center shadow-2xl relative overflow-hidden"
-              style={{ boxShadow: '0 0 60px rgba(245, 158, 11, 0.3), 0 20px 60px rgba(0,0,0,0.3)' }}
+              className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-green-600 flex items-center justify-center relative overflow-hidden"
               animate={phase >= 2 ? { rotate: [0, -5, 5, 0] } : {}}
               transition={{ duration: 0.6, ease: 'easeInOut' }}
             >
               <svg viewBox="0 0 24 24" className="w-9 h-9 text-white relative z-10" fill="currentColor">
                 <path d="M12 2L13.09 8.26L18 6L15.74 10.91L22 12L15.74 13.09L18 18L13.09 15.74L12 22L10.91 15.74L6 18L8.26 13.09L2 12L8.26 10.91L6 6L10.91 8.26L12 2Z" />
               </svg>
-              <div className="absolute inset-0 bg-gradient-to-t from-amber-600/40 to-transparent" />
             </motion.div>
 
             <motion.span
@@ -112,7 +110,7 @@ export function SplashScreen({ onComplete, minDuration = 1800 }: SplashScreenPro
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
               style={{
-                background: 'linear-gradient(135deg, hsl(210 20% 98%), hsl(215 15% 70%))',
+                background: 'linear-gradient(135deg, hsl(0 0% 98%), hsl(0 0% 65%))',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}

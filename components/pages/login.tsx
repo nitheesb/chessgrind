@@ -102,7 +102,7 @@ export function LoginPage() {
           transition={{ duration: 0.4 }}
           className="inline-flex items-center justify-center gap-3 mb-4 relative"
         >
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-xl shadow-amber-500/30 relative z-10">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center  relative z-10">
             <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
               <path d="M19 22H5v-2h14v2M12 2c-1.1 0-2 .9-2 2v4h4V4c0-1.1-.9-2-2-2m4 6H8v2H7v8h2v-6h6v6h2v-8h-1V8z"/>
             </svg>
@@ -134,7 +134,7 @@ export function LoginPage() {
                     layoutId="mode-indicator"
                     className="absolute top-1.5 bottom-1.5 w-[calc(50%-3px)] bg-card rounded-xl shadow-md"
                     style={{ left: mode === 'login' ? '6px' : 'calc(50% + 0px)' }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                    transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
                   />
                   <button
                     onClick={() => { setMode('login'); playSound('click'); }}
@@ -169,7 +169,7 @@ export function LoginPage() {
                     onKeyDown={(e) => e.key === 'Enter' && (password || !isBackendEnabled) && handleSubmit()}
                     placeholder="Enter your username"
                     maxLength={20}
-                    className="w-full h-14 px-4 rounded-2xl bg-secondary text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all duration-300"
+                    className="w-full h-14 px-4 rounded-2xl bg-secondary text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all duration-300"
                     autoFocus
                   />
                 </div>
@@ -188,7 +188,7 @@ export function LoginPage() {
                         onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                         placeholder="Enter your password"
                         minLength={4}
-                        className="w-full h-14 px-4 pr-14 rounded-2xl bg-secondary text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all duration-300"
+                        className="w-full h-14 px-4 pr-14 rounded-2xl bg-secondary text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all duration-300"
                       />
                       <button
                         type="button"
@@ -218,7 +218,7 @@ export function LoginPage() {
                 <button
                   onClick={handleSubmit}
                   disabled={!username.trim() || isSubmitting || (isBackendEnabled && !password)}
-                  className="relative w-full h-14 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-base flex items-center justify-center gap-2.5 disabled:opacity-40 shadow-xl shadow-amber-500/25 active:scale-[0.98] transition-transform overflow-hidden"
+                  className="relative w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold text-base flex items-center justify-center gap-2.5 disabled:opacity-40 shadow-amber-500/25 active:scale-[0.98] transition-transform overflow-hidden"
                 >
                   <span className="absolute inset-0 pointer-events-none" style={{
                     background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%)',

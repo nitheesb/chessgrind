@@ -123,48 +123,48 @@ export function DesktopShell() {
         onDismiss={dismissAchievement}
       />
 
-      {/* Sidebar — Apple frosted glass */}
+      {/* Sidebar — Apple Sidebar */}
       <aside
         className="fixed left-0 top-0 bottom-0 z-40 flex flex-col w-[220px]"
         style={{
-          background: 'rgba(18, 18, 20, 0.65)',
+          background: 'rgba(0, 0, 0, 0.65)',
           backdropFilter: 'saturate(180%) blur(20px)',
           WebkitBackdropFilter: 'saturate(180%) blur(20px)',
           borderRight: '0.5px solid rgba(255, 255, 255, 0.06)',
         }}
       >
         {/* Logo */}
-        <div className="h-14 flex items-center px-5 border-b border-white/[0.04]">
+        <div className="h-14 flex items-center px-5 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 flex items-center justify-center shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 via-emerald-500 to-green-600 flex items-center justify-center">
               <Crown className="w-4.5 h-4.5 text-white" />
             </div>
-            <span className="font-display font-bold text-[15px] text-foreground">ChessVault</span>
+            <span className="font-display font-bold text-[15px] text-foreground tracking-tight">ChessVault</span>
           </div>
         </div>
 
         {/* User info */}
-        <div className="px-4 py-3 border-b border-white/[0.04]">
+        <div className="px-4 py-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/15">
+            <div className="w-8 h-8 rounded-full bg-primary/12 flex items-center justify-center border border-primary/15">
               <span className="text-xs font-semibold text-primary">{profile?.level || 1}</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{profile?.username || 'Player'}</p>
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                 <span className="flex items-center gap-0.5">
-                  <Flame className="w-3 h-3 text-orange-500" />
+                  <Flame className="w-3 h-3 text-orange-400" />
                   {profile?.streak || 0}
                 </span>
                 <span className="flex items-center gap-0.5">
-                  <Zap className="w-3 h-3 text-amber-500" />
+                  <Zap className="w-3 h-3 text-amber-400" />
                   {profile?.xp || 0}
                 </span>
               </div>
               {/* XP bar */}
-              <div className="mt-1.5 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+              <div className="mt-1.5 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-primary/60 transition-all duration-700 ease-out"
+                  className="h-full rounded-full bg-primary/50 transition-all duration-700 ease-out"
                   style={{ width: `${Math.min(progress, 100)}%` }}
                 />
               </div>
@@ -181,15 +181,15 @@ export function DesktopShell() {
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
                 className={`w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-left transition-all duration-150 relative ${isActive
-                    ? 'bg-white/[0.08] text-foreground'
-                    : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
+                    ? 'bg-white/[0.1] text-foreground'
+                    : 'text-muted-foreground hover:bg-white/[0.05] hover:text-foreground'
                   }`}
               >
                 {isActive && (
                   <motion.div
                     layoutId="desktop-nav-indicator"
                     className="absolute left-0 top-[6px] bottom-[6px] w-[2.5px] bg-primary rounded-r-full"
-                    transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
+                    transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
                   />
                 )}
                 <span className={`flex-shrink-0 ${isActive ? 'text-primary' : ''}`}>
@@ -202,7 +202,7 @@ export function DesktopShell() {
         </nav>
 
         {/* Secondary Navigation */}
-        <div className="py-2 px-2.5 border-t border-white/[0.04] space-y-0.5">
+        <div className="py-2 px-2.5 border-t border-white/[0.06] space-y-0.5">
           {SECONDARY_NAV.map((item) => {
             const isActive = currentPage === item.id
             return (
@@ -210,8 +210,8 @@ export function DesktopShell() {
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
                 className={`w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-left transition-all duration-150 ${isActive
-                    ? 'bg-white/[0.08] text-foreground'
-                    : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
+                    ? 'bg-white/[0.1] text-foreground'
+                    : 'text-muted-foreground hover:bg-white/[0.05] hover:text-foreground'
                   }`}
               >
                 <span className={`flex-shrink-0 ${isActive ? 'text-primary' : ''}`}>
@@ -225,7 +225,7 @@ export function DesktopShell() {
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-muted-foreground hover:bg-destructive/8 hover:text-destructive transition-all duration-150"
+            className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-150"
           >
             <LogOut className="w-5 h-5" />
             <span className="text-[13px] font-medium">Logout</span>

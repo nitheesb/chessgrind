@@ -25,7 +25,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 28 } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
 }
 
 interface DesktopProfileProps {
@@ -71,7 +71,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
                   <span className="text-4xl font-display font-bold text-primary relative z-10">{currentLevel.level}</span>
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent" />
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
                   <Crown className="w-4 h-4 text-white" />
                 </div>
               </div>
@@ -102,8 +102,6 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
                   onNavigate('settings')
                 }}
                 className="px-5 py-2.5 rounded-xl bg-white/[0.04] text-muted-foreground font-medium flex items-center gap-2 hover:bg-white/[0.07] border border-white/[0.06] transition-all duration-300"
-                whileHover={{ y: -1 }}
-                whileTap={{ scale: 0.98 }}
               >
                 <Settings className="w-5 h-5" />
                 Settings
@@ -142,10 +140,9 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
             <motion.div
               key={stat.label}
               className={`glass-card p-5 text-center group transition-all duration-500 ${stat.hoverCard}`}
-              whileHover={{ y: -4 }}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * index, type: 'spring', stiffness: 300, damping: 24 }}
+              transition={{ delay: 0.03 * index, duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
             >
               <div className={`w-10 h-10 rounded-xl ${stat.bgClass} flex items-center justify-center mx-auto mb-3 ${stat.colorClass} transition-transform duration-300 group-hover:scale-110`}>
                 {stat.icon}
@@ -172,7 +169,6 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
                 <motion.div
                   key={achievement.id}
                   className="glass-card p-4 border-primary/10 group hover:border-primary/20 transition-all duration-500"
-                  whileHover={{ y: -2 }}
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">

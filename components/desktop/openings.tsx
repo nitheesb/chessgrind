@@ -22,12 +22,12 @@ import {
 
 const container = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.04 } },
 }
 
 const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+  hidden: { opacity: 0, y: 6 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
 }
 
 interface DesktopOpeningsProps {
@@ -88,7 +88,7 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
             }}
             className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               filterCategory === cat
-                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                ? 'bg-primary text-primary-foreground'
                 : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
             }`}
           >
@@ -115,8 +115,6 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
                     setActiveOpening(opening)
                   }}
                   className="glass-card-hover p-5 text-left group"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex gap-4">
                     <div className="rounded-xl overflow-hidden shadow-md flex-shrink-0" style={{ width: 80, height: 80 }}>
@@ -332,8 +330,6 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
               <motion.button
                 onClick={handleReset}
                 className="p-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <RotateCcw className="w-5 h-5" />
               </motion.button>
@@ -341,8 +337,6 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
                 onClick={handlePrev}
                 disabled={currentMoveIndex < 0}
                 className="p-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 disabled:opacity-50 transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <ChevronLeft className="w-5 h-5" />
               </motion.button>
@@ -351,9 +345,7 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
                   playSound('click')
                   setIsPlaying(!isPlaying)
                 }}
-                className="p-4 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="p-4 rounded-xl bg-primary text-primary-foreground"
               >
                 {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
               </motion.button>
@@ -361,8 +353,6 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
                 onClick={handleNext}
                 disabled={currentMoveIndex >= opening.moves.length - 1}
                 className="p-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 disabled:opacity-50 transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <ChevronRight className="w-5 h-5" />
               </motion.button>

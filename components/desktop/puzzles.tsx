@@ -34,7 +34,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
 }
 
 interface DesktopPuzzlesProps {
@@ -127,7 +127,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
             }}
             className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               filterDifficulty === diff
-                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                ? 'bg-primary text-primary-foreground'
                 : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
             }`}
           >
@@ -146,8 +146,6 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
               setActivePuzzle(puzzle)
             }}
             className="glass-card-hover p-5 text-left group"
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-start justify-between mb-3">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
@@ -443,8 +441,6 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
               onClick={handleShowHint}
               disabled={status !== 'playing'}
               className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground font-medium flex items-center justify-center gap-2 hover:bg-secondary/80 disabled:opacity-50 transition-all"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <Lightbulb className="w-5 h-5" />
               Hint
@@ -452,8 +448,6 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
             <motion.button
               onClick={handleRetry}
               className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground font-medium flex items-center justify-center gap-2 hover:bg-secondary/80 transition-all"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <RefreshCw className="w-5 h-5" />
               Retry
@@ -539,8 +533,6 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                     onBack()
                   }}
                   className="flex-1 py-4 rounded-xl bg-secondary text-foreground font-semibold flex items-center justify-center gap-2"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   Back to Puzzles
                 </motion.button>
@@ -549,9 +541,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                     playSound('click')
                     onNext()
                   }}
-                  className="flex-1 py-4 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/25"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 py-4 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold flex items-center justify-center gap-2"
                 >
                   Next Puzzle <SkipForward className="w-5 h-5" />
                 </motion.button>
@@ -568,8 +558,6 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                 <motion.button
                   onClick={handleRetry}
                   className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold flex items-center justify-center gap-2"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   <RefreshCw className="w-5 h-5" /> Try Again
                 </motion.button>

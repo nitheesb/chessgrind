@@ -118,7 +118,6 @@ export function TrapsPage({ onBack }: TrapsPageProps) {
         {filteredTraps.map((trap) => (
           <motion.button
             key={trap.id}
-            whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTrap(trap)}
             className="w-full glass-card-hover glow-card p-4 flex items-center gap-3 text-left"
             style={{ ['--glow-color' as string]: 'rgba(239, 68, 68, 0.15)' }}

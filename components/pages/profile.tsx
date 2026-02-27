@@ -190,7 +190,7 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
           <div className="glass-card p-4 flex flex-col gap-4">
             <div className="flex items-center justify-around">
               <div className="flex flex-col items-center gap-2">
-                <ProgressRing progress={puzzleAccuracy} size={72} strokeWidth={5} color="hsl(152, 76%, 46%)">
+                <ProgressRing progress={puzzleAccuracy} size={72} strokeWidth={5} color="hsl(142, 71%, 45%)">
                   <span className="text-xs font-bold text-foreground">{puzzleAccuracy}%</span>
                 </ProgressRing>
                 <span className="text-[10px] text-muted-foreground">Puzzle Accuracy</span>

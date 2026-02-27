@@ -194,7 +194,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         className="p-8 max-w-4xl mx-auto"
       >
         <div className="text-center mb-12">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-purple-500/30">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center mx-auto mb-6">
             <Swords className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-3">Play vs AI</h1>
@@ -217,8 +217,6 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                     ? `border-${config.color}-500 bg-${config.color}-500/10`
                     : 'border-border hover:border-border/80 bg-card'
                 }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
               >
                 <Cpu className={`w-8 h-8 mb-3 mx-auto ${difficulty === key ? `text-${config.color}-500` : 'text-muted-foreground'}`} />
                 <h3 className="font-semibold text-foreground mb-1">{config.name}</h3>
@@ -244,8 +242,6 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                     ? 'border-primary bg-primary/10'
                     : 'border-border bg-card hover:border-border/80'
                 }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
               >
                 <span className={`w-6 h-6 rounded-full ${color === 'white' ? 'bg-white border-2 border-gray-300' : 'bg-gray-800'}`} />
                 <span className="font-semibold text-foreground capitalize">{color}</span>
@@ -258,9 +254,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         <div className="text-center">
           <motion.button
             onClick={startGame}
-            className="px-12 py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-lg shadow-xl shadow-primary/30"
-            whileHover={{ scale: 1.05, boxShadow: '0 25px 50px -12px rgba(var(--primary), 0.4)' }}
-            whileTap={{ scale: 0.95 }}
+            className="px-12 py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-lg"
           >
             Start Game
           </motion.button>
@@ -356,8 +350,6 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
             <motion.button
               onClick={resetGame}
               className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground font-medium flex items-center justify-center gap-2 hover:bg-secondary/80"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <RotateCcw className="w-5 h-5" />
               Reset
@@ -369,8 +361,6 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 if (timerRef.current) clearInterval(timerRef.current)
               }}
               className="flex-1 py-3 rounded-xl bg-red-500/10 text-red-500 font-medium flex items-center justify-center gap-2 hover:bg-red-500/20"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <Flag className="w-5 h-5" />
               Resign
@@ -444,9 +434,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               >
                 <motion.button
                   onClick={resetGame}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold shadow-lg shadow-primary/25"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold"
                 >
                   Play Again
                 </motion.button>

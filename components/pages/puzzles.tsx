@@ -109,7 +109,6 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
         {['all', 'easy', 'medium', 'hard', 'expert'].map((diff) => (
           <motion.button
             key={diff}
-            whileTap={{ scale: 0.92 }}
             onClick={() => setFilterDifficulty(diff)}
             className={`px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
               filterDifficulty === diff
@@ -154,7 +153,6 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
         {filteredPuzzles.map((puzzle, idx) => (
           <motion.button
             key={puzzle.id}
-            whileTap={{ scale: 0.98 }}
             onClick={() => setActivePuzzle(puzzle)}
             className="w-full glass-card-hover glow-card p-4 flex items-center gap-3 text-left"
           >
@@ -512,7 +510,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
               className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center"
             >
               <Trophy className="w-8 h-8 text-primary" />
@@ -535,8 +533,6 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             <motion.button
               onClick={onNext}
               className="flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               Next Puzzle <SkipForward className="w-4 h-4" />
             </motion.button>
@@ -553,8 +549,6 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
               onClick={handleHint}
               disabled={hintActive || status === 'opponent-moving'}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/10 border border-accent/20 text-accent text-sm font-medium disabled:opacity-40 transition-all"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <Lightbulb className="w-4 h-4" />
               {hintActive ? 'Hint Active' : 'Show Hint'}

@@ -89,7 +89,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* Header */}
       <motion.div variants={staggerItem} className="relative flex items-center justify-between overflow-hidden rounded-2xl p-3 -mx-3">
         <div className="relative flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center">
             <span className="text-xl font-bold text-white">{profile.username.charAt(0).toUpperCase()}</span>
           </div>
           <div>
@@ -150,7 +150,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         {quickActions.map((action) => (
           <motion.button
             key={action.id}
-            whileTap={{ scale: 0.95 }}
             onClick={() => handleNavigate(action.page)}
             className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary active:bg-secondary/70 transition-colors w-full"
           >
@@ -209,7 +208,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           )}
         </div>
         <motion.button
-          whileTap={{ scale: 0.98 }}
           onClick={() => handleNavigate('puzzles')}
           className="w-full gradient-border-card bg-secondary rounded-xl p-3 flex items-center gap-3 text-left"
         >
@@ -240,7 +238,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             progress={profile.dailyChallengeCompleted ? 100 : 0}
             size={36}
             strokeWidth={3}
-            color="hsl(152, 76%, 46%)"
+            color="hsl(142, 71%, 45%)"
             className="flex-shrink-0"
           >
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -260,7 +258,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </button>
         </div>
         <motion.button
-          whileTap={{ scale: 0.98 }}
           onClick={() => handleNavigate('openings')}
           className="w-full bg-secondary rounded-xl p-3 flex items-center gap-3 text-left"
         >

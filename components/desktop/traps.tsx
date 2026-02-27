@@ -22,12 +22,12 @@ import {
 
 const container = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.04 } },
 }
 
 const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+  hidden: { opacity: 0, y: 6 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
 }
 
 interface DesktopTrapsProps {
@@ -58,7 +58,7 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
       {/* Header */}
       <motion.div variants={item} className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
             <Target className="w-7 h-7 text-white" />
           </div>
           <div>
@@ -93,9 +93,7 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
               playSound('click')
               setActiveTrap(trap)
             }}
-            className="glass-card-hover p-5 text-left group"
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+            className="glass-card-hover p-5 text-left group hover-lift"
           >
             <div className="flex gap-4">
               <div className="rounded-xl overflow-hidden shadow-md flex-shrink-0" style={{ width: 80, height: 80 }}>
@@ -309,8 +307,6 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
               <motion.button
                 onClick={handleReset}
                 className="p-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <RotateCcw className="w-5 h-5" />
               </motion.button>
@@ -318,17 +314,13 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
                 onClick={handlePrev}
                 disabled={currentMoveIndex < 0}
                 className="p-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 disabled:opacity-50 transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <ChevronLeft className="w-5 h-5" />
               </motion.button>
               <motion.button
                 onClick={handleNext}
                 disabled={currentMoveIndex >= trap.moves.length - 1}
-                className="p-4 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="p-4 rounded-xl bg-primary text-primary-foreground"
               >
                 <Play className="w-6 h-6" />
               </motion.button>
@@ -336,8 +328,6 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
                 onClick={handleNext}
                 disabled={currentMoveIndex >= trap.moves.length - 1}
                 className="p-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 disabled:opacity-50 transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <ChevronRight className="w-5 h-5" />
               </motion.button>

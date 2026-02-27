@@ -119,13 +119,13 @@ export function AppShell() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation Bar — Apple style */}
+      {/* Bottom Navigation Bar — Apple Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
         style={{
-          background: 'rgba(18, 18, 20, 0.72)',
+          background: 'rgba(0, 0, 0, 0.75)',
           backdropFilter: 'saturate(180%) blur(20px)',
           WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-          borderTop: '0.5px solid rgba(255, 255, 255, 0.08)',
+          borderTop: '0.5px solid rgba(255, 255, 255, 0.06)',
         }}
       >
         <div className="max-w-lg mx-auto flex items-stretch justify-around">

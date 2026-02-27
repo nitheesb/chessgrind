@@ -89,7 +89,7 @@ export function DesktopLogin() {
     <div className="min-h-screen flex">
       {/* Left side - Branding */}
       <motion.div
-        className="hidden lg:flex lg:w-1/2 xl:w-3/5 bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 relative overflow-hidden"
+        className="hidden lg:flex lg:w-1/2 xl:w-3/5 bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 relative overflow-hidden"
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
@@ -176,7 +176,7 @@ export function DesktopLogin() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
               <Crown className="w-7 h-7 text-white" />
             </div>
             <span className="text-2xl font-bold text-foreground">ChessVault</span>
@@ -267,9 +267,7 @@ export function DesktopLogin() {
               <motion.button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                whileHover={{ scale: 1.02, boxShadow: '0 20px 40px -10px rgba(245, 158, 11, 0.4)' }}
-                whileTap={{ scale: 0.98 }}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

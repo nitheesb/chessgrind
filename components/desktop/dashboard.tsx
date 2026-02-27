@@ -36,7 +36,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 28 } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
 }
 
 interface DesktopDashboardProps {
@@ -111,10 +111,8 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 <p className="text-3xl font-display font-bold text-foreground">{currentLevel.level}</p>
                 <p className="text-sm text-primary font-medium">{currentLevel.title}</p>
               </div>
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 flex items-center justify-center shadow-xl shadow-amber-500/25 relative overflow-hidden">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-green-600 flex items-center justify-center relative overflow-hidden">
                 <Crown className="w-9 h-9 text-white relative z-10" />
-                <div className="absolute inset-0 bg-gradient-to-t from-amber-600/40 to-transparent" />
-                <div className="absolute inset-0 animate-pulse-glow rounded-2xl" style={{ boxShadow: '0 0 20px rgba(245, 158, 11, 0.3) inset' }} />
               </div>
             </div>
           </div>
@@ -168,10 +166,9 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
           <motion.div
             key={stat.label}
             className={`glass-card p-5 group cursor-default transition-all duration-500 ${stat.hoverCard}`}
-            whileHover={{ y: -4 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + index * 0.05, type: 'spring', stiffness: 300, damping: 24 }}
+            transition={{ delay: 0.03 * index, duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <div className="flex items-center gap-3 mb-3">
               <div className={`w-10 h-10 rounded-xl ${stat.bgClass} flex items-center justify-center ${stat.colorClass} transition-transform duration-300 group-hover:scale-110`}>
@@ -198,13 +195,11 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                   key={action.id}
                   onClick={() => handleNavigate(action.id)}
                   className="glass-card-hover p-6 text-left group relative overflow-hidden"
-                  whileHover={{ y: -4 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   {/* Hover gradient overlay */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500`} />
 
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-4 shadow-lg ${action.shadowColor} group-hover:shadow-xl transition-all duration-300 group-hover:scale-105`}>
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-4 shadow-lg ${action.shadowColor}`}>
                     <span className="text-white">{action.icon}</span>
                   </div>
                   <h3 className="text-lg font-display font-semibold text-foreground mb-1">{action.label}</h3>
@@ -231,10 +226,8 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             <motion.button
               onClick={() => handleNavigate('openings')}
               className="w-full glass-card-hover p-5 flex items-center gap-5 text-left group"
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.99 }}
             >
-              <div className="rounded-xl overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow ring-1 ring-white/5" style={{ width: 120, height: 120 }}>
+              <div className="rounded-xl overflow-hidden ring-1 ring-white/5" style={{ width: 120, height: 120 }}>
                 <MiniChessboard fen={OPENINGS[0].fen} size={120} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
               </div>
               <div className="flex-1">
@@ -268,8 +261,6 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             <motion.button
               onClick={() => handleNavigate('puzzles')}
               className="w-full glass-card-hover p-5 text-left relative overflow-hidden group"
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
             >
               {profile.dailyChallengeCompleted && (
                 <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium flex items-center gap-1 border border-emerald-500/20">
@@ -318,7 +309,6 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                     ? 'bg-primary/[0.04] hover:bg-primary/[0.07]'
                     : 'opacity-40 hover:opacity-60'
                     }`}
-                  whileHover={{ x: 2 }}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${achievement.earned ? 'bg-primary/10' : 'bg-secondary'
                     }`}>

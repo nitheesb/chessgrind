@@ -90,7 +90,7 @@ export function OpeningsPage({ onBack }: OpeningsPageProps) {
               <motion.div
                 layoutId="openings-filter-underline"
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
               />
             )}
           </button>
