@@ -114,6 +114,10 @@ export function DesktopShell() {
 
   return (
     <div className="min-h-screen flex bg-background relative">
+      {/* Mesh gradient background — gives glass something to blur */}
+      <div className="mesh-gradient" />
+      <div className="noise-overlay" />
+
       {/* Global overlays */}
       <XPPopup />
       <LevelUpOverlay />
@@ -127,10 +131,11 @@ export function DesktopShell() {
       <aside
         className="fixed left-0 top-0 bottom-0 z-40 flex flex-col w-[220px]"
         style={{
-          background: 'rgba(0, 0, 0, 0.65)',
-          backdropFilter: 'saturate(180%) blur(20px)',
-          WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-          borderRight: '0.5px solid rgba(255, 255, 255, 0.06)',
+          background: 'rgba(255, 255, 255, 0.03)',
+          backdropFilter: 'saturate(180%) blur(24px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(24px)',
+          borderRight: '0.5px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: 'inset -0.5px 0 0 0 rgba(255,255,255,0.04)',
         }}
       >
         {/* Logo */}

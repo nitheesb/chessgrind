@@ -89,35 +89,47 @@ export function DesktopLogin() {
     <div className="min-h-screen flex">
       {/* Left side - Branding */}
       <motion.div
-        className="hidden lg:flex lg:w-1/2 xl:w-3/5 bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 relative overflow-hidden"
+        className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, hsl(228 25% 6%) 0%, hsl(240 20% 8%) 50%, hsl(220 25% 5%) 100%)',
+        }}
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        {/* Mesh gradient orbs */}
+        <div className="absolute inset-0">
+          <div className="absolute w-[500px] h-[500px] rounded-full" style={{
+            background: 'radial-gradient(circle, rgba(0, 210, 190, 0.12) 0%, transparent 70%)',
+            top: '10%', left: '10%',
+          }} />
+          <div className="absolute w-[400px] h-[400px] rounded-full" style={{
+            background: 'radial-gradient(circle, rgba(120, 60, 220, 0.08) 0%, transparent 70%)',
+            bottom: '10%', right: '10%',
+          }} />
+          <div className="absolute w-[300px] h-[300px] rounded-full" style={{
+            background: 'radial-gradient(circle, rgba(48, 209, 88, 0.06) 0%, transparent 70%)',
+            top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           }} />
         </div>
 
         {/* Floating chess pieces */}
         <motion.div
-          className="absolute top-20 left-20 text-white/20 text-8xl"
+          className="absolute top-20 left-20 text-white/[0.06] text-8xl"
           animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
         >
           ♔
         </motion.div>
         <motion.div
-          className="absolute bottom-32 right-32 text-white/20 text-7xl"
+          className="absolute bottom-32 right-32 text-white/[0.06] text-7xl"
           animate={{ y: [0, 20, 0], rotate: [0, -5, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
         >
           ♕
         </motion.div>
         <motion.div
-          className="absolute top-1/3 right-20 text-white/15 text-6xl"
+          className="absolute top-1/3 right-20 text-white/[0.05] text-6xl"
           animate={{ y: [0, -15, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
         >
@@ -132,13 +144,13 @@ export function DesktopLogin() {
             transition={{ delay: 0.3, duration: 0.6 }}
           >
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl">
-                <Crown className="w-10 h-10 text-white" />
+              <div className="w-16 h-16 rounded-2xl glass-card flex items-center justify-center border border-white/[0.1]">
+                <Crown className="w-10 h-10 text-primary" />
               </div>
-              <h1 className="text-5xl font-bold text-white">ChessVault</h1>
+              <h1 className="text-5xl font-bold gradient-text-hero">ChessVault</h1>
             </div>
 
-            <p className="text-xl text-white/90 max-w-md leading-relaxed mb-8">
+            <p className="text-xl text-white/60 max-w-md leading-relaxed mb-8">
               Your personal chess mastery journey starts here. Master openings, solve puzzles, 
               and become the player you've always wanted to be.
             </p>
@@ -152,7 +164,7 @@ export function DesktopLogin() {
               ].map((item, i) => (
                 <motion.div
                   key={i}
-                  className="flex items-center gap-3 text-white/90"
+                  className="flex items-center gap-3 text-white/50"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.5 + i * 0.1, duration: 0.4 }}
@@ -168,11 +180,12 @@ export function DesktopLogin() {
 
       {/* Right side - Form */}
       <motion.div
-        className="flex-1 flex items-center justify-center p-8 bg-background"
+        className="flex-1 flex items-center justify-center p-8 bg-background relative"
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
       >
+        <div className="mesh-gradient" />
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">

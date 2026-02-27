@@ -89,6 +89,10 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Mesh gradient background */}
+      <div className="mesh-gradient" />
+      <div className="noise-overlay" />
+
       {/* Global overlays */}
       <XPPopup />
       <LevelUpOverlay />
@@ -99,7 +103,7 @@ export function AppShell() {
       />
 
       {/* Main content area */}
-      <main className="flex-1 overflow-y-auto px-4 pt-3 pb-20">
+      <main className="flex-1 overflow-y-auto px-4 pt-3 pb-20 relative z-10">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={currentPage}
@@ -122,10 +126,10 @@ export function AppShell() {
       {/* Bottom Navigation Bar — Apple Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
         style={{
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'saturate(180%) blur(20px)',
-          WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-          borderTop: '0.5px solid rgba(255, 255, 255, 0.06)',
+          background: 'rgba(255, 255, 255, 0.03)',
+          backdropFilter: 'saturate(180%) blur(24px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(24px)',
+          borderTop: '0.5px solid rgba(255, 255, 255, 0.08)',
         }}
       >
         <div className="max-w-lg mx-auto flex items-stretch justify-around">
