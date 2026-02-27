@@ -17,15 +17,16 @@ import {
   BookOpen,
   Settings,
 } from 'lucide-react'
+import { AnimatedCounter } from '@/components/ui/animated-components'
 
 const container = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
 }
 
 const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
+  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
+  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 }
 
 interface DesktopProfileProps {
@@ -41,7 +42,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
     { label: 'Puzzles Solved', value: profile.puzzlesSolved, icon: <Puzzle className="w-5 h-5" />, colorClass: 'text-emerald-400', bgClass: 'bg-emerald-500/10', hoverCard: 'stat-card-emerald' },
     { label: 'Current Streak', value: profile.streak, icon: <Flame className="w-5 h-5" />, colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10', hoverCard: 'stat-card-orange' },
     { label: 'Puzzle Rating', value: profile.puzzleRating || 800, icon: <TrendingUp className="w-5 h-5" />, colorClass: 'text-blue-400', bgClass: 'bg-blue-500/10', hoverCard: 'stat-card-blue' },
-    { label: 'Total XP', value: profile.xp.toLocaleString(), icon: <Zap className="w-5 h-5" />, colorClass: 'text-primary', bgClass: 'bg-primary/10', hoverCard: 'stat-card-emerald' },
+    { label: 'Total XP', value: profile.xp, icon: <Zap className="w-5 h-5" />, colorClass: 'text-primary', bgClass: 'bg-primary/10', hoverCard: 'stat-card-emerald' },
     { label: 'Games Played', value: profile.gamesPlayed || 0, icon: <Trophy className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
     { label: 'Openings Learned', value: profile.openingsLearned || 0, icon: <BookOpen className="w-5 h-5" />, colorClass: 'text-violet-400', bgClass: 'bg-violet-500/10', hoverCard: 'stat-card-blue' },
   ]
@@ -147,7 +148,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
               <div className={`w-10 h-10 rounded-xl ${stat.bgClass} flex items-center justify-center mx-auto mb-3 ${stat.colorClass} transition-transform duration-300 group-hover:scale-110`}>
                 {stat.icon}
               </div>
-              <p className="text-2xl font-display font-bold text-foreground mb-1">{stat.value}</p>
+              <p className="text-2xl font-display font-bold text-foreground mb-1"><AnimatedCounter value={stat.value} /></p>
               <p className="text-xs text-muted-foreground">{stat.label}</p>
             </motion.div>
           ))}

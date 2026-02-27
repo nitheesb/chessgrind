@@ -19,6 +19,16 @@ import {
   Zap,
 } from 'lucide-react'
 
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
+}
+
+const item = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
+  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+}
+
 interface DesktopPlayAIProps {
   onNavigate: (page: string) => void
 }

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatedCounter } from '@/components/ui/animated-components'
 import { Chess } from 'chess.js'
 import { Chessboard } from '@/components/chess/chessboard'
 import { PUZZLES, getDifficultyBg } from '@/lib/chess-data'
@@ -29,12 +30,12 @@ import {
 
 const container = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
 }
 
 const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
+  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
+  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 }
 
 interface DesktopPuzzlesProps {
@@ -59,6 +60,12 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
       ? Math.round((profile.puzzlesCorrect / profile.puzzlesAttempted) * 100) 
       : 0,
     rating: profile.puzzleRating || 800,
+  }
+
+  function handleSpotlight(e: React.MouseEvent<HTMLElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`)
+    e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
   }
 
   if (activePuzzle) {
@@ -96,44 +103,53 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
       <motion.div variants={item} className="grid grid-cols-4 gap-4 mb-8">
         <div className="glass-card p-5 text-center">
           <PuzzleIcon className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
-          <p className="text-3xl font-bold text-foreground">{stats.solved}</p>
+          <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.solved} /></p>
           <p className="text-sm text-muted-foreground">Puzzles Solved</p>
         </div>
         <div className="glass-card p-5 text-center">
           <Target className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-          <p className="text-3xl font-bold text-foreground">{stats.accuracy}%</p>
+          <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.accuracy} suffix="%" /></p>
           <p className="text-sm text-muted-foreground">Accuracy</p>
         </div>
         <div className="glass-card p-5 text-center">
           <TrendingUp className="w-6 h-6 text-purple-500 mx-auto mb-2" />
-          <p className="text-3xl font-bold text-foreground">{stats.rating}</p>
+          <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.rating} /></p>
           <p className="text-sm text-muted-foreground">Puzzle Rating</p>
         </div>
         <div className="glass-card p-5 text-center">
           <Trophy className="w-6 h-6 text-amber-500 mx-auto mb-2" />
-          <p className="text-3xl font-bold text-foreground">{stats.total}</p>
+          <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.total} /></p>
           <p className="text-sm text-muted-foreground">Total Puzzles</p>
         </div>
       </motion.div>
 
       {/* Filter */}
-      <motion.div variants={item} className="flex gap-2 mb-6">
-        {['all', 'easy', 'medium', 'hard', 'expert'].map((diff) => (
-          <button
-            key={diff}
-            onClick={() => {
-              playSound('click')
-              setFilterDifficulty(diff)
-            }}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              filterDifficulty === diff
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
-            }`}
-          >
-            {diff === 'all' ? 'All Puzzles' : diff.charAt(0).toUpperCase() + diff.slice(1)}
-          </button>
-        ))}
+      <motion.div variants={item} className="flex mb-6">
+        <div className="segmented-control flex">
+          {['all', 'easy', 'medium', 'hard', 'expert'].map((diff) => (
+            <button
+              key={diff}
+              onClick={() => {
+                playSound('click')
+                setFilterDifficulty(diff)
+              }}
+              className="relative"
+            >
+              {filterDifficulty === diff && (
+                <motion.div
+                  layoutId="puzzle-filter-pill"
+                  className="absolute inset-0 segmented-control-pill"
+                  transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                />
+              )}
+              <span className={`relative z-10 ${
+                filterDifficulty === diff ? 'text-foreground' : 'text-muted-foreground'
+              }`}>
+                {diff === 'all' ? 'All Puzzles' : diff.charAt(0).toUpperCase() + diff.slice(1)}
+              </span>
+            </button>
+          ))}
+        </div>
       </motion.div>
 
       {/* Puzzle Grid */}
@@ -145,7 +161,8 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
               playSound('click')
               setActivePuzzle(puzzle)
             }}
-            className="glass-card-hover p-5 text-left group"
+            className="glass-card-hover card-spotlight p-5 text-left group"
+            onMouseMove={handleSpotlight}
           >
             <div className="flex items-start justify-between mb-3">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">

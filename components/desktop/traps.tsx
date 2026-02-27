@@ -22,16 +22,22 @@ import {
 
 const container = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.04 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
 }
 
 const item = {
-  hidden: { opacity: 0, y: 6 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
+  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
+  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 }
 
 interface DesktopTrapsProps {
   onNavigate: (page: string) => void
+}
+
+function handleSpotlight(e: React.MouseEvent<HTMLElement>) {
+  const rect = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`)
+  e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
 }
 
 export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
@@ -93,7 +99,8 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
               playSound('click')
               setActiveTrap(trap)
             }}
-            className="glass-card-hover p-5 text-left group hover-lift"
+            onMouseMove={handleSpotlight}
+            className="glass-card-hover card-spotlight p-5 text-left group hover-lift"
           >
             <div className="flex gap-4">
               <div className="rounded-xl overflow-hidden shadow-md flex-shrink-0" style={{ width: 80, height: 80 }}>
