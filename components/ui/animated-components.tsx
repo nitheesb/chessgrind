@@ -117,7 +117,7 @@ export function ProgressRing({
   progress,
   size = 80,
   strokeWidth = 6,
-  color = 'hsl(152, 76%, 46%)',
+  color = 'hsl(142, 71%, 45%)',
   bgColor = 'hsl(222, 16%, 12%)',
   children,
   className = '',
@@ -334,22 +334,19 @@ export const staggerContainer = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.1,
+      staggerChildren: 0.04,
     },
   },
 }
 
 export const staggerItem = {
-  hidden: { opacity: 0, y: 20, scale: 0.98 },
+  hidden: { opacity: 0, y: 8 },
   show: {
     opacity: 1,
     y: 0,
-    scale: 1,
     transition: {
-      type: 'spring',
-      stiffness: 300,
-      damping: 24,
+      duration: 0.25,
+      ease: [0.25, 0.1, 0.25, 1],
     },
   },
 }

@@ -49,7 +49,7 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean
       <motion.div
         className="absolute top-1 w-5 h-5 rounded-full bg-white shadow-md"
         animate={{ left: enabled ? 26 : 4 }}
-        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
       />
     </button>
   )

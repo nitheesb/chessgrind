@@ -170,7 +170,6 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
           {AI_LEVELS.map((level) => (
             <motion.button
               key={level.level}
-              whileTap={{ scale: 0.98 }}
               onClick={() => {
                 setSelectedLevel(level.level)
                 setGameStarted(true)

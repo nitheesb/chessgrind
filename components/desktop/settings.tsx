@@ -23,7 +23,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
 }
 
 interface DesktopSettingsProps {
@@ -136,12 +136,11 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                   onClick={() => toggleSetting(settingItem.key)}
                   className={`relative w-14 h-8 rounded-full transition-colors ${settings[settingItem.key] ? 'bg-primary' : 'bg-secondary'
                     }`}
-                  whileTap={{ scale: 0.95 }}
                 >
                   <motion.div
                     className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md"
                     animate={{ left: settings[settingItem.key] ? 30 : 4 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
                   />
                 </motion.button>
               </div>
@@ -165,8 +164,6 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                 ? 'border-primary bg-primary/5'
                 : 'border-border hover:border-border/80 bg-card'
                 }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               {/* Mini board preview */}
               <div className="w-full aspect-square rounded-lg overflow-hidden mb-3 shadow-md">
@@ -212,8 +209,6 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                 ? 'border-primary bg-primary/5'
                 : 'border-border hover:border-border/80 bg-card'
                 }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <div className="w-full flex items-center justify-center mb-3">
                 <svg viewBox="0 0 45 45" width={48} height={48}>
@@ -253,8 +248,6 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                   ? 'bg-primary/10 text-primary border border-primary/30'
                   : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
                   }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
               >
                 {theme.icon}
                 <span className="text-sm font-medium">{theme.name}</span>

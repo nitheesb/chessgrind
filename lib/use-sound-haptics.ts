@@ -16,176 +16,171 @@ const getAudioContext = (): AudioContext | null => {
   return audioContext
 }
 
-// Generate sounds procedurally (no external files needed)
+// Generate Apple-like sounds procedurally (soft, clean, minimal)
 const generateSound = (type: SoundType): ((ctx: AudioContext) => void) => {
   switch (type) {
     case 'move':
       return (ctx) => {
+        // Soft wood tap — Apple keyboard-like
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-        osc.frequency.setValueAtTime(300, ctx.currentTime)
-        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.1)
-        gain.gain.setValueAtTime(0.3, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.1)
-      }
-    case 'capture':
-      return (ctx) => {
-        // Thump + crunch
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        const noise = ctx.createOscillator()
-        const noiseGain = ctx.createGain()
-        
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-        osc.frequency.setValueAtTime(150, ctx.currentTime)
-        osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.15)
-        gain.gain.setValueAtTime(0.4, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.15)
-        
-        noise.type = 'square'
-        noise.connect(noiseGain)
-        noiseGain.connect(ctx.destination)
-        noise.frequency.setValueAtTime(100, ctx.currentTime)
-        noiseGain.gain.setValueAtTime(0.2, ctx.currentTime)
-        noiseGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08)
-        noise.start(ctx.currentTime)
-        noise.stop(ctx.currentTime + 0.08)
-      }
-    case 'check':
-      return (ctx) => {
-        // Alert tone
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-        osc.frequency.setValueAtTime(880, ctx.currentTime)
-        osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1)
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.2)
-        gain.gain.setValueAtTime(0.25, ctx.currentTime)
-        gain.gain.setValueAtTime(0.25, ctx.currentTime + 0.25)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.35)
-      }
-    case 'castle':
-      return (ctx) => {
-        // Two thuds
-        const playThud = (time: number) => {
-          const osc = ctx.createOscillator()
-          const gain = ctx.createGain()
-          osc.connect(gain)
-          gain.connect(ctx.destination)
-          osc.frequency.setValueAtTime(250, time)
-          osc.frequency.exponentialRampToValueAtTime(150, time + 0.1)
-          gain.gain.setValueAtTime(0.3, time)
-          gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1)
-          osc.start(time)
-          osc.stop(time + 0.1)
-        }
-        playThud(ctx.currentTime)
-        playThud(ctx.currentTime + 0.12)
-      }
-    case 'promote':
-      return (ctx) => {
-        // Triumphant ascending tone
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
+        osc.type = 'sine'
         osc.connect(gain)
         gain.connect(ctx.destination)
         osc.frequency.setValueAtTime(440, ctx.currentTime)
-        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.2)
-        gain.gain.setValueAtTime(0.3, ctx.currentTime)
-        gain.gain.setValueAtTime(0.3, ctx.currentTime + 0.15)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+        osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.06)
+        gain.gain.setValueAtTime(0.12, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06)
         osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.3)
+        osc.stop(ctx.currentTime + 0.06)
+      }
+    case 'capture':
+      return (ctx) => {
+        // Slightly more presence than move
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.setValueAtTime(280, ctx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.08)
+        gain.gain.setValueAtTime(0.18, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08)
+        osc.start(ctx.currentTime)
+        osc.stop(ctx.currentTime + 0.08)
+      }
+    case 'check':
+      return (ctx) => {
+        // Gentle two-tone alert
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.setValueAtTime(660, ctx.currentTime)
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08)
+        gain.gain.setValueAtTime(0.12, ctx.currentTime)
+        gain.gain.setValueAtTime(0.12, ctx.currentTime + 0.08)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18)
+        osc.start(ctx.currentTime)
+        osc.stop(ctx.currentTime + 0.18)
+      }
+    case 'castle':
+      return (ctx) => {
+        // Two quick soft taps
+        const playTap = (time: number) => {
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.type = 'sine'
+          osc.connect(gain)
+          gain.connect(ctx.destination)
+          osc.frequency.setValueAtTime(350, time)
+          osc.frequency.exponentialRampToValueAtTime(200, time + 0.05)
+          gain.gain.setValueAtTime(0.1, time)
+          gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05)
+          osc.start(time)
+          osc.stop(time + 0.05)
+        }
+        playTap(ctx.currentTime)
+        playTap(ctx.currentTime + 0.08)
+      }
+    case 'promote':
+      return (ctx) => {
+        // Gentle ascending chime
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.setValueAtTime(523, ctx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(1047, ctx.currentTime + 0.15)
+        gain.gain.setValueAtTime(0.12, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2)
+        osc.start(ctx.currentTime)
+        osc.stop(ctx.currentTime + 0.2)
       }
     case 'illegal':
       return (ctx) => {
-        // Error buzz
+        // Soft low thud — like Apple's deny sound
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
-        osc.type = 'square'
+        osc.type = 'sine'
         osc.connect(gain)
         gain.connect(ctx.destination)
-        osc.frequency.setValueAtTime(150, ctx.currentTime)
+        osc.frequency.setValueAtTime(180, ctx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.08)
         gain.gain.setValueAtTime(0.15, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08)
         osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.15)
+        osc.stop(ctx.currentTime + 0.08)
       }
     case 'success':
       return (ctx) => {
-        // Victory chime
-        const notes = [523.25, 659.25, 783.99, 1046.50] // C5, E5, G5, C6
+        // Apple-like completion chime: C-E-G triad
+        const notes = [523.25, 659.25, 783.99]
         notes.forEach((freq, i) => {
           const osc = ctx.createOscillator()
           const gain = ctx.createGain()
+          osc.type = 'sine'
           osc.connect(gain)
           gain.connect(ctx.destination)
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1)
-          gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.1)
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.1 + 0.3)
-          osc.start(ctx.currentTime + i * 0.1)
-          osc.stop(ctx.currentTime + i * 0.1 + 0.3)
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.08)
+          gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.08)
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.08 + 0.2)
+          osc.start(ctx.currentTime + i * 0.08)
+          osc.stop(ctx.currentTime + i * 0.08 + 0.2)
         })
       }
     case 'fail':
       return (ctx) => {
-        // Descending tone
+        // Gentle descending tone
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
+        osc.type = 'sine'
         osc.connect(gain)
         gain.connect(ctx.destination)
-        osc.frequency.setValueAtTime(400, ctx.currentTime)
-        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.3)
-        gain.gain.setValueAtTime(0.25, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+        osc.frequency.setValueAtTime(350, ctx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15)
+        gain.gain.setValueAtTime(0.1, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15)
         osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.3)
+        osc.stop(ctx.currentTime + 0.15)
       }
     case 'click':
       return (ctx) => {
-        // Soft click
+        // Ultra-subtle Apple tap — like iOS keyboard
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
+        osc.type = 'sine'
         osc.connect(gain)
         gain.connect(ctx.destination)
-        osc.frequency.setValueAtTime(1000, ctx.currentTime)
-        osc.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.03)
-        gain.gain.setValueAtTime(0.15, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.03)
+        osc.frequency.setValueAtTime(1200, ctx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.015)
+        gain.gain.setValueAtTime(0.06, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.015)
         osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.03)
+        osc.stop(ctx.currentTime + 0.015)
       }
     case 'levelup':
       return (ctx) => {
-        // Epic level up fanfare
+        // Apple achievement — ascending arpeggio
         const melody = [
-          { freq: 523.25, time: 0 },      // C5
-          { freq: 659.25, time: 0.1 },    // E5
-          { freq: 783.99, time: 0.2 },    // G5
-          { freq: 1046.50, time: 0.35 },  // C6
-          { freq: 1318.51, time: 0.5 },   // E6
-          { freq: 1567.98, time: 0.65 },  // G6
+          { freq: 523.25, time: 0 },
+          { freq: 659.25, time: 0.08 },
+          { freq: 783.99, time: 0.16 },
+          { freq: 1046.50, time: 0.28 },
         ]
         melody.forEach(({ freq, time }) => {
           const osc = ctx.createOscillator()
           const gain = ctx.createGain()
+          osc.type = 'sine'
           osc.connect(gain)
           gain.connect(ctx.destination)
           osc.frequency.setValueAtTime(freq, ctx.currentTime + time)
-          gain.gain.setValueAtTime(0.25, ctx.currentTime + time)
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time + 0.25)
+          gain.gain.setValueAtTime(0.1, ctx.currentTime + time)
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + time + 0.2)
           osc.start(ctx.currentTime + time)
-          osc.stop(ctx.currentTime + time + 0.25)
+          osc.stop(ctx.currentTime + time + 0.2)
         })
       }
     default:
