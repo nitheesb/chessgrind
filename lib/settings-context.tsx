@@ -9,8 +9,8 @@ export interface AppSettings {
   autoQueen: boolean
   showHints: boolean
   theme: 'dark' | 'light' | 'system'
-  pieceStyle: 'standard' | 'neo' | 'classic' | 'minimal'
-  boardStyle: 'green' | 'brown' | 'blue' | 'purple'
+  pieceStyle: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+  boardStyle: 'green' | 'brown' | 'blue' | 'purple' | 'pink'
 }
 
 const DEFAULT_SETTINGS: AppSettings = {

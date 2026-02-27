@@ -79,6 +79,7 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
     { id: 'brown', name: 'Wooden', light: '#f0d9b5', dark: '#b58863' },
     { id: 'blue', name: 'Ocean', light: '#dee3e6', dark: '#8ca2ad' },
     { id: 'purple', name: 'Royal', light: '#e8d0e8', dark: '#9070a0' },
+    { id: 'pink', name: 'Rose', light: '#f5dce0', dark: '#d4778a' },
   ]
 
   return (
@@ -140,7 +141,7 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
       {/* Board Style */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-foreground mb-4">Board Style</h2>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-5 gap-4">
           {boardStyles.map((style) => (
             <motion.button
               key={style.id}
@@ -180,12 +181,12 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
       {/* Piece Style */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-foreground mb-4">Piece Style</h2>
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { id: 'standard', name: 'Standard', fill: '#fff', stroke: '#000', strokeWidth: 1.5 },
+        <div className="grid grid-cols-5 gap-4">
+          {[{ id: 'standard', name: 'Standard', fill: '#fff', stroke: '#000', strokeWidth: 1.5 },
             { id: 'neo', name: 'Neo', fill: '#f8f8f8', stroke: '#555', strokeWidth: 1.5 },
             { id: 'classic', name: 'Classic', fill: '#f5e6c8', stroke: '#4a3728', strokeWidth: 2 },
             { id: 'minimal', name: 'Minimal', fill: '#fff', stroke: '#999', strokeWidth: 1 },
+            { id: 'pink', name: 'Rose', fill: '#fce4ec', stroke: '#d4778a', strokeWidth: 1.5 },
           ].map((ps) => (
             <motion.button
               key={ps.id}

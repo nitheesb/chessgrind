@@ -4,13 +4,14 @@ import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from '
 import { ChessPiece, parseFEN } from './chess-pieces'
 import { getGlobalSoundHaptics } from '@/lib/use-sound-haptics'
 
-export type BoardStyle = 'green' | 'brown' | 'blue' | 'purple'
+export type BoardStyle = 'green' | 'brown' | 'blue' | 'purple' | 'pink'
 
 export const BOARD_THEMES: Record<BoardStyle, { light: string; dark: string; selectedLight: string; selectedDark: string }> = {
   green: { light: '#ebecd0', dark: '#739552', selectedLight: '#f7f769', selectedDark: '#bbcb2b' },
   brown: { light: '#f0d9b5', dark: '#b58863', selectedLight: '#f7ec59', selectedDark: '#daa520' },
   blue:  { light: '#dee3e6', dark: '#8ca2ad', selectedLight: '#c3d9e6', selectedDark: '#6f9bb3' },
   purple:{ light: '#e8dff0', dark: '#9068b0', selectedLight: '#d8c4f0', selectedDark: '#a87cd4' },
+  pink:  { light: '#f5dce0', dark: '#d4778a', selectedLight: '#f7b4c4', selectedDark: '#e8607a' },
 }
 
 interface ChessboardProps {
@@ -29,7 +30,7 @@ interface ChessboardProps {
   onPieceSelect?: () => void
   onPieceMove?: (captured: boolean) => void
   boardStyle?: BoardStyle
-  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal'
+  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
 }
 
 const squareToIndex = (square: string) => ({
@@ -68,7 +69,7 @@ const Square = memo(function Square({
   onTouchStart: (e: React.TouchEvent) => void
   interactive: boolean
   theme: typeof BOARD_THEMES[BoardStyle]
-  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal'
+  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
 }) {
   // Determine background color
   let bg = isLight ? theme.light : theme.dark
@@ -155,7 +156,7 @@ function AnimatedPiece({
   squareSize: number
   flipped: boolean
   onComplete: () => void
-  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal'
+  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
 }) {
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const rafRef = useRef<number>()
@@ -603,7 +604,7 @@ export function Chessboard({
 }
 
 // Mini chessboard for previews
-export const MiniChessboard = memo(function MiniChessboard({ fen, size = 120, boardStyle = 'green', pieceStyle = 'standard' }: { fen: string; size?: number; boardStyle?: BoardStyle; pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' }) {
+export const MiniChessboard = memo(function MiniChessboard({ fen, size = 120, boardStyle = 'green', pieceStyle = 'standard' }: { fen: string; size?: number; boardStyle?: BoardStyle; pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink' }) {
   const board = useMemo(() => parseFEN(fen), [fen])
   const squareSize = size / 8
   const miniTheme = BOARD_THEMES[boardStyle]
