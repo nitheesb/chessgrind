@@ -87,7 +87,7 @@ function SettingRow({
 
 // Board style preview
 function BoardStylePreview({ style, selected, onSelect }: { 
-  style: 'green' | 'brown' | 'blue' | 'purple'
+  style: 'green' | 'brown' | 'blue' | 'purple' | 'pink'
   selected: boolean
   onSelect: () => void 
 }) {
@@ -96,6 +96,7 @@ function BoardStylePreview({ style, selected, onSelect }: {
     brown: { light: '#f0d9b5', dark: '#b58863' },
     blue: { light: '#dee3e6', dark: '#8ca2ad' },
     purple: { light: '#e8dff0', dark: '#9068b0' },
+    pink: { light: '#f5dce0', dark: '#d4778a' },
   }
   const c = colors[style]
   
@@ -269,7 +270,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
         </h2>
         
         <div className="flex gap-3 py-3">
-          {(['green', 'brown', 'blue', 'purple'] as const).map((style) => (
+          {(['green', 'brown', 'blue', 'purple', 'pink'] as const).map((style) => (
             <BoardStylePreview
               key={style}
               style={style}
@@ -296,6 +297,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
             { id: 'neo', label: 'Neo' },
             { id: 'classic', label: 'Classic' },
             { id: 'minimal', label: 'Minimal' },
+            { id: 'pink', label: 'Rose' },
           ] as const).map((ps) => (
             <PieceStylePreview
               key={ps.id}
