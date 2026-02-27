@@ -34,26 +34,26 @@ export function SplashScreen({ onComplete, minDuration = 1800 }: SplashScreenPro
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden"
-          style={{ background: 'linear-gradient(180deg, hsl(222 22% 5%) 0%, hsl(222 22% 3%) 100%)' }}
+          style={{ background: 'linear-gradient(180deg, hsl(228 20% 5%) 0%, hsl(228 22% 3%) 100%)' }}
         >
           {/* Ambient orbs */}
           <div className="absolute inset-0 overflow-hidden">
             <motion.div
-              className="absolute w-[500px] h-[500px] rounded-full"
+              className="absolute w-[600px] h-[600px] rounded-full"
               style={{
-                background: 'radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%)',
-                top: '20%',
-                left: '30%',
+                background: 'radial-gradient(circle, rgba(0, 210, 190, 0.09) 0%, transparent 70%)',
+                top: '15%',
+                left: '25%',
               }}
               animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.div
-              className="absolute w-[400px] h-[400px] rounded-full"
+              className="absolute w-[500px] h-[500px] rounded-full"
               style={{
-                background: 'radial-gradient(circle, rgba(34, 197, 94, 0.04) 0%, transparent 70%)',
-                bottom: '20%',
-                right: '30%',
+                background: 'radial-gradient(circle, rgba(120, 60, 220, 0.06) 0%, transparent 70%)',
+                bottom: '15%',
+                right: '25%',
               }}
               animate={{ scale: [1.2, 1, 1.2], opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
@@ -142,7 +142,7 @@ export function SplashScreen({ onComplete, minDuration = 1800 }: SplashScreenPro
               transition={{ duration: 1.2, ease: 'easeInOut', repeat: 1 }}
               className="h-full w-1/2 rounded-full"
               style={{
-                background: 'linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.6), transparent)',
+                background: 'linear-gradient(90deg, transparent, rgba(48, 209, 88, 0.5), transparent)',
               }}
             />
           </motion.div>

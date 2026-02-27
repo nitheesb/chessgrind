@@ -84,8 +84,8 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
           {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-primary/[0.03] to-transparent rounded-full translate-x-1/3 -translate-y-1/3" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-amber-500/[0.02] to-transparent rounded-full -translate-x-1/4 translate-y-1/4" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-primary/[0.06] to-transparent rounded-full translate-x-1/3 -translate-y-1/3" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-500/[0.04] to-transparent rounded-full -translate-x-1/4 translate-y-1/4" />
 
           <div className="flex items-center justify-between relative">
             <div>

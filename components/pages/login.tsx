@@ -93,7 +93,10 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#1a1a1a] to-background relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
+      {/* Mesh gradient background */}
+      <div className="mesh-gradient" />
+      
       {/* Header */}
       <div className="flex-shrink-0 pt-16 pb-10 px-6 text-center relative overflow-hidden z-10">
         <motion.div
