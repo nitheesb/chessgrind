@@ -28,16 +28,6 @@ import {
   TrendingUp,
 } from 'lucide-react'
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
-  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-}
-
 interface DesktopPuzzlesProps {
   onNavigate: (page: string) => void
 }
@@ -62,12 +52,6 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
     rating: profile.puzzleRating || 800,
   }
 
-  function handleSpotlight(e: React.MouseEvent<HTMLElement>) {
-    const rect = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`)
-    e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
-  }
-
   if (activePuzzle) {
     return (
       <DesktopPuzzleSolver
@@ -87,20 +71,15 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
   }
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="p-8 max-w-7xl mx-auto"
-    >
+    <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <motion.div variants={item} className="mb-8">
+      <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Tactical Puzzles</h1>
         <p className="text-muted-foreground">Sharpen your tactical vision with {PUZZLES.length} puzzles</p>
-      </motion.div>
+      </div>
 
       {/* Stats */}
-      <motion.div variants={item} className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-4 gap-4 mb-8">
         <div className="glass-card p-5 text-center">
           <PuzzleIcon className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
           <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.solved} /></p>
@@ -121,10 +100,10 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
           <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.total} /></p>
           <p className="text-sm text-muted-foreground">Total Puzzles</p>
         </div>
-      </motion.div>
+      </div>
 
       {/* Filter */}
-      <motion.div variants={item} className="flex mb-6">
+      <div className="flex mb-6">
         <div className="segmented-control flex">
           {['all', 'easy', 'medium', 'hard', 'expert'].map((diff) => (
             <button
@@ -150,19 +129,18 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
             </button>
           ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* Puzzle Grid */}
-      <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPuzzles.map((puzzle, idx) => (
-          <motion.button
+          <button
             key={puzzle.id}
             onClick={() => {
               playSound('click')
               setActivePuzzle(puzzle)
             }}
-            className="glass-card-hover card-spotlight p-5 text-left group"
-            onMouseMove={handleSpotlight}
+            className="glass-card-hover p-5 text-left group"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
@@ -184,10 +162,10 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-          </motion.button>
+          </button>
         ))}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }
 

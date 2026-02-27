@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { getLevelInfo } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
@@ -243,24 +243,15 @@ export function DesktopShell() {
         className="flex-1 relative z-10"
         style={{ marginLeft: 220 }}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentPage}
-            initial={{ opacity: 0, filter: 'blur(6px)', scale: 0.985 }}
-            animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
-            exit={{ opacity: 0, filter: 'blur(4px)' }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="min-h-screen"
-          >
-            {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}
-            {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
-            {currentPage === 'openings' && <DesktopOpenings onNavigate={handleNavigate} />}
-            {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
-            {currentPage === 'traps' && <DesktopTraps onNavigate={handleNavigate} />}
-            {currentPage === 'profile' && <DesktopProfile onNavigate={handleNavigate} />}
-            {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
-          </motion.div>
-        </AnimatePresence>
+        <div key={currentPage} className="page-fade-in min-h-screen">
+          {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}
+          {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
+          {currentPage === 'openings' && <DesktopOpenings onNavigate={handleNavigate} />}
+          {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
+          {currentPage === 'traps' && <DesktopTraps onNavigate={handleNavigate} />}
+          {currentPage === 'profile' && <DesktopProfile onNavigate={handleNavigate} />}
+          {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
+        </div>
       </main>
     </div>
   )

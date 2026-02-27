@@ -16,15 +16,7 @@ import {
   ChevronLeft,
 } from 'lucide-react'
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
-}
 
-const item = {
-  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
-  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-}
 
 interface DesktopSettingsProps {
   onNavigate: (page: string) => void
@@ -90,14 +82,11 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
   ]
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
+    <div
       className="p-8 max-w-4xl mx-auto"
     >
       {/* Header */}
-      <motion.div variants={item} className="mb-8">
+      <div className="mb-8">
         <button
           onClick={() => {
             playSound('click')
@@ -110,11 +99,11 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
         </button>
         <h1 className="text-3xl font-bold text-foreground">Settings</h1>
         <p className="text-muted-foreground">Customize your ChessVault experience</p>
-      </motion.div>
+      </div>
 
       {/* Settings Sections */}
       {settingsSections.map((section) => (
-        <motion.div key={section.title} variants={item} className="mb-8">
+        <div key={section.title} className="mb-8">
           <h2 className="text-lg font-semibold text-foreground mb-4">{section.title}</h2>
           <div className="glass-card divide-y divide-border/50">
             {section.items.map((settingItem) => (
@@ -137,20 +126,19 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                   className={`relative w-14 h-8 rounded-full transition-colors ${settings[settingItem.key] ? 'bg-primary' : 'bg-secondary'
                     }`}
                 >
-                  <motion.div
-                    className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md"
-                    animate={{ left: settings[settingItem.key] ? 30 : 4 }}
-                    transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+                  <div
+                    className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md transition-all duration-150 ease-out"
+                    style={{ left: settings[settingItem.key] ? 30 : 4 }}
                   />
                 </motion.button>
               </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       ))}
 
       {/* Board Style */}
-      <motion.div variants={item} className="mb-8">
+      <div className="mb-8">
         <h2 className="text-lg font-semibold text-foreground mb-4">Board Style</h2>
         <div className="grid grid-cols-4 gap-4">
           {boardStyles.map((style) => (
@@ -187,10 +175,10 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
             </motion.button>
           ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* Piece Style */}
-      <motion.div variants={item} className="mb-8">
+      <div className="mb-8">
         <h2 className="text-lg font-semibold text-foreground mb-4">Piece Style</h2>
         <div className="grid grid-cols-4 gap-4">
           {[
@@ -226,10 +214,10 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
             </motion.button>
           ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* Theme */}
-      <motion.div variants={item}>
+      <div variants={item}>
         <h2 className="text-lg font-semibold text-foreground mb-4">Theme</h2>
         <div className="glass-card p-5">
           <div className="flex gap-4">
@@ -255,7 +243,7 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
             ))}
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }

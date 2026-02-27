@@ -19,15 +19,7 @@ import {
   Zap,
 } from 'lucide-react'
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
-}
 
-const item = {
-  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
-  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-}
 
 interface DesktopPlayAIProps {
   onNavigate: (page: string) => void
@@ -198,7 +190,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
   if (!gameStarted) {
     return (
-      <motion.div
+      <div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="p-8 max-w-4xl mx-auto"
@@ -269,19 +261,19 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
             Start Game
           </motion.button>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
   return (
-    <motion.div
+    <div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="p-8 max-w-7xl mx-auto"
     >
       <div className="grid grid-cols-3 gap-8">
         {/* Left Panel */}
-        <motion.div
+        <div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="space-y-6"
@@ -376,10 +368,10 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               Resign
             </motion.button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Center - Board */}
-        <motion.div
+        <div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="col-span-2"
@@ -387,7 +379,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           <div className="glass-card p-6">
             {/* Game Status */}
             {gameStatus !== 'playing' && (
-              <motion.div
+              <div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`mb-4 p-4 rounded-xl text-center font-semibold ${
@@ -405,7 +397,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 )}
                 {gameStatus === 'lost' && 'Game Over - AI Wins'}
                 {gameStatus === 'draw' && 'Game Drawn'}
-              </motion.div>
+              </div>
             )}
 
             {/* Board */}
@@ -424,7 +416,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
             {/* Reward info */}
             {gameStatus === 'won' && (
-              <motion.div
+              <div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-6 text-center"
@@ -433,11 +425,11 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                   <Zap className="w-5 h-5" />
                   +{50 * (Object.keys(DIFFICULTY_CONFIG).indexOf(difficulty) + 1)} XP earned!
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {gameStatus !== 'playing' && (
-              <motion.div
+              <div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-6 flex gap-4 justify-center"
@@ -448,11 +440,11 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 >
                   Play Again
                 </motion.button>
-              </motion.div>
+              </div>
             )}
           </div>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

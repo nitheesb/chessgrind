@@ -20,16 +20,6 @@ import {
   Layers,
 } from 'lucide-react'
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
-  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-}
-
 interface DesktopOpeningsProps {
   onNavigate: (page: string) => void
 }
@@ -55,12 +45,6 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
     return groups
   }, [filteredOpenings])
 
-  function handleSpotlight(e: React.MouseEvent<HTMLElement>) {
-    const rect = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`)
-    e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
-  }
-
   if (activeOpening) {
     return (
       <DesktopOpeningViewer
@@ -71,20 +55,15 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
   }
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="p-8 max-w-7xl mx-auto"
-    >
+    <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <motion.div variants={item} className="mb-8">
+      <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Opening Library</h1>
         <p className="text-muted-foreground">Master the opening phase with {OPENINGS.length} curated lines</p>
-      </motion.div>
+      </div>
 
       {/* Filter */}
-      <motion.div variants={item} className="flex mb-8">
+      <div className="flex mb-8">
         <div className="segmented-control flex">
           {(['all', 'e4', 'd4', 'other'] as const).map((cat) => (
             <button
@@ -110,12 +89,12 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
             </button>
           ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* Opening Grid by Difficulty */}
       {['beginner', 'intermediate', 'advanced'].map(difficulty => (
         groupedOpenings[difficulty] && (
-          <motion.div key={difficulty} variants={item} className="mb-8">
+          <div key={difficulty} className="mb-8">
             <h2 className="text-lg font-semibold text-foreground mb-4 capitalize flex items-center gap-2">
               <Layers className="w-5 h-5 text-primary" />
               {difficulty} Openings
@@ -123,14 +102,13 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               {groupedOpenings[difficulty].map((opening) => (
-                <motion.button
+                <button
                   key={opening.id}
                   onClick={() => {
                     playSound('click')
                     setActiveOpening(opening)
                   }}
-                  className="glass-card-hover card-spotlight p-5 text-left group"
-                  onMouseMove={handleSpotlight}
+                  className="glass-card-hover p-5 text-left group"
                 >
                   <div className="flex gap-4">
                     <div className="rounded-xl overflow-hidden shadow-md flex-shrink-0" style={{ width: 80, height: 80 }}>
@@ -157,13 +135,13 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
                       Study <ChevronRight className="w-3 h-3" />
                     </span>
                   </div>
-                </motion.button>
+                </button>
               ))}
             </div>
-          </motion.div>
+          </div>
         )
       ))}
-    </motion.div>
+    </div>
   )
 }
 

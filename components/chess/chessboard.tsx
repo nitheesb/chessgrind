@@ -603,7 +603,7 @@ export function Chessboard({
 }
 
 // Mini chessboard for previews
-export function MiniChessboard({ fen, size = 120, boardStyle = 'green', pieceStyle = 'standard' }: { fen: string; size?: number; boardStyle?: BoardStyle; pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' }) {
+export const MiniChessboard = memo(function MiniChessboard({ fen, size = 120, boardStyle = 'green', pieceStyle = 'standard' }: { fen: string; size?: number; boardStyle?: BoardStyle; pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' }) {
   const board = useMemo(() => parseFEN(fen), [fen])
   const squareSize = size / 8
   const miniTheme = BOARD_THEMES[boardStyle]
@@ -651,4 +651,4 @@ export function MiniChessboard({ fen, size = 120, boardStyle = 'green', pieceSty
       })}
     </div>
   )
-}
+})

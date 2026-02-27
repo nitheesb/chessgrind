@@ -20,24 +20,8 @@ import {
   Zap,
 } from 'lucide-react'
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
-  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-}
-
 interface DesktopTrapsProps {
   onNavigate: (page: string) => void
-}
-
-function handleSpotlight(e: React.MouseEvent<HTMLElement>) {
-  const rect = e.currentTarget.getBoundingClientRect()
-  e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`)
-  e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
 }
 
 export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
@@ -55,14 +39,9 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
   }
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="p-8 max-w-7xl mx-auto"
-    >
+    <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <motion.div variants={item} className="mb-8">
+      <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
             <Target className="w-7 h-7 text-white" />
@@ -72,10 +51,10 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
             <p className="text-muted-foreground">Learn devastating traps to catch your opponents</p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Warning Card */}
-      <motion.div variants={item} className="mb-8">
+      <div className="mb-8">
         <div className="glass-card p-5 border-amber-500/30 bg-amber-500/5">
           <div className="flex items-start gap-4">
             <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
@@ -88,19 +67,18 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Traps Grid */}
-      <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {TRAPS.map((trap) => (
-          <motion.button
+          <button
             key={trap.id}
             onClick={() => {
               playSound('click')
               setActiveTrap(trap)
             }}
-            onMouseMove={handleSpotlight}
-            className="glass-card-hover card-spotlight p-5 text-left group hover-lift"
+            className="glass-card-hover p-5 text-left group hover-lift"
           >
             <div className="flex gap-4">
               <div className="rounded-xl overflow-hidden shadow-md flex-shrink-0" style={{ width: 80, height: 80 }}>
@@ -127,10 +105,10 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
                 Study <ChevronRight className="w-3 h-3" />
               </span>
             </div>
-          </motion.button>
+          </button>
         ))}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }
 

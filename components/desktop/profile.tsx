@@ -19,15 +19,7 @@ import {
 } from 'lucide-react'
 import { AnimatedCounter } from '@/components/ui/animated-components'
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
-}
 
-const item = {
-  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
-  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-}
 
 interface DesktopProfileProps {
   onNavigate: (page: string) => void
@@ -51,14 +43,11 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
   const lockedAchievements = profile.achievements.filter(a => !a.earned)
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
+    <div
       className="p-8 max-w-6xl mx-auto"
     >
       {/* Header */}
-      <motion.div variants={item} className="mb-8">
+      <div className="mb-8">
         <div className="glass-card p-8 relative overflow-hidden">
           {/* Gradient accent */}
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
@@ -117,46 +106,41 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
               <span className="text-sm text-muted-foreground">{xpIntoLevel} / {xpForLevel} XP</span>
             </div>
             <div className="h-3.5 xp-bar-track rounded-full overflow-hidden">
-              <motion.div
-                className="h-full rounded-full xp-bar-fill relative"
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(progress, 100)}%` }}
-                transition={{ duration: 1, ease: 'easeOut' }}
+              <div
+                className="h-full rounded-full xp-bar-fill relative transition-all duration-700 ease-out"
+                style={{ width: `${Math.min(progress, 100)}%` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-              </motion.div>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               {xpForLevel - xpIntoLevel} XP to reach {nextLevel.level !== currentLevel.level ? <span className="text-primary font-medium">Level {nextLevel.level} — {nextLevel.title}</span> : <span className="text-primary font-medium">Max Level</span>}
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Stats Grid */}
-      <motion.div variants={item} className="mb-8">
+      <div className="mb-8">
         <h2 className="text-lg font-display font-semibold text-foreground mb-4">Statistics</h2>
         <div className="grid grid-cols-3 lg:grid-cols-6 gap-4">
           {stats.map((stat, index) => (
-            <motion.div
+            <div
               key={stat.label}
               className={`glass-card p-5 text-center group transition-all duration-500 ${stat.hoverCard}`}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.03 * index, duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
             >
               <div className={`w-10 h-10 rounded-xl ${stat.bgClass} flex items-center justify-center mx-auto mb-3 ${stat.colorClass} transition-transform duration-300 group-hover:scale-110`}>
                 {stat.icon}
               </div>
               <p className="text-2xl font-display font-bold text-foreground mb-1"><AnimatedCounter value={stat.value} /></p>
               <p className="text-xs text-muted-foreground">{stat.label}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* Achievements */}
-      <motion.div variants={item}>
+      <div variants={item}>
         <h2 className="text-lg font-display font-semibold text-foreground mb-4">
           Achievements <span className="text-sm font-normal text-muted-foreground">({earnedAchievements.length}/{profile.achievements.length})</span>
         </h2>
@@ -167,7 +151,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
             <h3 className="text-sm font-medium text-primary/70 mb-3 uppercase tracking-wider">Unlocked</h3>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {earnedAchievements.map((achievement) => (
-                <motion.div
+                <div
                   key={achievement.id}
                   className="glass-card p-4 border-primary/10 group hover:border-primary/20 transition-all duration-500"
                 >
@@ -184,7 +168,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -227,7 +211,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
             </div>
           </div>
         )}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }
