@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { getLevelInfo } from '@/lib/chess-store'
@@ -54,6 +54,26 @@ const SECONDARY_NAV: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
 ]
 
+const NAV_ORDER: Page[] = ['dashboard', 'puzzles', 'openings', 'play', 'traps', 'profile', 'settings']
+
+const desktopPageVariants = {
+  initial: (direction: number) => ({
+    opacity: 0,
+    x: direction * 60,
+    scale: 0.98,
+  }),
+  animate: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction * -60,
+    scale: 0.98,
+  }),
+}
+
 function NavTooltip({ label, show }: { label: string; show: boolean }) {
   return (
     <AnimatePresence>
@@ -86,6 +106,7 @@ export function DesktopShell() {
   const [showSplash, setShowSplash] = useState(true)
   const [sidebarHovered, setSidebarHovered] = useState(false)
   const [hoveredNavItem, setHoveredNavItem] = useState<string | null>(null)
+  const directionRef = useRef(0)
   const { currentLevel, progress } = getLevelInfo(profile.xp)
 
   useEffect(() => {
@@ -98,7 +119,10 @@ export function DesktopShell() {
 
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
-    setCurrentPage(page as Page)
+    setCurrentPage(prev => {
+      directionRef.current = NAV_ORDER.indexOf(page as Page) >= NAV_ORDER.indexOf(prev) ? 1 : -1
+      return page as Page
+    })
   }, [playSound])
 
   const handleLogout = useCallback(() => {
@@ -256,7 +280,16 @@ export function DesktopShell() {
                     style={{ boxShadow: '0 0 12px rgba(34, 197, 94, 0.4)' }}
                   />
                 )}
-                <span className={`flex-shrink-0 transition-transform duration-200 ${isActive ? 'text-primary' : 'group-hover:scale-110'}`}>
+                <span className={`relative flex-shrink-0 transition-transform duration-200 ${isActive ? 'text-primary' : 'group-hover:scale-110'}`}>
+                  {isActive && (
+                    <motion.div
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full"
+                      style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.3) 0%, transparent 70%)' }}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.6, 0.8, 0.6] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  )}
                   {item.icon}
                 </span>
                 <AnimatePresence>
@@ -296,7 +329,18 @@ export function DesktopShell() {
                 whileHover={{ x: 2 }}
                 whileTap={{ scale: 0.97 }}
               >
-                {item.icon}
+                <span className={`relative flex-shrink-0 ${isActive ? 'text-primary' : ''}`}>
+                  {isActive && (
+                    <motion.div
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full"
+                      style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.3) 0%, transparent 70%)' }}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.6, 0.8, 0.6] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  )}
+                  {item.icon}
+                </span>
                 <AnimatePresence>
                   {sidebarHovered && (
                     <motion.span
@@ -344,16 +388,21 @@ export function DesktopShell() {
       </motion.aside>
 
       {/* Main Content */}
-      <main
+      <motion.main
         className="flex-1 transition-all duration-300 relative z-10"
         style={{ marginLeft: sidebarHovered ? 260 : 72 }}
+        initial={{ scale: 0.97, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.1 }}
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" custom={directionRef.current}>
           <motion.div
             key={currentPage}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            custom={directionRef.current}
+            variants={desktopPageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
             transition={{ type: 'spring', stiffness: 400, damping: 35 }}
             className="min-h-screen"
           >
@@ -366,7 +415,7 @@ export function DesktopShell() {
             {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
           </motion.div>
         </AnimatePresence>
-      </main>
+      </motion.main>
     </div>
   )
 }

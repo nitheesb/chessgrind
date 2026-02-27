@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
@@ -40,6 +40,23 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'traps', label: 'Traps', icon: <Target className="w-5 h-5" /> },
 ]
 
+const NAV_ORDER: Page[] = ['dashboard', 'puzzles', 'openings', 'play', 'traps', 'profile', 'settings']
+
+const pageVariants = {
+  initial: (direction: number) => ({
+    opacity: 0,
+    x: direction * 40,
+  }),
+  animate: {
+    opacity: 1,
+    x: 0,
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction * -40,
+  }),
+}
+
 export function AppShell() {
   const { 
     isLoggedIn, 
@@ -50,6 +67,7 @@ export function AppShell() {
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
   const [showSplash, setShowSplash] = useState(true)
+  const directionRef = useRef(0)
 
   useEffect(() => {
     checkAndUpdateStreak()
@@ -62,19 +80,28 @@ export function AppShell() {
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
     triggerHaptic('selection')
-    setCurrentPage(page as Page)
+    setCurrentPage(prev => {
+      directionRef.current = NAV_ORDER.indexOf(page as Page) >= NAV_ORDER.indexOf(prev) ? 1 : -1
+      return page as Page
+    })
   }, [playSound, triggerHaptic])
 
   const handleBack = useCallback(() => {
     playSound('click')
     triggerHaptic('light')
-    setCurrentPage('dashboard')
+    setCurrentPage(prev => {
+      directionRef.current = -1
+      return 'dashboard'
+    })
   }, [playSound, triggerHaptic])
 
   const handleNavClick = useCallback((pageId: Page) => {
     playSound('click')
     triggerHaptic('selection')
-    setCurrentPage(pageId)
+    setCurrentPage(prev => {
+      directionRef.current = NAV_ORDER.indexOf(pageId) >= NAV_ORDER.indexOf(prev) ? 1 : -1
+      return pageId
+    })
   }, [playSound, triggerHaptic])
 
   if (showSplash) {
@@ -98,89 +125,34 @@ export function AppShell() {
 
       {/* Main content area */}
       <main className="flex-1 overflow-y-auto px-4 pt-3 pb-20">
-        <AnimatePresence mode="wait" initial={false}>
-          {currentPage === 'dashboard' && (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-            >
-              <Dashboard onNavigate={handleNavigate} />
-            </motion.div>
-          )}
-          {currentPage === 'puzzles' && (
-            <motion.div
-              key="puzzles"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-            >
-              <PuzzlesPage onBack={handleBack} />
-            </motion.div>
-          )}
-          {currentPage === 'openings' && (
-            <motion.div
-              key="openings"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-            >
-              <OpeningsPage onBack={handleBack} />
-            </motion.div>
-          )}
-          {currentPage === 'play' && (
-            <motion.div
-              key="play"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-            >
-              <PlayAIPage onBack={handleBack} />
-            </motion.div>
-          )}
-          {currentPage === 'traps' && (
-            <motion.div
-              key="traps"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-            >
-              <TrapsPage onBack={handleBack} />
-            </motion.div>
-          )}
-          {currentPage === 'profile' && (
-            <motion.div
-              key="profile"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-            >
-              <ProfilePage onBack={handleBack} onNavigate={handleNavigate} />
-            </motion.div>
-          )}
-          {currentPage === 'settings' && (
-            <motion.div
-              key="settings"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-            >
-              <SettingsPage onBack={handleBack} />
-            </motion.div>
-          )}
+        <AnimatePresence mode="wait" initial={false} custom={directionRef.current}>
+          <motion.div
+            key={currentPage}
+            custom={directionRef.current}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+          >
+            {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
+            {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}
+            {currentPage === 'openings' && <OpeningsPage onBack={handleBack} />}
+            {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
+            {currentPage === 'traps' && <TrapsPage onBack={handleBack} />}
+            {currentPage === 'profile' && <ProfilePage onBack={handleBack} onNavigate={handleNavigate} />}
+            {currentPage === 'settings' && <SettingsPage onBack={handleBack} />}
+          </motion.div>
         </AnimatePresence>
       </main>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom overflow-hidden">
+        {/* Animated gradient top border */}
+        <div
+          className="absolute top-0 left-0 right-0 h-[1px] animate-gradient"
+          style={{ background: 'linear-gradient(90deg, transparent, hsl(var(--primary) / 0.6), transparent)', backgroundSize: '300% 100%' }}
+        />
         <div className="max-w-lg mx-auto flex items-stretch justify-around">
           {NAV_ITEMS.map((navItem) => {
             const isActive = currentPage === navItem.id
@@ -199,12 +171,18 @@ export function AppShell() {
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                <motion.span 
-                  animate={{ scale: isActive ? 1.1 : 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                >
-                  {navItem.icon}
-                </motion.span>
+                <div className="relative">
+                  {isActive && (
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/20 blur-md" />
+                  )}
+                  <motion.span
+                    className="relative"
+                    animate={{ scale: isActive ? 1.15 : 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  >
+                    {navItem.icon}
+                  </motion.span>
+                </div>
                 <span className="text-[10px] font-medium">{navItem.label}</span>
               </button>
             )
@@ -222,12 +200,18 @@ export function AppShell() {
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
-            <motion.span 
-              animate={{ scale: currentPage === 'profile' ? 1.1 : 1 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            >
-              <User className="w-5 h-5" />
-            </motion.span>
+            <div className="relative">
+              {currentPage === 'profile' && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/20 blur-md" />
+              )}
+              <motion.span
+                className="relative"
+                animate={{ scale: currentPage === 'profile' ? 1.15 : 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              >
+                <User className="w-5 h-5" />
+              </motion.span>
+            </div>
             <span className="text-[10px] font-medium">Profile</span>
           </button>
         </div>

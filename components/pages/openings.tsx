@@ -9,6 +9,7 @@ import type { Opening } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
+import { staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
   ChevronRight,
@@ -52,9 +53,14 @@ export function OpeningsPage({ onBack }: OpeningsPageProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-8">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="flex flex-col gap-4 pb-8"
+    >
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <motion.div variants={staggerItem} className="flex items-center gap-3">
         <button
           onClick={onBack}
           className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center active:bg-secondary/70"
@@ -62,35 +68,42 @@ export function OpeningsPage({ onBack }: OpeningsPageProps) {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-foreground">Opening Explorer</h1>
+          <h1 className="text-xl font-bold text-foreground shimmer-text">Opening Explorer</h1>
           <p className="text-xs text-muted-foreground">{OPENINGS.length} openings to master</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2">
+      <motion.div variants={staggerItem} className="flex gap-2 relative">
         {(['all', 'e4', 'd4', 'other'] as const).map((f) => (
           <button
             key={f}
             onClick={() => handleFilterChange(f)}
-            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            className={`relative px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
               filter === f
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-secondary text-muted-foreground active:bg-secondary/70'
             }`}
           >
             {f === 'all' ? 'All' : f === 'other' ? 'Flank' : `1.${f}`}
+            {filter === f && (
+              <motion.div
+                layoutId="openings-filter-underline"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              />
+            )}
           </button>
         ))}
-      </div>
+      </motion.div>
 
       {/* Openings list */}
-      <div className="flex flex-col gap-2">
+      <motion.div variants={staggerItem} className="flex flex-col gap-2">
         {filteredOpenings.map((opening) => (
           <button
             key={opening.id}
             onClick={() => handleSelect(opening)}
-            className="w-full bg-secondary rounded-xl p-3 flex items-center gap-3 text-left active:bg-secondary/70"
+            className="w-full bg-secondary rounded-xl p-3 flex items-center gap-3 text-left active:bg-secondary/70 hover-lift glow-card"
           >
             <div className="overflow-hidden rounded-lg flex-shrink-0" style={{ width: 56, height: 56 }}>
               <MiniChessboard fen={opening.fen} size={56} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
@@ -110,8 +123,8 @@ export function OpeningsPage({ onBack }: OpeningsPageProps) {
             <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </button>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 

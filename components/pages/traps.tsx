@@ -8,6 +8,7 @@ import { TRAPS, getDifficultyBg } from '@/lib/chess-data'
 import type { Trap } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
+import { AnimatedCounter, staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
   Target,
@@ -23,16 +24,6 @@ import {
   BookOpen,
   FlipVertical,
 } from 'lucide-react'
-
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
-}
-
-const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0 },
-}
 
 interface TrapsPageProps {
   onBack: () => void
@@ -54,13 +45,13 @@ export function TrapsPage({ onBack }: TrapsPageProps) {
 
   return (
     <motion.div
-      variants={container}
+      variants={staggerContainer}
       initial="hidden"
       animate="show"
       className="flex flex-col gap-4 pb-8"
     >
       {/* Header */}
-      <motion.div variants={item} className="flex items-center gap-3">
+      <motion.div variants={staggerItem} className="flex items-center gap-3">
         <button
           onClick={onBack}
           className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"
@@ -68,13 +59,13 @@ export function TrapsPage({ onBack }: TrapsPageProps) {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div>
-          <h1 className="text-xl font-display font-bold text-foreground">Opening Traps</h1>
+          <h1 className="text-xl font-display font-bold text-foreground shimmer-text">Opening Traps</h1>
           <p className="text-xs text-muted-foreground">{TRAPS.length} traps to master</p>
         </div>
       </motion.div>
 
       {/* Info Card */}
-      <motion.div variants={item} className="glass-card p-4 flex items-start gap-3 border-accent/20">
+      <motion.div variants={staggerItem} className="glass-card p-4 flex items-start gap-3 border-accent/20 breathing-glow">
         <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
           <AlertTriangle className="w-5 h-5 text-accent" />
         </div>
@@ -87,26 +78,26 @@ export function TrapsPage({ onBack }: TrapsPageProps) {
       </motion.div>
 
       {/* Stats */}
-      <motion.div variants={item} className="grid grid-cols-3 gap-3">
+      <motion.div variants={staggerItem} className="grid grid-cols-3 gap-3">
         <div className="glass-card p-3 text-center">
           <Target className="w-4 h-4 text-red-400 mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground">{TRAPS.length}</p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={TRAPS.length} /></p>
           <p className="text-[10px] text-muted-foreground">Total</p>
         </div>
         <div className="glass-card p-3 text-center">
           <Eye className="w-4 h-4 text-blue-400 mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground">{TRAPS.filter(t => t.side === 'white').length}</p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={TRAPS.filter(t => t.side === 'white').length} /></p>
           <p className="text-[10px] text-muted-foreground">For White</p>
         </div>
         <div className="glass-card p-3 text-center">
           <Eye className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground">{TRAPS.filter(t => t.side === 'black').length}</p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={TRAPS.filter(t => t.side === 'black').length} /></p>
           <p className="text-[10px] text-muted-foreground">For Black</p>
         </div>
       </motion.div>
 
       {/* Filter */}
-      <motion.div variants={item} className="flex gap-2">
+      <motion.div variants={staggerItem} className="flex gap-2">
         {['all', 'beginner', 'intermediate', 'advanced'].map((diff) => (
           <button
             key={diff}
@@ -123,13 +114,14 @@ export function TrapsPage({ onBack }: TrapsPageProps) {
       </motion.div>
 
       {/* Trap List */}
-      <motion.div variants={item} className="flex flex-col gap-3">
+      <motion.div variants={staggerItem} className="flex flex-col gap-3">
         {filteredTraps.map((trap) => (
           <motion.button
             key={trap.id}
             whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTrap(trap)}
-            className="w-full glass-card-hover p-4 flex items-center gap-3 text-left"
+            className="w-full glass-card-hover glow-card p-4 flex items-center gap-3 text-left"
+            style={{ ['--glow-color' as string]: 'rgba(239, 68, 68, 0.15)' }}
           >
             <div className="relative overflow-hidden rounded-lg flex-shrink-0" style={{ width: 64, height: 64 }}>
               <MiniChessboard fen={trap.fen} size={64} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
