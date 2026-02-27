@@ -170,7 +170,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
 }
 
 function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
-  const { addXP, incrementPuzzlesSolved, updatePuzzleRating } = useGame()
+  const { addXP, incrementPuzzlesSolved, updatePuzzleRating, trackPuzzleFailure } = useGame()
   const { settings } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
@@ -310,6 +310,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
         playSound('fail')
         triggerHaptic('error')
         updatePuzzleRating(puzzle.rating, false, timer)
+        trackPuzzleFailure(puzzle.themes)
         processingRef.current = false
         return false
       }
@@ -317,7 +318,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
       processingRef.current = false
       return false
     }
-  }, [status, puzzle.moves, puzzle.xpReward, puzzle.rating, moveIndex, game, addXP, incrementPuzzlesSolved, updatePuzzleRating, timer, playOpponentMove, playSound, triggerHaptic])
+  }, [status, puzzle.moves, puzzle.xpReward, puzzle.rating, puzzle.themes, moveIndex, game, addXP, incrementPuzzlesSolved, updatePuzzleRating, trackPuzzleFailure, timer, playOpponentMove, playSound, triggerHaptic])
 
   const handleRetry = useCallback(() => {
     playSound('click')

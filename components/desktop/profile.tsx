@@ -139,8 +139,42 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
         </div>
       </div>
 
+      {/* Weakness Analysis */}
+      {Object.keys(profile.failedPuzzleThemes || {}).length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-display font-semibold text-foreground mb-4">Areas to Improve</h2>
+          <div className="glass-card p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {Object.entries(profile.failedPuzzleThemes)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 6)
+                .map(([theme, count]) => {
+                  const maxCount = Math.max(...Object.values(profile.failedPuzzleThemes))
+                  return (
+                    <div key={theme}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm text-foreground capitalize">{theme}</span>
+                        <span className="text-xs text-muted-foreground">{count} missed</span>
+                      </div>
+                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-orange-500 rounded-full transition-all duration-500"
+                          style={{ width: `${(count / maxCount) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Based on incorrect puzzle attempts. Practice these themes to improve!
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Achievements */}
-      <div variants={item}>
+      <div>
         <h2 className="text-lg font-display font-semibold text-foreground mb-4">
           Achievements <span className="text-sm font-normal text-muted-foreground">({earnedAchievements.length}/{profile.achievements.length})</span>
         </h2>

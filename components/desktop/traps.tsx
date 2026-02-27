@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard, MiniChessboard } from '@/components/chess/chessboard'
 import { TRAPS } from '@/lib/chess-data'
 import type { Trap } from '@/lib/chess-data'
+import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import {
@@ -18,6 +19,10 @@ import {
   AlertTriangle,
   Clock,
   Zap,
+  Check,
+  Eye,
+  FlipVertical,
+  BookOpen,
 } from 'lucide-react'
 
 interface DesktopTrapsProps {
@@ -113,9 +118,15 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
 }
 
 function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
+  const { addXP, incrementTrapsLearned } = useGame()
   const { settings } = useSettings()
   const { playSound } = useSoundAndHaptics()
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1)
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false)
+  const [showExplanation, setShowExplanation] = useState(false)
+  const [boardFlipOverride, setBoardFlipOverride] = useState(false)
+  const [showCoords, setShowCoords] = useState(true)
 
   const currentFen = useMemo(() => {
     if (currentMoveIndex < 0) return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -127,27 +138,83 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
     return game.fen()
   }, [currentMoveIndex, trap.moves])
 
-  const handleNext = () => {
+  const markCompleted = useCallback(() => {
+    if (!isCompleted) {
+      setIsCompleted(true)
+      addXP(trap.xpReward)
+      incrementTrapsLearned()
+    }
+  }, [isCompleted, addXP, incrementTrapsLearned, trap.xpReward])
+
+  const handleNext = useCallback(() => {
     if (currentMoveIndex < trap.moves.length - 1) {
       playSound('move')
-      setCurrentMoveIndex(prev => prev + 1)
+      const nextIndex = currentMoveIndex + 1
+      setCurrentMoveIndex(nextIndex)
+      if (nextIndex === trap.moves.length - 1) {
+        markCompleted()
+      }
     }
-  }
+  }, [currentMoveIndex, trap.moves.length, playSound, markCompleted])
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     if (currentMoveIndex >= 0) {
       playSound('click')
       setCurrentMoveIndex(prev => prev - 1)
     }
-  }
+  }, [currentMoveIndex, playSound])
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     playSound('click')
     setCurrentMoveIndex(-1)
-  }
+    setIsAutoPlaying(false)
+  }, [playSound])
+
+  const handleAutoPlay = useCallback(() => {
+    if (isAutoPlaying) {
+      setIsAutoPlaying(false)
+      return
+    }
+    setIsAutoPlaying(true)
+    setCurrentMoveIndex(-1)
+
+    let idx = -1
+    const interval = setInterval(() => {
+      idx++
+      if (idx >= trap.moves.length) {
+        clearInterval(interval)
+        setIsAutoPlaying(false)
+        return
+      }
+      setCurrentMoveIndex(idx)
+      if (idx === trap.moves.length - 1) {
+        markCompleted()
+      }
+    }, 1200)
+  }, [isAutoPlaying, trap.moves.length, markCompleted])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        handleNext()
+      } else if (e.key === 'ArrowLeft') {
+        handlePrev()
+      } else if (e.key === ' ') {
+        e.preventDefault()
+        handleAutoPlay()
+      } else if (e.key === 'r' || e.key === 'R') {
+        handleReset()
+      } else if (e.key === 'Escape') {
+        onBack()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleNext, handlePrev, handleAutoPlay, handleReset, onBack])
 
   // Highlight the trap move
-  const trapMoveIndex = trap.trapMoveIndex !== undefined ? trap.trapMoveIndex : -1
+  const trapMoveIndex = (trap as Trap & { trapMoveIndex?: number }).trapMoveIndex !== undefined ? (trap as Trap & { trapMoveIndex?: number }).trapMoveIndex! : -1
   const isTrapMove = currentMoveIndex === trapMoveIndex
 
   return (
@@ -191,13 +258,39 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
             <p className="text-sm text-muted-foreground">{trap.description}</p>
           </div>
 
-          {/* Explanation */}
-          {trap.explanation && (
+          {/* Step-by-Step Explanation */}
+          {trap.explanation && trap.explanation.length > 0 && (
             <div className="glass-card p-5">
-              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-500" /> How the Trap Works
-              </h3>
-              <p className="text-sm text-muted-foreground">{trap.explanation}</p>
+              <button
+                onClick={() => setShowExplanation(!showExplanation)}
+                className="w-full flex items-center justify-between mb-1"
+              >
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-primary" /> Step-by-Step Explanation
+                </h3>
+                <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showExplanation ? 'rotate-90' : ''}`} />
+              </button>
+              <AnimatePresence>
+                {showExplanation && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex flex-col gap-2 mt-3">
+                      {trap.explanation.map((step, idx) => (
+                        <div key={idx} className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-[10px] font-bold text-primary">{idx + 1}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{step}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
@@ -228,11 +321,33 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
                 </button>
               ))}
             </div>
+            {/* Move annotation */}
+            {trap.moveAnnotations && currentMoveIndex >= 0 && trap.moveAnnotations[currentMoveIndex] && (
+              <div className="mt-3 pt-3 border-t border-border/30">
+                <div className="flex items-start gap-2">
+                  <BookOpen className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-foreground/80 leading-relaxed">
+                    <span className="font-mono font-semibold text-primary mr-1">
+                      {trap.moves[currentMoveIndex]}
+                    </span>
+                    — {trap.moveAnnotations[currentMoveIndex]}
+                  </p>
+                </div>
+              </div>
+            )}
             {trapMoveIndex >= 0 && (
               <p className="text-xs text-red-500 mt-3 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" /> Move {trapMoveIndex + 1} is the trap!
               </p>
             )}
+          </div>
+
+          {/* Keyboard shortcuts hint */}
+          <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground/50 px-1">
+            <span><kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">←→</kbd> Navigate</span>
+            <span><kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">Space</kbd> Play</span>
+            <span><kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">R</kbd> Reset</span>
+            <span><kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">Esc</kbd> Back</span>
           </div>
         </motion.div>
 
@@ -244,6 +359,21 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
           className="col-span-2"
         >
           <div className="glass-card p-6">
+            {/* Completion Banner */}
+            <AnimatePresence>
+              {isCompleted && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mb-4 p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center gap-2"
+                >
+                  <Check className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-semibold text-primary">Trap Learned!</span>
+                  <span className="text-xs text-primary/70">+{trap.xpReward} XP</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Trap Alert */}
             <AnimatePresence>
               {isTrapMove && (
@@ -275,16 +405,37 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
             </div>
 
             {/* Board */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-4">
               <Chessboard
                 fen={currentFen}
                 onMove={() => false}
-                orientation="white"
+                flipped={trap.side === 'black' !== boardFlipOverride}
                 interactive={false}
                 size={560}
+                showCoordinates={showCoords}
                 boardStyle={settings.boardStyle}
                 pieceStyle={settings.pieceStyle}
               />
+            </div>
+
+            {/* Board toggles */}
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <button
+                onClick={() => setBoardFlipOverride(!boardFlipOverride)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-xs transition-colors"
+              >
+                <FlipVertical className="w-3.5 h-3.5" />
+                Flip
+              </button>
+              <button
+                onClick={() => setShowCoords(!showCoords)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                  showCoords ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Coords
+              </button>
             </div>
 
             {/* Controls */}
@@ -303,11 +454,14 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
                 <ChevronLeft className="w-5 h-5" />
               </motion.button>
               <motion.button
-                onClick={handleNext}
-                disabled={currentMoveIndex >= trap.moves.length - 1}
-                className="p-4 rounded-xl bg-primary text-primary-foreground"
+                onClick={handleAutoPlay}
+                className={`p-4 rounded-xl transition-all ${
+                  isAutoPlaying
+                    ? 'bg-accent text-accent-foreground'
+                    : 'bg-primary text-primary-foreground'
+                }`}
               >
-                <Play className="w-6 h-6" />
+                {isAutoPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
               </motion.button>
               <motion.button
                 onClick={handleNext}

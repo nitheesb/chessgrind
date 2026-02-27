@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard, MiniChessboard } from '@/components/chess/chessboard'
 import { OPENINGS } from '@/lib/chess-data'
 import type { Opening } from '@/lib/chess-data'
+import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import {
@@ -18,6 +19,12 @@ import {
   Star,
   Clock,
   Layers,
+  Check,
+  Lightbulb,
+  Eye,
+  EyeOff,
+  FlipVertical,
+  Zap,
 } from 'lucide-react'
 
 interface DesktopOpeningsProps {
@@ -146,61 +153,104 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
 }
 
 function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: () => void }) {
+  const { addXP, incrementOpeningsLearned } = useGame()
   const { settings } = useSettings()
   const { playSound } = useSoundAndHaptics()
-  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1)
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [game, setGame] = useState(() => new Chess())
+  const [moveIndex, setMoveIndex] = useState(0)
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [showHint, setShowHint] = useState(true)
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
+  const [incorrectMove, setIncorrectMove] = useState(false)
+  const [boardFlipped, setBoardFlipped] = useState(false)
 
-  const currentFen = useMemo(() => {
-    if (currentMoveIndex < 0) return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-    
-    const game = new Chess()
-    for (let i = 0; i <= currentMoveIndex && i < opening.moves.length; i++) {
-      try {
-        game.move(opening.moves[i])
-      } catch { break }
-    }
-    return game.fen()
-  }, [currentMoveIndex, opening.moves])
+  const isUserTurn = moveIndex % 2 === 0
 
-  // Determine board orientation based on first move or category
-  const orientation = opening.category === 'e4' || opening.category === 'd4' || opening.category === 'other' ? 'white' : 'white'
+  const expectedMove = useMemo(() => {
+    if (moveIndex >= opening.moves.length) return null
+    const tempGame = new Chess(game.fen())
+    try {
+      const move = tempGame.move(opening.moves[moveIndex])
+      if (move) return { from: move.from, to: move.to }
+    } catch { /* invalid */ }
+    return null
+  }, [game, moveIndex, opening.moves])
 
-  const handleNext = () => {
-    if (currentMoveIndex < opening.moves.length - 1) {
-      playSound('move')
-      setCurrentMoveIndex(prev => prev + 1)
-    }
-  }
-
-  const handlePrev = () => {
-    if (currentMoveIndex >= 0) {
-      playSound('click')
-      setCurrentMoveIndex(prev => prev - 1)
-    }
-  }
-
-  const handleReset = () => {
-    playSound('click')
-    setCurrentMoveIndex(-1)
-    setIsPlaying(false)
-  }
-
-  // Auto-play effect
+  // Auto-play opponent moves
   useEffect(() => {
-    if (!isPlaying) return
-    const interval = setInterval(() => {
-      setCurrentMoveIndex(prev => {
-        if (prev >= opening.moves.length - 1) {
-          setIsPlaying(false)
-          return prev
+    if (!isUserTurn && moveIndex < opening.moves.length && !isCompleted) {
+      const timer = setTimeout(() => {
+        const newGame = new Chess(game.fen())
+        try {
+          const move = newGame.move(opening.moves[moveIndex])
+          if (move) {
+            setLastMove({ from: move.from, to: move.to })
+            setGame(newGame)
+            setMoveIndex(moveIndex + 1)
+            playSound('move')
+          }
+        } catch { /* invalid */ }
+      }, 400)
+      return () => clearTimeout(timer)
+    }
+  }, [isUserTurn, moveIndex, opening.moves, game, isCompleted, playSound])
+
+  // Check completion
+  useEffect(() => {
+    if (moveIndex >= opening.moves.length && !isCompleted) {
+      setIsCompleted(true)
+      playSound('success')
+      addXP(15)
+      incrementOpeningsLearned()
+    }
+  }, [moveIndex, opening.moves.length, isCompleted, addXP, incrementOpeningsLearned, playSound])
+
+  const handleMove = useCallback((from: string, to: string): boolean => {
+    if (!isUserTurn || moveIndex >= opening.moves.length) return false
+    const expected = expectedMove
+    if (!expected) return false
+
+    if (from === expected.from && to === expected.to) {
+      const newGame = new Chess(game.fen())
+      try {
+        const move = newGame.move({ from, to, promotion: 'q' })
+        if (move) {
+          setLastMove({ from, to })
+          setGame(newGame)
+          setMoveIndex(moveIndex + 1)
+          setIncorrectMove(false)
+          playSound(move.captured ? 'capture' : 'move')
+          return true
         }
-        playSound('move')
-        return prev + 1
-      })
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [isPlaying, opening.moves.length, playSound])
+      } catch { return false }
+    } else {
+      setIncorrectMove(true)
+      playSound('illegal')
+      setTimeout(() => setIncorrectMove(false), 500)
+    }
+    return false
+  }, [isUserTurn, moveIndex, opening.moves.length, expectedMove, game, playSound])
+
+  const handleReset = useCallback(() => {
+    playSound('click')
+    setGame(new Chess())
+    setMoveIndex(0)
+    setLastMove(null)
+    setIsCompleted(false)
+    setIncorrectMove(false)
+  }, [playSound])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'r' || e.key === 'R') handleReset()
+      else if (e.key === 'Escape') onBack()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleReset, onBack])
+
+  const progress = (moveIndex / opening.moves.length) * 100
 
   return (
     <motion.div
@@ -231,7 +281,7 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
               <span className="px-2 py-1 rounded-lg text-sm font-semibold bg-primary/10 text-primary border border-primary/20">
                 {opening.eco}
               </span>
-              <span className={`px-2 py-1 rounded-lg text-xs font-medium bg-secondary text-muted-foreground capitalize`}>
+              <span className="px-2 py-1 rounded-lg text-xs font-medium bg-secondary text-muted-foreground capitalize">
                 {opening.difficulty}
               </span>
             </div>
@@ -259,30 +309,48 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
           {/* Move List */}
           <div className="glass-card p-5">
             <h3 className="text-sm font-semibold text-foreground mb-3">Move Sequence</h3>
-            <div className="flex flex-wrap gap-2">
-              {opening.moves.map((move, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    playSound('click')
-                    setCurrentMoveIndex(i)
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-mono transition-all ${
-                    i === currentMoveIndex
-                      ? 'bg-primary text-primary-foreground'
-                      : i < currentMoveIndex
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
-                  }`}
-                >
-                  {i % 2 === 0 && <span className="text-xs opacity-60">{Math.floor(i/2) + 1}.</span>} {move}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-1.5">
+              {opening.moves.map((move, idx) => {
+                const isWhite = idx % 2 === 0
+                const isPlayed = idx < moveIndex
+                const isCurrent = idx === moveIndex
+                return (
+                  <span key={idx} className="flex items-center gap-0.5">
+                    {isWhite && (
+                      <span className="text-xs text-muted-foreground mr-0.5">{Math.floor(idx / 2) + 1}.</span>
+                    )}
+                    <span
+                      className={`px-2 py-1 rounded-lg text-sm font-mono transition-all ${
+                        isCurrent
+                          ? 'bg-primary text-primary-foreground'
+                          : isPlayed
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-secondary text-muted-foreground/50'
+                      }`}
+                    >
+                      {move}
+                    </span>
+                  </span>
+                )
+              })}
             </div>
+            {opening.moveAnnotations && moveIndex > 0 && opening.moveAnnotations[moveIndex - 1] && (
+              <div className="mt-3 pt-3 border-t border-border/30">
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-foreground/80 leading-relaxed">
+                    <span className="font-mono font-semibold text-primary mr-1">
+                      {opening.moves[moveIndex - 1]}
+                    </span>
+                    — {opening.moveAnnotations[moveIndex - 1]}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
 
-        {/* Center - Chessboard */}
+        {/* Right - Chessboard */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -294,73 +362,102 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
             <div className="mb-4">
               <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
                 <span>Progress</span>
-                <span>{currentMoveIndex + 1} / {opening.moves.length}</span>
+                <span>{moveIndex} / {opening.moves.length} — {Math.round(progress)}%</span>
               </div>
               <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-primary rounded-full"
                   initial={{ width: 0 }}
-                  animate={{ width: `${((currentMoveIndex + 1) / opening.moves.length) * 100}%` }}
+                  animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.3 }}
                 />
               </div>
             </div>
 
+            {/* Status */}
+            <div className="text-center mb-4">
+              <AnimatePresence mode="wait">
+                {isCompleted ? (
+                  <motion.div
+                    key="completed"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 text-green-500"
+                  >
+                    <Check className="w-5 h-5" />
+                    <span className="font-semibold">Opening complete! +15 XP</span>
+                    <Zap className="w-4 h-4" />
+                  </motion.div>
+                ) : isUserTurn ? (
+                  <motion.div
+                    key="user-turn"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary"
+                  >
+                    <Lightbulb className="w-4 h-4" />
+                    <span className="text-sm font-medium">Your turn — play the next move</span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="opponent-turn"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary text-muted-foreground"
+                  >
+                    <span className="text-sm">Opponent playing...</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Board */}
             <div className="flex justify-center mb-6">
-              <Chessboard
-                fen={currentFen}
-                onMove={() => false}
-                orientation={orientation}
-                interactive={false}
-                size={560}
-                boardStyle={settings.boardStyle}
-                pieceStyle={settings.pieceStyle}
-              />
+              <div className={`transition-transform duration-100 ${incorrectMove ? 'animate-shake' : ''}`}>
+                <Chessboard
+                  fen={game.fen()}
+                  interactive={isUserTurn && !isCompleted}
+                  onMove={handleMove}
+                  lastMove={lastMove || undefined}
+                  showHint={showHint && isUserTurn && expectedMove ? expectedMove : undefined}
+                  flipped={boardFlipped}
+                  size={560}
+                  boardStyle={settings.boardStyle}
+                  pieceStyle={settings.pieceStyle}
+                />
+              </div>
             </div>
 
             {/* Controls */}
             <div className="flex items-center justify-center gap-4">
               <motion.button
                 onClick={handleReset}
-                className="p-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all"
               >
-                <RotateCcw className="w-5 h-5" />
+                <RotateCcw className="w-4 h-4" />
+                <span className="text-sm font-medium">Reset</span>
               </motion.button>
               <motion.button
-                onClick={handlePrev}
-                disabled={currentMoveIndex < 0}
-                className="p-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 disabled:opacity-50 transition-all"
+                onClick={() => { playSound('click'); setShowHint(!showHint) }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
+                  showHint
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                }`}
               >
-                <ChevronLeft className="w-5 h-5" />
+                {showHint ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                <span className="text-sm font-medium">{showHint ? 'Hint On' : 'Hint Off'}</span>
               </motion.button>
               <motion.button
-                onClick={() => {
-                  playSound('click')
-                  setIsPlaying(!isPlaying)
-                }}
-                className="p-4 rounded-xl bg-primary text-primary-foreground"
+                onClick={() => setBoardFlipped(!boardFlipped)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all"
               >
-                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+                <FlipVertical className="w-4 h-4" />
+                <span className="text-sm font-medium">Flip</span>
               </motion.button>
-              <motion.button
-                onClick={handleNext}
-                disabled={currentMoveIndex >= opening.moves.length - 1}
-                className="p-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 disabled:opacity-50 transition-all"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </motion.button>
-            </div>
-
-            {/* Current Move Display */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                {currentMoveIndex < 0 ? 'Starting position' : (
-                  <>
-                    Move {currentMoveIndex + 1}: <span className="font-mono font-semibold text-foreground">{opening.moves[currentMoveIndex]}</span>
-                  </>
-                )}
-              </p>
             </div>
           </div>
         </motion.div>
