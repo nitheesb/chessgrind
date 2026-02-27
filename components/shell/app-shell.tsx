@@ -107,10 +107,10 @@ export function AppShell() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={currentPage}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15, ease: [0.2, 0, 0, 1] }}
+            initial={{ opacity: 0, filter: 'blur(6px)', scale: 0.985 }}
+            animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
+            exit={{ opacity: 0, filter: 'blur(4px)' }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           >
             {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
             {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}

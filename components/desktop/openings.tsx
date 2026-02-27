@@ -22,12 +22,12 @@ import {
 
 const container = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.04 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
 }
 
 const item = {
-  hidden: { opacity: 0, y: 6 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
+  hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
+  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 }
 
 interface DesktopOpeningsProps {
@@ -55,6 +55,12 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
     return groups
   }, [filteredOpenings])
 
+  function handleSpotlight(e: React.MouseEvent<HTMLElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`)
+    e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
+  }
+
   if (activeOpening) {
     return (
       <DesktopOpeningViewer
@@ -78,23 +84,32 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
       </motion.div>
 
       {/* Filter */}
-      <motion.div variants={item} className="flex gap-2 mb-8">
-        {(['all', 'e4', 'd4', 'other'] as const).map((cat) => (
-          <button
-            key={cat}
-            onClick={() => {
-              playSound('click')
-              setFilterCategory(cat)
-            }}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              filterCategory === cat
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
-            }`}
-          >
-            {cat === 'all' ? 'All Openings' : cat === 'e4' ? '1.e4 Openings' : cat === 'd4' ? '1.d4 Openings' : 'Other'}
-          </button>
-        ))}
+      <motion.div variants={item} className="flex mb-8">
+        <div className="segmented-control flex">
+          {(['all', 'e4', 'd4', 'other'] as const).map((cat) => (
+            <button
+              key={cat}
+              onClick={() => {
+                playSound('click')
+                setFilterCategory(cat)
+              }}
+              className="relative"
+            >
+              {filterCategory === cat && (
+                <motion.div
+                  layoutId="opening-filter-pill"
+                  className="absolute inset-0 segmented-control-pill"
+                  transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                />
+              )}
+              <span className={`relative z-10 ${
+                filterCategory === cat ? 'text-foreground' : 'text-muted-foreground'
+              }`}>
+                {cat === 'all' ? 'All Openings' : cat === 'e4' ? '1.e4 Openings' : cat === 'd4' ? '1.d4 Openings' : 'Other'}
+              </span>
+            </button>
+          ))}
+        </div>
       </motion.div>
 
       {/* Opening Grid by Difficulty */}
@@ -114,7 +129,8 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
                     playSound('click')
                     setActiveOpening(opening)
                   }}
-                  className="glass-card-hover p-5 text-left group"
+                  className="glass-card-hover card-spotlight p-5 text-left group"
+                  onMouseMove={handleSpotlight}
                 >
                   <div className="flex gap-4">
                     <div className="rounded-xl overflow-hidden shadow-md flex-shrink-0" style={{ width: 80, height: 80 }}>

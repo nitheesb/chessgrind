@@ -607,6 +607,137 @@
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
 }
 
+/* ── Card Spotlight — mouse-tracking inner glow ── */
+.card-spotlight {
+  position: relative;
+  overflow: hidden;
+}
+.card-spotlight::before {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  left: var(--mouse-x, 50%);
+  top: var(--mouse-y, 50%);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+.card-spotlight:hover::before {
+  opacity: 1;
+}
+
+/* ── Primary Button Shine ── */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 80%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transform: skewX(-20deg);
+  animation: shine-sweep 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes shine-sweep {
+  0%, 70% { left: -100%; }
+  100% { left: 150%; }
+}
+
+/* ── Stat Cards — colored border on hover ── */
+.stat-card-emerald {
+  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.stat-card-emerald:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(52, 211, 153, 0.25);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.06);
+}
+.stat-card-orange {
+  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.stat-card-orange:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(251, 146, 60, 0.25);
+  box-shadow: 0 0 20px rgba(251, 146, 60, 0.06);
+}
+.stat-card-blue {
+  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.stat-card-blue:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(96, 165, 250, 0.25);
+  box-shadow: 0 0 20px rgba(96, 165, 250, 0.06);
+}
+.stat-card-amber {
+  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.stat-card-amber:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(251, 191, 36, 0.25);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.06);
+}
+
+/* ── Hero Gradient Text — dramatic Apple style ── */
+.hero-text-large {
+  background: linear-gradient(135deg, #f5f5f7 0%, #86868b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* ── Segmented Control ── */
+.segmented-control {
+  background: rgba(255, 255, 255, 0.04);
+  border: 0.5px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 3px;
+  display: inline-flex;
+  gap: 2px;
+}
+.segmented-control-pill {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 11px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.segmented-control button {
+  position: relative;
+  z-index: 1;
+  padding: 8px 18px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+/* ── Gradient Accent Line ── */
+.accent-line-top {
+  position: relative;
+}
+.accent-line-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(48, 209, 88, 0.4), transparent);
+  border-radius: 1px;
+}
+
 /* ── Breathing Glow — subtle pulse ── */
 .breathing-glow {
   animation: breathing 4s ease-in-out infinite;
@@ -778,13 +909,7 @@
    STAT CARD MICRO-ANIMATIONS
    ═══════════════════════════ */
 
-.stat-card-emerald:hover,
-.stat-card-orange:hover,
-.stat-card-blue:hover,
-.stat-card-amber:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
-}
+/* Stat card hovers are defined above in the advanced animation section */
 
 /* ═══════════════════════════
    TOOLTIP
