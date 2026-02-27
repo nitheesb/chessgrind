@@ -1,15 +1,15 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { motion, useMotionValue, useSpring, useTransform, useInView } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion, useInView } from 'framer-motion'
 
 // ═══════════════════════════
-// ANIMATED COUNTER
+// ANIMATED COUNTER (lightweight rAF-based)
 // ═══════════════════════════
 
 export function AnimatedCounter({
   value,
-  duration = 1.2,
+  duration = 1200,
   className = '',
   prefix = '',
   suffix = '',
@@ -21,91 +21,39 @@ export function AnimatedCounter({
   suffix?: string
 }) {
   const ref = useRef<HTMLSpanElement>(null)
-  const motionValue = useMotionValue(0)
-  const springValue = useSpring(motionValue, { duration: duration * 1000, bounce: 0 })
-  const isInView = useInView(ref, { once: true, margin: '-20px' })
   const [displayValue, setDisplayValue] = useState(0)
+  const hasAnimated = useRef(false)
 
   useEffect(() => {
-    if (isInView) {
-      motionValue.set(value)
-    }
-  }, [isInView, value, motionValue])
+    const el = ref.current
+    if (!el || hasAnimated.current) return
 
-  useEffect(() => {
-    const unsubscribe = springValue.on('change', (latest) => {
-      setDisplayValue(Math.round(latest))
-    })
-    return unsubscribe
-  }, [springValue])
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || hasAnimated.current) return
+        hasAnimated.current = true
+        observer.disconnect()
+
+        const start = performance.now()
+        const animate = (now: number) => {
+          const elapsed = now - start
+          const progress = Math.min(elapsed / duration, 1)
+          const eased = 1 - Math.pow(1 - progress, 3)
+          setDisplayValue(Math.round(eased * value))
+          if (progress < 1) requestAnimationFrame(animate)
+        }
+        requestAnimationFrame(animate)
+      },
+      { rootMargin: '-20px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [value, duration])
 
   return (
     <span ref={ref} className={className}>
       {prefix}{displayValue.toLocaleString()}{suffix}
     </span>
-  )
-}
-
-// ═══════════════════════════
-// 3D TILT CARD
-// ═══════════════════════════
-
-export function Tilt3DCard({
-  children,
-  className = '',
-  intensity = 10,
-  glare = true,
-}: {
-  children: React.ReactNode
-  className?: string
-  intensity?: number
-  glare?: boolean
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [intensity, -intensity]), { stiffness: 300, damping: 30 })
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-intensity, intensity]), { stiffness: 300, damping: 30 })
-  const glareOpacity = useTransform(
-    [x, y],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ([latestX, latestY]: any) => Math.min(0.15, (Math.abs(latestX as number) + Math.abs(latestY as number)) * 0.2)
-  )
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return
-    const rect = ref.current.getBoundingClientRect()
-    x.set((e.clientX - rect.left) / rect.width - 0.5)
-    y.set((e.clientY - rect.top) / rect.height - 0.5)
-  }, [x, y])
-
-  const handleMouseLeave = useCallback(() => {
-    x.set(0)
-    y.set(0)
-  }, [x, y])
-
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ rotateX, rotateY, transformStyle: 'preserve-3d', perspective: 1000 }}
-      className={className}
-    >
-      <div style={{ transformStyle: 'preserve-3d' }}>
-        {children}
-        {glare && (
-          <motion.div
-            className="absolute inset-0 rounded-inherit pointer-events-none"
-            style={{
-              opacity: glareOpacity,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%)',
-              borderRadius: 'inherit',
-            }}
-          />
-        )}
-      </div>
-    </motion.div>
   )
 }
 
@@ -209,81 +157,6 @@ export function TextReveal({
         </span>
       ))}
     </span>
-  )
-}
-
-// ═══════════════════════════
-// FLOATING PARTICLES
-// ═══════════════════════════
-
-export function ParticleField({
-  count = 20,
-  className = '',
-  colors = ['rgba(34,197,94,0.3)', 'rgba(245,158,11,0.2)', 'rgba(59,130,246,0.2)'],
-}: {
-  count?: number
-  className?: string
-  colors?: string[]
-}) {
-  const particles = useRef(
-    Array.from({ length: count }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      size: 1 + Math.random() * 3,
-      duration: 8 + Math.random() * 12,
-      delay: Math.random() * 8,
-      color: colors[Math.floor(Math.random() * colors.length)],
-    }))
-  ).current
-
-  return (
-    <div className={`particle-field ${className}`}>
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          className="particle"
-          style={{
-            left: `${p.left}%`,
-            width: p.size,
-            height: p.size,
-            background: p.color,
-            animationDuration: `${p.duration}s`,
-            animationDelay: `${p.delay}s`,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-// ═══════════════════════════
-// GLOWING BORDER
-// ═══════════════════════════
-
-export function GlowingBorder({
-  children,
-  className = '',
-  color = 'primary',
-}: {
-  children: React.ReactNode
-  className?: string
-  color?: 'primary' | 'gold' | 'blue'
-}) {
-  const colorMap = {
-    primary: 'from-emerald-500/40 via-transparent to-emerald-500/40',
-    gold: 'from-amber-500/40 via-transparent to-amber-500/40',
-    blue: 'from-blue-500/40 via-transparent to-blue-500/40',
-  }
-
-  return (
-    <div className={`relative ${className}`}>
-      <div className="absolute -inset-[1px] rounded-2xl overflow-hidden">
-        <div className={`absolute inset-0 bg-gradient-to-r ${colorMap[color]} animate-[border-spin_4s_linear_infinite]`}
-          style={{ background: `conic-gradient(from var(--border-angle, 0deg), transparent, ${color === 'primary' ? 'rgba(34,197,94,0.4)' : color === 'gold' ? 'rgba(245,158,11,0.4)' : 'rgba(59,130,246,0.4)'}, transparent)` }}
-        />
-      </div>
-      <div className="relative bg-card rounded-2xl">{children}</div>
-    </div>
   )
 }
 
