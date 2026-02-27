@@ -23,9 +23,7 @@ import {
 } from 'lucide-react'
 import {
   AnimatedCounter,
-  Tilt3DCard,
   ProgressRing,
-  ParticleField,
   TextReveal,
   staggerContainer,
   staggerItem,
@@ -90,7 +88,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     >
       {/* Header */}
       <motion.div variants={staggerItem} className="relative flex items-center justify-between overflow-hidden rounded-2xl p-3 -mx-3">
-        <ParticleField count={12} className="absolute inset-0 pointer-events-none opacity-40" />
         <div className="relative flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
             <span className="text-xl font-bold text-white">{profile.username.charAt(0).toUpperCase()}</span>
@@ -151,18 +148,17 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* Quick Actions */}
       <motion.div variants={staggerItem} className="grid grid-cols-4 gap-2">
         {quickActions.map((action) => (
-          <Tilt3DCard key={action.id} intensity={8} className="rounded-xl">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleNavigate(action.page)}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary active:bg-secondary/70 transition-colors w-full"
-            >
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white shadow-sm`}>
-                {action.icon}
-              </div>
-              <span className="text-[11px] font-medium text-foreground">{action.label}</span>
-            </motion.button>
-          </Tilt3DCard>
+          <motion.button
+            key={action.id}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleNavigate(action.page)}
+            className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary active:bg-secondary/70 transition-colors w-full"
+          >
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white shadow-sm`}>
+              {action.icon}
+            </div>
+            <span className="text-[11px] font-medium text-foreground">{action.label}</span>
+          </motion.button>
         ))}
       </motion.div>
 
@@ -171,7 +167,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-              <Flame className="w-6 h-6 text-white fire-flicker" />
+              <Flame className="w-6 h-6 text-white" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={profile.streak} /></p>

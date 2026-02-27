@@ -12,16 +12,7 @@ import {
   LogIn,
   Loader2,
 } from 'lucide-react'
-import { ParticleField, GlowingBorder, TextReveal } from '@/components/ui/animated-components'
-
-const floatingPieces = [
-  { emoji: '♔', x: '10%', y: '12%', duration: 14, delay: 0 },
-  { emoji: '♕', x: '85%', y: '8%', duration: 16, delay: 2 },
-  { emoji: '♗', x: '75%', y: '35%', duration: 12, delay: 4 },
-  { emoji: '♘', x: '15%', y: '40%', duration: 18, delay: 1 },
-  { emoji: '♔', x: '50%', y: '5%', duration: 15, delay: 3 },
-  { emoji: '♗', x: '90%', y: '25%', duration: 13, delay: 5 },
-]
+import { TextReveal } from '@/components/ui/animated-components'
 
 export function LoginPage() {
   const { login, register, authError, isLoading, isBackendEnabled } = useGame()
@@ -103,33 +94,15 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#1a1a1a] to-background relative overflow-hidden">
-      {/* Particle background */}
-      <ParticleField count={15} className="!fixed inset-0 z-0 pointer-events-none" />
-
-      {/* Floating chess piece emojis */}
-      {floatingPieces.map((piece, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-2xl text-white/10 pointer-events-none z-0 select-none"
-          style={{ left: piece.x, top: piece.y }}
-          animate={{ y: [0, -20, 0], rotate: [0, 10, -10, 0] }}
-          transition={{ duration: piece.duration, repeat: Infinity, ease: 'easeInOut', delay: piece.delay }}
-        >
-          {piece.emoji}
-        </motion.div>
-      ))}
-
-      {/* Header with aurora-bg */}
-      <div className="aurora-bg flex-shrink-0 pt-16 pb-10 px-6 text-center relative overflow-hidden z-10">
+      {/* Header */}
+      <div className="flex-shrink-0 pt-16 pb-10 px-6 text-center relative overflow-hidden z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
           className="inline-flex items-center justify-center gap-3 mb-4 relative"
         >
-          {/* Morph blob behind logo */}
-          <div className="morph-blob absolute -inset-4 bg-amber-500/15 blur-xl z-0" />
-          <div className="breathing-glow w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-xl shadow-amber-500/30 relative z-10">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-xl shadow-amber-500/30 relative z-10">
             <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
               <path d="M19 22H5v-2h14v2M12 2c-1.1 0-2 .9-2 2v4h4V4c0-1.1-.9-2-2-2m4 6H8v2H7v8h2v-6h6v6h2v-8h-1V8z"/>
             </svg>
@@ -151,8 +124,8 @@ export function LoginPage() {
         className="flex-1 bg-background rounded-t-[2rem] px-6 pt-8 pb-8 shadow-2xl relative z-10"
       >
         <div className="max-w-sm mx-auto space-y-6">
-          {/* Form card wrapped in GlowingBorder */}
-          <GlowingBorder color="gold" className="rounded-2xl">
+          {/* Form card */}
+          <div className="glass-card rounded-2xl">
             <div className="p-6 space-y-6">
               {/* Mode Toggle with sliding indicator */}
               {isBackendEnabled && (
@@ -271,7 +244,7 @@ export function LoginPage() {
                 )}
               </div>
             </div>
-          </GlowingBorder>
+          </div>
 
           {/* Features */}
           <div className="pt-6">
