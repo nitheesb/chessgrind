@@ -8,6 +8,7 @@ import { getLevelInfo, getDailyPuzzleIndex } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { MiniChessboard } from '@/components/chess/chessboard'
 import { AnimatedCounter } from '@/components/ui/animated-components'
+import { TiltCard, MagneticWrap, OdometerCounter, TypewriterText, RevealGrid } from '@/components/ui/effects'
 import { PUZZLES, OPENINGS } from '@/lib/chess-data'
 import {
   Trophy,
@@ -91,7 +92,8 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               >
-                Welcome back,<br />{profile.username}.
+                Welcome back,<br />
+                <TypewriterText text={profile.username + '.'} speed={60} delay={600} />
               </motion.h1>
               <motion.p
                 className="text-muted-foreground text-lg"
@@ -159,11 +161,12 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-5 mb-10">
+      <RevealGrid className="grid grid-cols-4 gap-5 mb-10" staggerDelay={100}>
         {stats.map((stat, index) => (
-          <div
+          <TiltCard
             key={stat.label}
-            className={`glass-card p-6 group cursor-default ${stat.hoverCard}`}
+            className={`glass-card p-6 group cursor-default relative overflow-hidden ${stat.hoverCard}`}
+            intensity={10}
           >
             <div className="flex items-center gap-3 mb-4 relative z-10">
               <div className={`w-11 h-11 rounded-xl ${stat.bgClass} flex items-center justify-center ${stat.colorClass} transition-transform duration-300 group-hover:scale-110`}>
@@ -171,12 +174,12 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               </div>
             </div>
             <p className="text-4xl font-display font-bold text-foreground mb-1.5 relative z-10">
-              <AnimatedCounter value={typeof stat.value === 'number' ? stat.value : 0} duration={1.2} />
+              <OdometerCounter value={typeof stat.value === 'number' ? stat.value : 0} />
             </p>
             <p className="text-sm text-muted-foreground relative z-10">{stat.label}</p>
-          </div>
+          </TiltCard>
         ))}
-      </div>
+      </RevealGrid>
 
       <div className="grid grid-cols-3 gap-7">
         {/* Left Column - Quick Actions */}
@@ -184,27 +187,29 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
           {/* Quick Actions */}
           <div>
             <h2 className="text-xl font-display font-semibold text-foreground mb-5">Quick Start</h2>
-            <div className="grid grid-cols-2 gap-5">
+            <RevealGrid className="grid grid-cols-2 gap-5" staggerDelay={120}>
               {quickActions.map((action, i) => (
-                <motion.button
-                  key={action.id}
-                  onClick={() => handleNavigate(action.id)}
-                  className="glass-card-hover p-7 text-left group relative overflow-hidden"
-                >
-                  {/* Hover gradient overlay */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-500`} />
+                <MagneticWrap key={action.id} strength={0.15}>
+                  <TiltCard
+                    className="glass-card-hover p-7 text-left group relative overflow-hidden cursor-pointer"
+                    intensity={12}
+                    onClick={() => handleNavigate(action.id)}
+                  >
+                    {/* Hover gradient overlay */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-500`} />
 
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-5 shadow-lg relative z-10`}>
-                    <span className="text-white">{action.icon}</span>
-                  </div>
-                  <h3 className="text-lg font-display font-semibold text-foreground mb-1 relative z-10">{action.label}</h3>
-                  <p className="text-sm text-muted-foreground relative z-10">{action.description}</p>
-                  <div className="flex items-center gap-1 mt-5 text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1 relative z-10">
-                    Start now <ChevronRight className="w-4 h-4" />
-                  </div>
-                </motion.button>
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-5 shadow-lg relative z-10`}>
+                      <span className="text-white">{action.icon}</span>
+                    </div>
+                    <h3 className="text-lg font-display font-semibold text-foreground mb-1 relative z-10">{action.label}</h3>
+                    <p className="text-sm text-muted-foreground relative z-10">{action.description}</p>
+                    <div className="flex items-center gap-1 mt-5 text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1 relative z-10">
+                      Start now <ChevronRight className="w-4 h-4" />
+                    </div>
+                  </TiltCard>
+                </MagneticWrap>
               ))}
-            </div>
+            </RevealGrid>
           </div>
 
           {/* Featured Opening */}

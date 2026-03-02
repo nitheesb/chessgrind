@@ -18,6 +18,7 @@ import {
   Settings,
 } from 'lucide-react'
 import { AnimatedCounter } from '@/components/ui/animated-components'
+import { TiltCard, OdometerCounter, RevealGrid } from '@/components/ui/effects'
 
 
 
@@ -123,20 +124,21 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
       {/* Stats Grid */}
       <div className="mb-8">
         <h2 className="text-lg font-display font-semibold text-foreground mb-4">Statistics</h2>
-        <div className="grid grid-cols-3 lg:grid-cols-6 gap-4">
+        <RevealGrid className="grid grid-cols-3 lg:grid-cols-6 gap-4" staggerDelay={80}>
           {stats.map((stat, index) => (
-            <div
+            <TiltCard
               key={stat.label}
-              className={`glass-card p-5 text-center group transition-all duration-500 ${stat.hoverCard}`}
+              className={`glass-card p-5 text-center group relative overflow-hidden ${stat.hoverCard}`}
+              intensity={12}
             >
               <div className={`w-10 h-10 rounded-xl ${stat.bgClass} flex items-center justify-center mx-auto mb-3 ${stat.colorClass} transition-transform duration-300 group-hover:scale-110`}>
                 {stat.icon}
               </div>
-              <p className="text-2xl font-display font-bold text-foreground mb-1"><AnimatedCounter value={stat.value} /></p>
+              <p className="text-2xl font-display font-bold text-foreground mb-1"><OdometerCounter value={stat.value} /></p>
               <p className="text-xs text-muted-foreground">{stat.label}</p>
-            </div>
+            </TiltCard>
           ))}
-        </div>
+        </RevealGrid>
       </div>
 
       {/* Weakness Analysis */}

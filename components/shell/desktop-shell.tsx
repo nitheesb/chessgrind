@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { getLevelInfo } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
@@ -21,6 +21,8 @@ import {
   Flame,
   Zap,
 } from 'lucide-react'
+import { CursorSpotlight } from '@/components/ui/effects'
+import { CommandPalette, CommandPaletteTrigger } from '@/components/ui/command-palette'
 
 // Desktop pages
 import { DesktopDashboard } from '@/components/desktop/dashboard'
@@ -117,10 +119,12 @@ export function DesktopShell() {
       {/* Mesh gradient background — gives glass something to blur */}
       <div className="mesh-gradient" />
       <div className="noise-overlay" />
+      <CursorSpotlight />
 
       {/* Global overlays */}
       <XPPopup />
       <LevelUpOverlay />
+      <CommandPalette onNavigate={handleNavigate} />
       <AchievementPopup
         show={achievementAnimation.show}
         achievement={achievementAnimation.achievement}
@@ -141,10 +145,11 @@ export function DesktopShell() {
         {/* Logo */}
         <div className="h-14 flex items-center px-5 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 via-emerald-500 to-green-600 flex items-center justify-center">
-              <Crown className="w-4.5 h-4.5 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 via-emerald-500 to-green-600 flex items-center justify-center relative overflow-hidden">
+              <Crown className="w-4.5 h-4.5 text-white relative z-10" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
             </div>
-            <span className="font-display font-bold text-[15px] text-foreground tracking-tight">ChessVault</span>
+            <span className="font-display font-bold text-[15px] tracking-tight shimmer-text">ChessVault</span>
           </div>
         </div>
 
@@ -169,7 +174,7 @@ export function DesktopShell() {
               {/* XP bar */}
               <div className="mt-1.5 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-primary/50 transition-all duration-700 ease-out"
+                  className="h-full rounded-full xp-bar-fill relative transition-all duration-700 ease-out"
                   style={{ width: `${Math.min(progress, 100)}%` }}
                 />
               </div>
@@ -179,6 +184,10 @@ export function DesktopShell() {
 
         {/* Main Navigation */}
         <nav className="flex-1 py-2 px-2.5 space-y-0.5 overflow-hidden">
+          {/* Command palette trigger */}
+          <div className="mb-2">
+            <CommandPaletteTrigger />
+          </div>
           {NAV_ITEMS.map((item) => {
             const isActive = currentPage === item.id
             return (
@@ -243,7 +252,15 @@ export function DesktopShell() {
         className="flex-1 relative z-10"
         style={{ marginLeft: 220 }}
       >
-        <div key={currentPage} className="page-fade-in min-h-screen">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentPage}
+            initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="min-h-screen"
+          >
           {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}
           {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
           {currentPage === 'openings' && <DesktopOpenings onNavigate={handleNavigate} />}
@@ -251,7 +268,8 @@ export function DesktopShell() {
           {currentPage === 'traps' && <DesktopTraps onNavigate={handleNavigate} />}
           {currentPage === 'profile' && <DesktopProfile onNavigate={handleNavigate} />}
           {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   )

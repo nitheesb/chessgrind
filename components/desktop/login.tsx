@@ -91,14 +91,21 @@ export function DesktopLogin() {
       <motion.div
         className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, hsl(228 25% 6%) 0%, hsl(240 20% 8%) 50%, hsl(220 25% 5%) 100%)',
+          background: 'linear-gradient(135deg, hsl(228 25% 5%) 0%, hsl(240 20% 7%) 50%, hsl(220 25% 4%) 100%)',
         }}
-        initial={{ opacity: 0, x: -50 }}
+        initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       >
         {/* Mesh gradient orbs */}
         <div className="absolute inset-0">
+          {/* Animated chess grid pattern */}
+          <div className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+              backgroundSize: '60px 60px',
+            }}
+          />
           <div className="absolute w-[500px] h-[500px] rounded-full" style={{
             background: 'radial-gradient(circle, rgba(0, 210, 190, 0.12) 0%, transparent 70%)',
             top: '10%', left: '10%',
@@ -280,7 +287,9 @@ export function DesktopLogin() {
               <motion.button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-shine relative overflow-hidden group"
+                whileHover={{ y: -1, boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}
+                whileTap={{ scale: 0.98 }}
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

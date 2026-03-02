@@ -12,27 +12,28 @@ export function XPPopup() {
     <AnimatePresence>
       {xpAnimation.show && (
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.8 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -30, scale: 0.5 }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
+          initial={{ opacity: 0, y: 30, scale: 0.7, filter: 'blur(8px)' }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, y: -40, scale: 0.5, filter: 'blur(8px)' }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] pointer-events-none"
         >
-          <div className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl border border-primary/30 backdrop-blur-2xl relative overflow-hidden"
+          <div className="flex items-center gap-3 px-7 py-4 rounded-2xl border border-primary/30 relative overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(34,197,94,0.06) 100%)',
-              boxShadow: '0 0 40px rgba(34,197,94,0.15), 0 8px 32px rgba(0,0,0,0.3)',
+              background: 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)',
+              backdropFilter: 'saturate(180%) blur(24px)',
+              boxShadow: '0 0 60px rgba(34,197,94,0.2), 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)',
             }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-shimmer" />
             <motion.span
-              animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.3, 1] }}
-              transition={{ duration: 0.5 }}
+              animate={{ rotate: [0, 20, -20, 0], scale: [1, 1.4, 1] }}
+              transition={{ duration: 0.6 }}
               className="text-xl relative z-10"
             >
               <Sparkles className="w-5 h-5 text-primary" />
             </motion.span>
-            <span className="text-lg font-display font-bold text-primary text-glow-primary relative z-10">
+            <span className="text-xl font-display font-bold text-primary relative z-10">
               +{xpAnimation.amount} XP
             </span>
           </div>
@@ -54,61 +55,96 @@ export function LevelUpOverlay() {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[200] flex items-center justify-center"
           onClick={dismissLevelUp}
-          style={{ background: 'rgba(5,8,14,0.85)', backdropFilter: 'blur(12px)' }}
+          style={{ background: 'rgba(3,5,10,0.88)', backdropFilter: 'saturate(180%) blur(16px)' }}
         >
+          {/* Radial burst */}
           <motion.div
-            initial={{ scale: 0.5, opacity: 0, y: 30 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="flex flex-col items-center gap-6 p-12 glass-card text-center relative overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-            style={{ boxShadow: '0 0 80px rgba(34,197,94,0.15), 0 20px 60px rgba(0,0,0,0.4)' }}
+            className="absolute inset-0 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.5, 0] }}
+            transition={{ duration: 1.5, ease: 'easeOut' }}
           >
-            {/* Top accent */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+            <div className="absolute inset-0" style={{
+              background: 'radial-gradient(circle at 50% 50%, rgba(48,209,88,0.15) 0%, transparent 50%)',
+            }} />
+          </motion.div>
 
-            {/* Background decoration */}
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-transparent" />
+          {/* Floating particles */}
+          {Array.from({ length: 12 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1.5 h-1.5 rounded-full bg-primary/60"
+              style={{ left: '50%', top: '50%' }}
+              initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
+              animate={{
+                x: Math.cos(i * (Math.PI * 2 / 12)) * (120 + Math.random() * 80),
+                y: Math.sin(i * (Math.PI * 2 / 12)) * (120 + Math.random() * 80),
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0],
+              }}
+              transition={{ duration: 1.2, delay: 0.3 + i * 0.05, ease: 'easeOut' }}
+            />
+          ))}
+
+          <motion.div
+            initial={{ scale: 0.4, opacity: 0, rotateY: -30 }}
+            animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+            exit={{ scale: 0.7, opacity: 0, rotateY: 30 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 16 }}
+            className="flex flex-col items-center gap-6 p-14 glass-card text-center relative overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              boxShadow: '0 0 100px rgba(34,197,94,0.2), 0 25px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
+              perspective: '600px',
+            }}
+          >
+            {/* Top accent line */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] to-transparent" />
 
             <motion.div
-              animate={{ rotate: [0, 360], scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, ease: 'easeInOut' }}
-              className="w-28 h-28 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center relative z-10"
-              style={{ boxShadow: '0 0 40px rgba(34,197,94,0.2)' }}
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
+              className="w-32 h-32 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center relative z-10"
+              style={{ boxShadow: '0 0 50px rgba(34,197,94,0.25)' }}
             >
-              <span className="text-5xl font-display font-bold text-primary text-glow-primary">
+              <motion.span
+                className="text-6xl font-display font-bold text-primary"
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.3, 1] }}
+                transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              >
                 {levelUpAnimation.level}
-              </span>
+              </motion.span>
             </motion.div>
 
             <div className="relative z-10">
               <motion.p
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-sm font-semibold text-primary uppercase tracking-[0.2em]"
+                transition={{ delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="text-sm font-semibold text-primary uppercase tracking-[0.25em]"
               >
                 Level Up!
               </motion.p>
               <motion.h2
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="text-3xl font-display font-bold gradient-text-hero mt-2"
+                transition={{ delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                className="text-4xl font-display font-bold gradient-text-hero mt-2"
               >
                 {levelUpAnimation.title}
               </motion.h2>
             </div>
 
             <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
               onClick={dismissLevelUp}
-              className="px-10 py-3 rounded-xl bg-gradient-to-r from-primary to-emerald-400 text-primary-foreground font-semibold text-sm hover:shadow-lg hover:shadow-primary/20 transition-all relative z-10"
-              whileHover={{ y: -1 }}
-              whileTap={{ scale: 0.98 }}
+              className="px-12 py-3.5 rounded-xl bg-gradient-to-r from-primary to-emerald-400 text-primary-foreground font-semibold text-sm hover:shadow-xl hover:shadow-primary/25 transition-all relative z-10 btn-shine"
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
             >
               Continue
             </motion.button>
