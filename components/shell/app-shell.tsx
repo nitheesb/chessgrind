@@ -14,6 +14,7 @@ import { ProfilePage } from '@/components/pages/profile'
 import { SettingsPage } from '@/components/pages/settings'
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
+import { ComboOverlay, DailyBonusPopup, PerfectSolveFlash } from '@/components/ui/game-rewards'
 import { SplashScreen } from '@/components/ui/splash-screen'
 import {
   Home,
@@ -96,6 +97,9 @@ export function AppShell() {
       {/* Global overlays */}
       <XPPopup />
       <LevelUpOverlay />
+      <ComboOverlay />
+      <PerfectSolveFlash />
+      <DailyBonusPopup />
       <AchievementPopup
         show={achievementAnimation.show}
         achievement={achievementAnimation.achievement}

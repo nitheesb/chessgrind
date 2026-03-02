@@ -184,7 +184,7 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
 }
 
 function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
-  const { addXP, incrementPuzzlesSolved, trackPuzzleFailure } = useGame()
+  const { addXP, incrementPuzzlesSolved, trackPuzzleFailure, incrementCombo, resetCombo, recordPerfectSolve, profile } = useGame()
   const { settings } = useSettings()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
@@ -197,8 +197,10 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   const [hintActive, setHintActive] = useState(false)
   const processingRef = useRef(false)
   const hintActiveRef = useRef(false)
+  const hadWrongMoveRef = useRef(false)
   const [boardFlipped, setBoardFlipped] = useState(false)
   const [showCoords, setShowCoords] = useState(true)
+  const [earnedXP, setEarnedXP] = useState(0)
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -226,6 +228,25 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     return null
   }, [puzzle.moves])
 
+  // Handle puzzle completion with combo and perfect solve
+  const completePuzzle = useCallback(() => {
+    setStatus('complete')
+    if (timerRef.current) clearInterval(timerRef.current)
+    
+    const comboMultiplier = incrementCombo()
+    const isPerfect = !hadWrongMoveRef.current
+    const perfectBonus = isPerfect ? 1.5 : 1
+    const totalXP = Math.round(puzzle.xpReward * comboMultiplier * perfectBonus)
+    
+    setEarnedXP(totalXP)
+    addXP(totalXP)
+    incrementPuzzlesSolved()
+    
+    if (isPerfect) {
+      recordPerfectSolve()
+    }
+  }, [puzzle.xpReward, addXP, incrementPuzzlesSolved, incrementCombo, recordPerfectSolve])
+
   // Play opponent's move automatically
   const playOpponentMove = useCallback((currentGame: Chess, currentMoveIndex: number) => {
     const opponentMoveStr = puzzle.moves[currentMoveIndex]
@@ -247,15 +268,10 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
           const nextIndex = currentMoveIndex + 1
           setMoveIndex(nextIndex)
           
-          // Check if this was the last move
           if (nextIndex >= puzzle.moves.length) {
-            setStatus('complete')
-            if (timerRef.current) clearInterval(timerRef.current)
-            addXP(puzzle.xpReward)
-            incrementPuzzlesSolved()
+            completePuzzle()
           } else {
             setStatus('playing')
-            // If hint was showing, update it for the next move
             if (hintActiveRef.current) {
               const newHint = calculateHint(opponentGame, nextIndex)
               setHintArrow(newHint)
@@ -274,7 +290,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       }
       processingRef.current = false
     }, 600)
-  }, [puzzle.moves, puzzle.xpReward, addXP, incrementPuzzlesSolved, calculateHint])
+  }, [puzzle.moves, completePuzzle, calculateHint])
 
   const handleMove = useCallback((from: string, to: string): boolean => {
     if (status !== 'playing' || processingRef.current) return false
@@ -295,7 +311,6 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         return false
       }
 
-      // Check if this is the expected move (compare SAN)
       if (move.san === expectedMove) {
         setGame(gameCopy)
         setLastMove({ from, to })
@@ -304,20 +319,13 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         
         const nextMoveIndex = moveIndex + 1
 
-        // Check if puzzle is complete (player made the last move)
         if (nextMoveIndex >= puzzle.moves.length) {
           setMoveIndex(nextMoveIndex)
-          setStatus('complete')
-          if (timerRef.current) clearInterval(timerRef.current)
-          addXP(puzzle.xpReward)
-          incrementPuzzlesSolved()
+          completePuzzle()
           processingRef.current = false
         } else {
-          // Show correct feedback briefly, then play opponent's move
           setStatus('correct')
           setMoveIndex(nextMoveIndex)
-          
-          // Opponent needs to respond
           setTimeout(() => {
             playOpponentMove(gameCopy, nextMoveIndex)
           }, 400)
@@ -325,6 +333,8 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         return true
       } else {
         setStatus('wrong')
+        hadWrongMoveRef.current = true
+        resetCombo()
         trackPuzzleFailure(puzzle.themes)
         processingRef.current = false
         setTimeout(() => setStatus('playing'), 1500)
@@ -334,7 +344,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       processingRef.current = false
       return false
     }
-  }, [game, moveIndex, puzzle, status, addXP, incrementPuzzlesSolved, playOpponentMove, trackPuzzleFailure])
+  }, [game, moveIndex, puzzle, status, completePuzzle, playOpponentMove, resetCombo, trackPuzzleFailure])
 
   const handleHint = useCallback(() => {
     const hint = calculateHint(game, moveIndex)
@@ -527,7 +537,10 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
                 transition={{ delay: 0.3 }}
               >
                 <Zap className="w-4 h-4 text-primary" />
-                <span className="text-sm font-bold text-primary">+{puzzle.xpReward} XP</span>
+                <span className="text-sm font-bold text-primary">+{earnedXP || puzzle.xpReward} XP</span>
+                {earnedXP > puzzle.xpReward && (
+                  <span className="text-[10px] font-bold text-orange-400 ml-1">🔥 Bonus!</span>
+                )}
               </motion.div>
             </div>
             <motion.button

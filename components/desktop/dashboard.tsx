@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
@@ -9,6 +9,7 @@ import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { MiniChessboard } from '@/components/chess/chessboard'
 import { AnimatedCounter } from '@/components/ui/animated-components'
 import { TiltCard, MagneticWrap, OdometerCounter, TypewriterText, RevealGrid } from '@/components/ui/effects'
+import { StreakWarning, NextAchievementPreview } from '@/components/ui/game-rewards'
 import { PUZZLES, OPENINGS } from '@/lib/chess-data'
 import {
   Trophy,
@@ -37,12 +38,24 @@ interface DesktopDashboardProps {
 
 
 export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
-  const { profile } = useGame()
+  const { profile, claimDailyBonus } = useGame()
   const { settings } = useSettings()
   const { playSound } = useSoundAndHaptics()
   const { currentLevel, nextLevel, progress, xpIntoLevel, xpForLevel } = getLevelInfo(profile.xp)
   const dailyPuzzleIndex = getDailyPuzzleIndex(PUZZLES.length)
   const dailyPuzzle = PUZZLES[dailyPuzzleIndex]
+  const dailyBonusChecked = useRef(false)
+
+  // Auto-claim daily bonus on first dashboard load
+  useEffect(() => {
+    if (!dailyBonusChecked.current && profile.username !== 'ChessLearner') {
+      dailyBonusChecked.current = true
+      const today = new Date().toDateString()
+      if (!profile.dailyBonusClaimed || profile.lastActiveDate !== today) {
+        setTimeout(() => claimDailyBonus(), 1500)
+      }
+    }
+  }, [profile.username, profile.dailyBonusClaimed, profile.lastActiveDate, claimDailyBonus])
 
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
@@ -180,6 +193,21 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
           </TiltCard>
         ))}
       </RevealGrid>
+
+      {/* Streak Warning + Combo + Achievement Progress */}
+      <div className="grid grid-cols-3 gap-4">
+        <StreakWarning />
+        {profile.combo > 0 && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+            <span className="text-xl">🔥</span>
+            <div>
+              <span className="text-sm font-bold text-orange-400">{profile.combo}x Combo</span>
+              <p className="text-[10px] text-orange-400/70">Keep solving for bonus XP!</p>
+            </div>
+          </div>
+        )}
+        <NextAchievementPreview />
+      </div>
 
       <div className="grid grid-cols-3 gap-7">
         {/* Left Column - Quick Actions */}

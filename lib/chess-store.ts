@@ -22,6 +22,12 @@ export interface UserProfile {
   puzzlesAttempted: number
   puzzlesCorrect: number
   failedPuzzleThemes: Record<string, number>
+  // Addictiveness features
+  combo: number
+  bestCombo: number
+  perfectSolves: number
+  lastActiveDate: string
+  dailyBonusClaimed: boolean
 }
 
 export interface Achievement {
@@ -82,6 +88,10 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'streak-30', name: 'Monthly Dedication', description: 'Maintain a 30-day streak', icon: '💎', earned: false, rarity: 'legendary', progress: 0, target: 30 },
   { id: 'all-openings', name: 'Encyclopedia', description: 'Learn all openings', icon: '📖', earned: false, rarity: 'legendary', progress: 0, target: 10 },
   { id: 'puzzle-100', name: 'Puzzle Master', description: 'Solve 100 puzzles', icon: '🎯', earned: false, rarity: 'legendary', progress: 0, target: 100 },
+  { id: 'combo-5', name: 'On Fire', description: 'Get a 5x puzzle combo', icon: '🔥', earned: false, rarity: 'rare', progress: 0, target: 5 },
+  { id: 'combo-10', name: 'Unstoppable', description: 'Get a 10x puzzle combo', icon: '💥', earned: false, rarity: 'epic', progress: 0, target: 10 },
+  { id: 'perfect-10', name: 'Perfectionist', description: 'Solve 10 puzzles without mistakes', icon: '✨', earned: false, rarity: 'rare', progress: 0, target: 10 },
+  { id: 'daily-7', name: 'Loyal Player', description: 'Claim daily bonus 7 days in a row', icon: '🎁', earned: false, rarity: 'rare', progress: 0, target: 7 },
 ]
 
 export const DEFAULT_PROFILE: UserProfile = {
@@ -105,6 +115,28 @@ export const DEFAULT_PROFILE: UserProfile = {
   puzzlesAttempted: 0,
   puzzlesCorrect: 0,
   failedPuzzleThemes: {},
+  combo: 0,
+  bestCombo: 0,
+  perfectSolves: 0,
+  lastActiveDate: '',
+  dailyBonusClaimed: false,
+}
+
+// Get XP multiplier based on combo count
+export function getComboMultiplier(combo: number): number {
+  if (combo >= 10) return 3
+  if (combo >= 5) return 2
+  if (combo >= 3) return 1.5
+  return 1
+}
+
+// Get daily bonus XP based on consecutive days
+export function getDailyBonusXP(streak: number): number {
+  if (streak >= 30) return 75
+  if (streak >= 14) return 50
+  if (streak >= 7) return 30
+  if (streak >= 3) return 20
+  return 10
 }
 
 // Calculate new puzzle rating using ELO formula
