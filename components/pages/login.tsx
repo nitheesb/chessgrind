@@ -97,6 +97,12 @@ export function LoginPage() {
       {/* Mesh gradient background */}
       <div className="mesh-gradient" />
       
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 z-[1] pointer-events-none" style={{
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)`,
+        backgroundSize: '40px 40px',
+      }} />
+      
       {/* Header */}
       <div className="flex-shrink-0 pt-16 pb-10 px-6 text-center relative overflow-hidden z-10">
         <motion.div
@@ -218,10 +224,11 @@ export function LoginPage() {
                 </AnimatePresence>
 
                 {/* Submit button with shimmer overlay */}
-                <button
+                <motion.button
                   onClick={handleSubmit}
                   disabled={!username.trim() || isSubmitting || (isBackendEnabled && !password)}
-                  className="relative w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold text-base flex items-center justify-center gap-2.5 disabled:opacity-40 shadow-amber-500/25 active:scale-[0.98] transition-transform overflow-hidden"
+                  whileTap={{ scale: 0.97 }}
+                  className="relative w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold text-base flex items-center justify-center gap-2.5 disabled:opacity-40 shadow-lg shadow-emerald-500/20 active:shadow-sm transition-shadow overflow-hidden btn-shine"
                 >
                   <span className="absolute inset-0 pointer-events-none" style={{
                     background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%)',
@@ -238,7 +245,7 @@ export function LoginPage() {
                       </>
                     )}
                   </span>
-                </button>
+                </motion.button>
 
                 {!isBackendEnabled && (
                   <p className="text-sm text-center text-muted-foreground">

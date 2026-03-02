@@ -13,6 +13,7 @@ import {
   staggerContainer,
   staggerItem,
 } from '@/components/ui/animated-components'
+import { OdometerCounter } from '@/components/ui/effects'
 import {
   ArrowLeft,
   Crown,
@@ -172,7 +173,8 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
                   <span className="text-muted-foreground">{stat.icon}</span>
                 </div>
                 <p className="text-xl font-display font-bold text-foreground">
-                  <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+                  <OdometerCounter value={stat.value} />
+                  {stat.suffix && <span className="text-sm text-muted-foreground">{stat.suffix}</span>}
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
               </div>

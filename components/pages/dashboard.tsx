@@ -28,6 +28,7 @@ import {
   staggerContainer,
   staggerItem,
 } from '@/components/ui/animated-components'
+import { OdometerCounter, TypewriterText } from '@/components/ui/effects'
 
 interface DashboardProps {
   onNavigate: (page: string) => void
@@ -94,7 +95,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </div>
           <div>
             <h1 className="text-lg font-bold text-foreground shimmer-text">
-              <TextReveal text={profile.username} />
+              <TypewriterText text={profile.username} speed={60} />
             </h1>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Level {currentLevel.level}</span>
@@ -117,21 +118,21 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
             <Zap className="w-4 h-4" />
           </div>
-          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={profile.xp} /></p>
+          <p className="text-lg font-bold text-foreground"><OdometerCounter value={profile.xp} /></p>
           <p className="text-[10px] text-muted-foreground">XP</p>
         </div>
         <div className="glow-card bg-secondary rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 text-green-500 mb-1">
             <Flame className="w-4 h-4" />
           </div>
-          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={profile.streak} /></p>
+          <p className="text-lg font-bold text-foreground"><OdometerCounter value={profile.streak} /></p>
           <p className="text-[10px] text-muted-foreground">Day Streak</p>
         </div>
         <div className="glow-card bg-secondary rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 text-blue-500 mb-1">
             <TrendingUp className="w-4 h-4" />
           </div>
-          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={profile.rating} /></p>
+          <p className="text-lg font-bold text-foreground"><OdometerCounter value={profile.rating} /></p>
           <p className="text-[10px] text-muted-foreground">Rating</p>
         </div>
       </motion.div>

@@ -43,8 +43,28 @@ export function AchievementPopup({ show, achievement, onDismiss }: AchievementPo
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           className="fixed top-4 left-4 right-4 z-[60] pointer-events-none"
         >
+          {/* Particle burst */}
+          {Array.from({ length: 8 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute left-1/2 top-1/2 w-1 h-1 rounded-full"
+              style={{
+                background: achievement.rarity === 'legendary' ? '#fbbf24' :
+                  achievement.rarity === 'epic' ? '#a855f7' :
+                  achievement.rarity === 'rare' ? '#3b82f6' : '#94a3b8',
+              }}
+              initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+              animate={{
+                x: Math.cos(i * (Math.PI * 2 / 8)) * 80,
+                y: Math.sin(i * (Math.PI * 2 / 8)) * 60,
+                opacity: 0,
+                scale: 0,
+              }}
+              transition={{ duration: 0.8, delay: 0.2 + i * 0.03, ease: 'easeOut' }}
+            />
+          ))}
           <motion.div
-            className={`mx-auto max-w-sm rounded-2xl ${colors.bg} ${colors.border} border-2 p-4 backdrop-blur-lg shadow-2xl ${colors.glow}`}
+            className={`mx-auto max-w-sm rounded-2xl ${colors.bg} ${colors.border} border-2 p-4 backdrop-blur-lg shadow-2xl ${colors.glow} relative overflow-hidden`}
             onClick={onDismiss}
             style={{ pointerEvents: 'auto' }}
           >

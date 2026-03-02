@@ -476,14 +476,27 @@ export function Chessboard({
   }, [lastMove])
 
   return (
-    <div className="relative inline-block select-none touch-none">
+    <div className="relative inline-block select-none touch-none group/board">
+      {/* Animated gradient border */}
+      <div
+        className="absolute -inset-[2px] rounded-xl opacity-40 group-hover/board:opacity-70 transition-opacity duration-500"
+        style={{
+          background: 'conic-gradient(from var(--border-angle, 0deg), transparent 0%, rgba(48,209,88,0.4) 10%, transparent 20%, transparent 50%, rgba(10,132,255,0.3) 60%, transparent 70%)',
+          animation: 'border-spin 4s linear infinite',
+          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          maskComposite: 'exclude',
+          padding: '2px',
+          borderRadius: '12px',
+        }}
+      />
       <div
         ref={boardRef}
-        className="relative overflow-hidden rounded"
+        className="relative overflow-hidden rounded-xl"
         style={{ 
           width: size, 
           height: size,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)',
         }}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -593,7 +606,7 @@ export function Chessboard({
             zIndex: 100,
             pointerEvents: 'none',
             transform: 'scale(1.1)',
-            filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.4))',
+            filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(48,209,88,0.15))',
           }}
         >
           <ChessPiece piece={dragPiece.piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
@@ -615,7 +628,7 @@ export const MiniChessboard = memo(function MiniChessboard({ fen, size = 120, bo
       style={{ 
         width: size, 
         height: size,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05)',
       }}
     >
       {Array.from({ length: 64 }, (_, i) => {
