@@ -224,7 +224,8 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     const totalXP = Math.round(puzzle.xpReward * comboMultiplier * perfectBonus)
     
     setEarnedXP(totalXP)
-    addXP(totalXP)
+    // Delay XP popup slightly so combo overlay appears first
+    setTimeout(() => addXP(totalXP), 300)
     incrementPuzzlesSolved()
     updatePuzzleRating(puzzle.rating, true, timer)
     playSound('success')

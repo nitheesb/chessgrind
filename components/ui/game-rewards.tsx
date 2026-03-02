@@ -7,20 +7,18 @@ import { Flame, Gift, Sparkles, Zap, ChevronRight } from 'lucide-react'
 
 // Combo counter overlay — shows current combo streak with fire effect
 export function ComboOverlay() {
-  const { comboAnimation, dismissComboAnimation } = useGame()
+  const { comboAnimation } = useGame()
 
   return (
     <AnimatePresence>
       {comboAnimation.show && (
         <motion.div
+          key={`combo-${comboAnimation.combo}`}
           initial={{ opacity: 0, scale: 0.5, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: -20 }}
           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
           className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] pointer-events-none"
-          onAnimationComplete={() => {
-            setTimeout(dismissComboAnimation, 1500)
-          }}
         >
           <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-orange-500/90 to-red-500/90 backdrop-blur-xl border border-orange-400/30 shadow-2xl shadow-orange-500/30">
             <Flame className="w-6 h-6 text-yellow-300 animate-pulse" />
@@ -125,20 +123,18 @@ export function DailyBonusPopup() {
 
 // Perfect solve flash
 export function PerfectSolveFlash() {
-  const { perfectSolveAnimation, dismissPerfectSolve } = useGame()
+  const { perfectSolveAnimation } = useGame()
 
   return (
     <AnimatePresence>
       {perfectSolveAnimation.show && (
         <motion.div
+          key="perfect-solve"
           initial={{ opacity: 0, scale: 0.5, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, y: -30 }}
           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-          className="fixed top-32 left-1/2 -translate-x-1/2 z-[200] pointer-events-none"
-          onAnimationComplete={() => {
-            setTimeout(dismissPerfectSolve, 1200)
-          }}
+          className="fixed top-36 left-1/2 -translate-x-1/2 z-[199] pointer-events-none"
         >
           <div className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-violet-500/90 to-purple-600/90 backdrop-blur-xl border border-violet-400/30 shadow-2xl shadow-purple-500/30">
             <Sparkles className="w-5 h-5 text-violet-200" />

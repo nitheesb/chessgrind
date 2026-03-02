@@ -16,7 +16,7 @@ export function XPPopup() {
           animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
           exit={{ opacity: 0, y: -40, scale: 0.5, filter: 'blur(8px)' }}
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] pointer-events-none"
+          className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] pointer-events-none"
         >
           <div className="flex items-center gap-3 px-7 py-4 rounded-2xl border border-primary/30 relative overflow-hidden"
             style={{

@@ -442,8 +442,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       currentCombo = prev.combo
       const newCombo = prev.combo + 1
       const mult = getComboMultiplier(newCombo)
+      // Show combo overlay, auto-dismiss after 1.8s
       setComboAnimation({ show: true, combo: newCombo, multiplier: mult })
-      setTimeout(() => setComboAnimation({ show: false, combo: 0, multiplier: 1 }), 2000)
+      setTimeout(() => setComboAnimation(prev => prev.combo === newCombo ? { show: false, combo: 0, multiplier: 1 } : prev), 1800)
       return {
         ...prev,
         combo: newCombo,
@@ -462,11 +463,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const recordPerfectSolve = useCallback(() => {
-    setPerfectSolveAnimation({ show: true })
-    setTimeout(() => setPerfectSolveAnimation({ show: false }), 2000)
+    // Delay perfect solve flash so it doesn't overlap with combo overlay
+    setTimeout(() => {
+      setPerfectSolveAnimation({ show: true })
+      setTimeout(() => setPerfectSolveAnimation({ show: false }), 1500)
+    }, 600)
     setProfile(prev => {
       const newCount = prev.perfectSolves + 1
-      // Track perfect solve achievement
       setTimeout(() => updateAchievementProgress('perfect-10', newCount), 300)
       return { ...prev, perfectSolves: newCount }
     })

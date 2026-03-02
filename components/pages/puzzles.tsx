@@ -239,7 +239,8 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     const totalXP = Math.round(puzzle.xpReward * comboMultiplier * perfectBonus)
     
     setEarnedXP(totalXP)
-    addXP(totalXP)
+    // Delay XP popup slightly so combo overlay appears first
+    setTimeout(() => addXP(totalXP), 300)
     incrementPuzzlesSolved()
     
     if (isPerfect) {
