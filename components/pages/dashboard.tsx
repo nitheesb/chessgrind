@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
@@ -7,6 +8,7 @@ import { getLevelInfo, getDailyPuzzleIndex } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { XPBar, StatCard } from '@/components/ui/xp-animations'
 import { MiniChessboard } from '@/components/chess/chessboard'
+import { StreakWarning, NextAchievementPreview } from '@/components/ui/game-rewards'
 import { PUZZLES, OPENINGS } from '@/lib/chess-data'
 import {
   Trophy,
@@ -35,13 +37,25 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { profile } = useGame()
+  const { profile, claimDailyBonus } = useGame()
   const { settings } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const { currentLevel, progress } = getLevelInfo(profile.xp)
+  const dailyBonusChecked = useRef(false)
 
   const dailyPuzzleIndex = getDailyPuzzleIndex(PUZZLES.length)
   const dailyPuzzle = PUZZLES[dailyPuzzleIndex]
+
+  // Auto-claim daily bonus on first dashboard load
+  useEffect(() => {
+    if (!dailyBonusChecked.current && profile.username !== 'ChessLearner') {
+      dailyBonusChecked.current = true
+      const today = new Date().toDateString()
+      if (!profile.dailyBonusClaimed || profile.lastActiveDate !== today) {
+        setTimeout(() => claimDailyBonus(), 1500)
+      }
+    }
+  }, [profile.username, profile.dailyBonusClaimed, profile.lastActiveDate, claimDailyBonus])
 
   const handleNavigate = (page: string) => {
     playSound('click')
@@ -145,6 +159,24 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </div>
         <XPBar />
       </motion.div>
+
+      {/* Streak Warning */}
+      <motion.div variants={staggerItem}>
+        <StreakWarning />
+      </motion.div>
+
+      {/* Next Achievement */}
+      <motion.div variants={staggerItem}>
+        <NextAchievementPreview />
+      </motion.div>
+
+      {/* Combo indicator */}
+      {profile.combo > 0 && (
+        <motion.div variants={staggerItem} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20">
+          <span className="text-lg">🔥</span>
+          <span className="text-xs font-bold text-orange-400">{profile.combo}x Puzzle Combo Active</span>
+        </motion.div>
+      )}
 
       {/* Quick Actions */}
       <motion.div variants={staggerItem} className="grid grid-cols-4 gap-2">

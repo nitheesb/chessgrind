@@ -7,6 +7,7 @@ import { getLevelInfo } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
+import { ComboOverlay, DailyBonusPopup, PerfectSolveFlash } from '@/components/ui/game-rewards'
 import { SplashScreen } from '@/components/ui/splash-screen'
 import {
   Home,
@@ -124,6 +125,9 @@ export function DesktopShell() {
       {/* Global overlays */}
       <XPPopup />
       <LevelUpOverlay />
+      <ComboOverlay />
+      <PerfectSolveFlash />
+      <DailyBonusPopup />
       <CommandPalette onNavigate={handleNavigate} />
       <AchievementPopup
         show={achievementAnimation.show}

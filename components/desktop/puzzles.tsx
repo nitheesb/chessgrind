@@ -170,7 +170,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
 }
 
 function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
-  const { addXP, incrementPuzzlesSolved, updatePuzzleRating, trackPuzzleFailure } = useGame()
+  const { addXP, incrementPuzzlesSolved, updatePuzzleRating, trackPuzzleFailure, incrementCombo, resetCombo, recordPerfectSolve, profile } = useGame()
   const { settings } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
@@ -184,6 +184,8 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
   const [hintArrow, setHintArrow] = useState<{ from: string; to: string } | null>(null)
   const [moveHistory, setMoveHistory] = useState<string[]>([])
   const processingRef = useRef(false)
+  const hadWrongMoveRef = useRef(false)
+  const [earnedXP, setEarnedXP] = useState(0)
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -211,6 +213,28 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     return null
   }, [puzzle.moves])
 
+  // Handle puzzle completion with combo and perfect solve
+  const completePuzzle = useCallback(() => {
+    setStatus('complete')
+    if (timerRef.current) clearInterval(timerRef.current)
+    
+    const comboMultiplier = incrementCombo()
+    const isPerfect = !hadWrongMoveRef.current
+    const perfectBonus = isPerfect ? 1.5 : 1
+    const totalXP = Math.round(puzzle.xpReward * comboMultiplier * perfectBonus)
+    
+    setEarnedXP(totalXP)
+    addXP(totalXP)
+    incrementPuzzlesSolved()
+    updatePuzzleRating(puzzle.rating, true, timer)
+    playSound('success')
+    triggerHaptic('success')
+    
+    if (isPerfect) {
+      recordPerfectSolve()
+    }
+  }, [puzzle.xpReward, puzzle.rating, timer, addXP, incrementPuzzlesSolved, updatePuzzleRating, incrementCombo, recordPerfectSolve, playSound, triggerHaptic])
+
   const playOpponentMove = useCallback((currentGame: Chess, currentMoveIndex: number) => {
     const opponentMoveStr = puzzle.moves[currentMoveIndex]
     if (!opponentMoveStr) {
@@ -234,16 +258,9 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
           playSound('move')
           
           if (nextIndex >= puzzle.moves.length) {
-            setStatus('complete')
-            if (timerRef.current) clearInterval(timerRef.current)
-            addXP(puzzle.xpReward)
-            incrementPuzzlesSolved()
-            updatePuzzleRating(puzzle.rating, true, timer)
-            playSound('success')
-            triggerHaptic('success')
+            completePuzzle()
           } else {
             setStatus('playing')
-            // If hint was showing, update it for the next move
             if (hintActiveRef.current) {
               const newHint = calculateHint(opponentGame, nextIndex)
               setHintArrow(newHint)
@@ -257,7 +274,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
       }
       processingRef.current = false
     }, 600)
-  }, [puzzle.moves, puzzle.xpReward, puzzle.rating, addXP, incrementPuzzlesSolved, updatePuzzleRating, timer, playSound, triggerHaptic, calculateHint])
+  }, [puzzle.moves, completePuzzle, playSound, calculateHint])
 
   const handleMove = useCallback((from: string, to: string): boolean => {
     if (status !== 'playing' || processingRef.current) return false
@@ -288,13 +305,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
 
         if (nextMoveIndex >= puzzle.moves.length) {
           setMoveIndex(nextMoveIndex)
-          setStatus('complete')
-          if (timerRef.current) clearInterval(timerRef.current)
-          addXP(puzzle.xpReward)
-          incrementPuzzlesSolved()
-          updatePuzzleRating(puzzle.rating, true, timer)
-          playSound('success')
-          triggerHaptic('success')
+          completePuzzle()
         } else {
           setMoveIndex(nextMoveIndex)
           setStatus('correct')
@@ -307,6 +318,8 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
         return true
       } else {
         setStatus('wrong')
+        hadWrongMoveRef.current = true
+        resetCombo()
         playSound('fail')
         triggerHaptic('error')
         updatePuzzleRating(puzzle.rating, false, timer)
@@ -318,7 +331,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
       processingRef.current = false
       return false
     }
-  }, [status, puzzle.moves, puzzle.xpReward, puzzle.rating, puzzle.themes, moveIndex, game, addXP, incrementPuzzlesSolved, updatePuzzleRating, trackPuzzleFailure, timer, playOpponentMove, playSound, triggerHaptic])
+  }, [status, puzzle.moves, puzzle.rating, puzzle.themes, moveIndex, game, completePuzzle, resetCombo, updatePuzzleRating, trackPuzzleFailure, timer, playOpponentMove, playSound, triggerHaptic])
 
   const handleRetry = useCallback(() => {
     playSound('click')
@@ -495,7 +508,8 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                 )}
                 {status === 'complete' && (
                   <span className="flex items-center justify-center gap-2">
-                    <Trophy className="w-5 h-5" /> Puzzle Complete! +{puzzle.xpReward} XP
+                    <Trophy className="w-5 h-5" /> Puzzle Complete! +{earnedXP || puzzle.xpReward} XP
+                    {earnedXP > puzzle.xpReward && <span className="text-orange-400">🔥</span>}
                   </span>
                 )}
               </motion.div>

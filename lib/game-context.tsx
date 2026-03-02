@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
-import { type UserProfile, DEFAULT_PROFILE, getLevelInfo, LEVELS, ALL_ACHIEVEMENTS, calculatePuzzleRating } from './chess-store'
+import { type UserProfile, DEFAULT_PROFILE, getLevelInfo, LEVELS, ALL_ACHIEVEMENTS, calculatePuzzleRating, getComboMultiplier, getDailyBonusXP } from './chess-store'
 import { authApi, userApi, type UserProfileResponse } from './api-client'
 
 interface GameContextType {
@@ -24,12 +24,22 @@ interface GameContextType {
   updatePuzzleRating: (puzzleRating: number, solved: boolean, timeSeconds: number) => void
   trackPuzzleFailure: (themes: string[]) => void
   checkAndUpdateStreak: () => void
+  incrementCombo: () => number
+  resetCombo: () => void
+  recordPerfectSolve: () => void
+  claimDailyBonus: () => number
   xpAnimation: { show: boolean; amount: number }
   levelUpAnimation: { show: boolean; level: number; title: string }
   achievementAnimation: { show: boolean; achievement: { name: string; icon: string; rarity: string } | null }
+  comboAnimation: { show: boolean; combo: number; multiplier: number }
+  dailyBonusAnimation: { show: boolean; amount: number; streak: number }
+  perfectSolveAnimation: { show: boolean }
   dismissXPAnimation: () => void
   dismissLevelUp: () => void
   dismissAchievement: () => void
+  dismissComboAnimation: () => void
+  dismissDailyBonus: () => void
+  dismissPerfectSolve: () => void
   syncToBackend: () => Promise<void>
   isBackendEnabled: boolean
   hasSeenOnboarding: boolean
@@ -74,6 +84,11 @@ function mapApiUserToProfile(apiUser: UserProfileResponse): UserProfile {
     puzzlesAttempted: apiUser.puzzlesAttempted || 0,
     puzzlesCorrect: apiUser.puzzlesCorrect || 0,
     failedPuzzleThemes: apiUser.failedPuzzleThemes || {},
+    combo: 0,
+    bestCombo: (apiUser as Record<string, unknown>).bestCombo as number || 0,
+    perfectSolves: (apiUser as Record<string, unknown>).perfectSolves as number || 0,
+    lastActiveDate: '',
+    dailyBonusClaimed: false,
   }
 }
 
@@ -85,6 +100,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [xpAnimation, setXPAnimation] = useState({ show: false, amount: 0 })
   const [levelUpAnimation, setLevelUpAnimation] = useState({ show: false, level: 0, title: '' })
   const [achievementAnimation, setAchievementAnimation] = useState<{ show: boolean; achievement: { name: string; icon: string; rarity: string } | null }>({ show: false, achievement: null })
+  const [comboAnimation, setComboAnimation] = useState({ show: false, combo: 0, multiplier: 1 })
+  const [dailyBonusAnimation, setDailyBonusAnimation] = useState({ show: false, amount: 0, streak: 0 })
+  const [perfectSolveAnimation, setPerfectSolveAnimation] = useState({ show: false })
   const [isBackendEnabled, setIsBackendEnabled] = useState(false)
   const [pendingSync, setPendingSync] = useState(false)
   const [hasSeenOnboarding, setHasSeenOnboardingState] = useState(true) // Default true to avoid flash
@@ -413,6 +431,67 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const dismissXPAnimation = useCallback(() => setXPAnimation({ show: false, amount: 0 }), [])
   const dismissLevelUp = useCallback(() => setLevelUpAnimation({ show: false, level: 0, title: '' }), [])
   const dismissAchievement = useCallback(() => setAchievementAnimation({ show: false, achievement: null }), [])
+  const dismissComboAnimation = useCallback(() => setComboAnimation({ show: false, combo: 0, multiplier: 1 }), [])
+  const dismissDailyBonus = useCallback(() => setDailyBonusAnimation({ show: false, amount: 0, streak: 0 }), [])
+  const dismissPerfectSolve = useCallback(() => setPerfectSolveAnimation({ show: false }), [])
+
+  // Increment combo on correct puzzle solve, returns XP multiplier
+  const incrementCombo = useCallback((): number => {
+    let currentCombo = 0
+    setProfile(prev => {
+      currentCombo = prev.combo
+      const newCombo = prev.combo + 1
+      const mult = getComboMultiplier(newCombo)
+      setComboAnimation({ show: true, combo: newCombo, multiplier: mult })
+      setTimeout(() => setComboAnimation({ show: false, combo: 0, multiplier: 1 }), 2000)
+      return {
+        ...prev,
+        combo: newCombo,
+        bestCombo: Math.max(prev.bestCombo, newCombo),
+      }
+    })
+    const newCombo = currentCombo + 1
+    // Track combo achievements
+    if (newCombo >= 5) updateAchievementProgress('combo-5', newCombo)
+    if (newCombo >= 10) updateAchievementProgress('combo-10', newCombo)
+    return getComboMultiplier(newCombo)
+  }, [updateAchievementProgress])
+
+  const resetCombo = useCallback(() => {
+    setProfile(prev => ({ ...prev, combo: 0 }))
+  }, [])
+
+  const recordPerfectSolve = useCallback(() => {
+    setPerfectSolveAnimation({ show: true })
+    setTimeout(() => setPerfectSolveAnimation({ show: false }), 2000)
+    setProfile(prev => {
+      const newCount = prev.perfectSolves + 1
+      // Track perfect solve achievement
+      setTimeout(() => updateAchievementProgress('perfect-10', newCount), 300)
+      return { ...prev, perfectSolves: newCount }
+    })
+    setPendingSync(true)
+  }, [updateAchievementProgress])
+
+  // Claim daily bonus XP, returns amount awarded
+  const claimDailyBonus = useCallback((): number => {
+    const today = new Date().toDateString()
+    let bonusAmount = 0
+    setProfile(prev => {
+      if (prev.dailyBonusClaimed && prev.lastActiveDate === today) return prev
+      bonusAmount = getDailyBonusXP(prev.streak)
+      setDailyBonusAnimation({ show: true, amount: bonusAmount, streak: prev.streak })
+      return {
+        ...prev,
+        dailyBonusClaimed: true,
+        lastActiveDate: today,
+      }
+    })
+    if (bonusAmount > 0) {
+      setTimeout(() => addXP(bonusAmount), 800)
+    }
+    return bonusAmount
+  }, [addXP])
 
   return (
     <GameContext.Provider
@@ -436,12 +515,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
         updatePuzzleRating,
         trackPuzzleFailure,
         checkAndUpdateStreak,
+        incrementCombo,
+        resetCombo,
+        recordPerfectSolve,
+        claimDailyBonus,
         xpAnimation,
         levelUpAnimation,
         achievementAnimation,
+        comboAnimation,
+        dailyBonusAnimation,
+        perfectSolveAnimation,
         dismissXPAnimation,
         dismissLevelUp,
         dismissAchievement,
+        dismissComboAnimation,
+        dismissDailyBonus,
+        dismissPerfectSolve,
         syncToBackend,
         isBackendEnabled,
         hasSeenOnboarding,
