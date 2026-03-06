@@ -53,13 +53,13 @@ export { TRAPS } from './chess-data/traps'
 
 export const AI_LEVELS = [
   { level: 1, name: 'Beginner Bot', rating: 400, description: 'Makes random moves, perfect for learning', depth: 1, icon: 'P', color: '#4ade80' },
-  { level: 2, name: 'Casual Player', rating: 600, description: 'Knows basic tactics but misses a lot', depth: 2, icon: 'P', color: '#4ade80' },
-  { level: 3, name: 'Club Player', rating: 800, description: 'Understands basic strategy and openings', depth: 3, icon: 'N', color: '#60a5fa' },
-  { level: 4, name: 'Tournament Player', rating: 1000, description: 'Solid player with good tactical vision', depth: 5, icon: 'N', color: '#60a5fa' },
-  { level: 5, name: 'Expert', rating: 1200, description: 'Strong player who rarely blunders', depth: 7, icon: 'B', color: '#a78bfa' },
-  { level: 6, name: 'Master', rating: 1400, description: 'Plays at a master level with deep calculation', depth: 9, icon: 'R', color: '#f59e0b' },
-  { level: 7, name: 'Grandmaster', rating: 1600, description: 'Near-perfect play with devastating attacks', depth: 12, icon: 'Q', color: '#f59e0b' },
-  { level: 8, name: 'Stockfish Beast', rating: 2000, description: 'Maximum engine strength. Good luck!', depth: 15, icon: 'K', color: '#ef4444' },
+  { level: 2, name: 'Casual Player', rating: 600, description: 'Knows basic tactics but misses a lot', depth: 1, icon: 'P', color: '#4ade80' },
+  { level: 3, name: 'Club Player', rating: 800, description: 'Understands basic strategy and openings', depth: 2, icon: 'N', color: '#60a5fa' },
+  { level: 4, name: 'Tournament Player', rating: 1000, description: 'Solid player with good tactical vision', depth: 2, icon: 'N', color: '#60a5fa' },
+  { level: 5, name: 'Expert', rating: 1200, description: 'Strong player who rarely blunders', depth: 3, icon: 'B', color: '#a78bfa' },
+  { level: 6, name: 'Master', rating: 1400, description: 'Plays at a master level with deep calculation', depth: 3, icon: 'R', color: '#f59e0b' },
+  { level: 7, name: 'Grandmaster', rating: 1600, description: 'Near-perfect play with devastating attacks', depth: 4, icon: 'Q', color: '#f59e0b' },
+  { level: 8, name: 'Stockfish Beast', rating: 2000, description: 'Maximum engine strength. Good luck!', depth: 4, icon: 'K', color: '#ef4444' },
 ]
 
 export const PUZZLE_THEMES = [
