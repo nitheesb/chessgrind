@@ -92,6 +92,30 @@ function mapApiUserToProfile(apiUser: UserProfileResponse): UserProfile {
   }
 }
 
+const STORAGE_KEY = 'chessvault_profile'
+
+function loadProfileFromStorage(): UserProfile | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved) as UserProfile
+      // Reset transient state
+      parsed.combo = 0
+      parsed.dailyBonusClaimed = false
+      return parsed
+    }
+  } catch { /* corrupt data — ignore */ }
+  return null
+}
+
+function saveProfileToStorage(profile: UserProfile) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(profile))
+  } catch { /* storage full — ignore */ }
+}
+
 export function GameProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -111,6 +135,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setIsBackendEnabled(isBackendConfigured())
   }, [])
+
+  // Load profile from localStorage on mount (local-mode fallback)
+  useEffect(() => {
+    const saved = loadProfileFromStorage()
+    if (saved && saved.username !== 'ChessLearner') {
+      setProfile(saved)
+      setIsLoggedIn(true)
+    }
+  }, [])
+
+  // Auto-save profile to localStorage on every change
+  useEffect(() => {
+    if (isLoggedIn && profile.username !== 'ChessLearner') {
+      saveProfileToStorage(profile)
+    }
+  }, [isLoggedIn, profile])
 
   // Load onboarding state
   useEffect(() => {
@@ -249,6 +289,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setIsLoggedIn(false)
     setProfile(DEFAULT_PROFILE)
     setAuthError(null)
+    if (typeof window !== 'undefined') localStorage.removeItem(STORAGE_KEY)
   }, [isBackendEnabled])
 
   const addXP = useCallback((amount: number) => {

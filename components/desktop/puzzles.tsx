@@ -186,6 +186,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
   const [moveHistory, setMoveHistory] = useState<string[]>([])
   const processingRef = useRef(false)
   const hadWrongMoveRef = useRef(false)
+  const [wrongMoveHint, setWrongMoveHint] = useState<string | null>(null)
   const [earnedXP, setEarnedXP] = useState(0)
 
   useEffect(() => {
@@ -278,7 +279,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     }, 600)
   }, [puzzle.moves, completePuzzle, playSound, calculateHint])
 
-  const handleMove = useCallback((from: string, to: string): boolean => {
+  const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     if (status !== 'playing' || processingRef.current) return false
     processingRef.current = true
 
@@ -290,7 +291,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
 
     try {
       const gameCopy = new Chess(game.fen())
-      const move = gameCopy.move({ from, to, promotion: 'q' })
+      const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
 
       if (!move) {
         processingRef.current = false
@@ -322,11 +323,13 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
         setStatus('wrong')
         hadWrongMoveRef.current = true
         setHintArrow(null)
+        setWrongMoveHint(expectedMove)
         resetCombo()
         playSound('fail')
         triggerHaptic('error')
         trackPuzzleFailure(puzzle.themes)
         processingRef.current = false
+        setTimeout(() => setWrongMoveHint(null), 3000)
         return false
       }
     } catch {
@@ -527,6 +530,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                 size={560}
                 highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
                 showHint={hintArrow}
+                isCheck={game.isCheck()}
                 boardStyle={settings.boardStyle}
                 pieceStyle={settings.pieceStyle}
               />
@@ -570,8 +574,11 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-6"
+                className="mt-6 flex flex-col items-center gap-3"
               >
+                {wrongMoveHint && (
+                  <p className="text-sm text-muted-foreground">Expected: <strong className="text-foreground">{wrongMoveHint}</strong></p>
+                )}
                 <motion.button
                   onClick={handleRetry}
                   className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold flex items-center justify-center gap-2"

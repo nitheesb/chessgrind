@@ -191,7 +191,7 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
     }
   }, [moveIndex, opening.moves.length, isCompleted, addXP, incrementOpeningsLearned, playSound, triggerHaptic])
 
-  const handleMove = useCallback((from: string, to: string): boolean => {
+  const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     if (!isUserTurn || moveIndex >= opening.moves.length) return false
 
     const expected = expectedMove
@@ -201,7 +201,7 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
     if (from === expected.from && to === expected.to) {
       const newGame = new Chess(game.fen())
       try {
-        const move = newGame.move({ from, to, promotion: 'q' })
+        const move = newGame.move({ from, to, promotion: promotion || 'q' })
         if (move) {
           setLastMove({ from, to })
           setGame(newGame)
@@ -279,6 +279,7 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
             lastMove={lastMove || undefined}
             showCoordinates={showCoords}
             showHint={showHint && isUserTurn && expectedMove ? expectedMove : undefined}
+            isCheck={game.isCheck()}
             boardStyle={settings.boardStyle}
             pieceStyle={settings.pieceStyle}
             flipped={boardFlipped}
