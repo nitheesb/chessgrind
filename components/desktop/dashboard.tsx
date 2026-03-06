@@ -156,7 +156,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               </p>
             </div>
           </div>
-          <div className="h-3 rounded-full xp-bar-track overflow-hidden">
+          <div className="h-3 rounded-full xp-bar-track overflow-hidden" role="progressbar" aria-valuenow={Math.min(Math.round(progress), 100)} aria-valuemin={0} aria-valuemax={100} aria-label="XP progress">
             <div
               className="h-full rounded-full xp-bar-fill relative transition-all duration-700 ease-out"
               style={{ width: `${Math.min(progress, 100)}%` }}
@@ -172,6 +172,24 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* Welcome banner for new users */}
+      {profile.xp === 0 && profile.puzzlesSolved === 0 && (
+        <div className="mb-8 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 p-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-foreground mb-1">👋 Welcome to ChessVault!</h2>
+            <p className="text-sm text-muted-foreground">Start with a quick puzzle to earn your first XP and unlock achievements.</p>
+          </div>
+          <motion.button
+            onClick={() => onNavigate('puzzles')}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="px-6 py-3 rounded-xl bg-emerald-500 text-white text-sm font-semibold shrink-0 ml-4"
+          >
+            Solve First Puzzle →
+          </motion.button>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <RevealGrid className="grid grid-cols-4 gap-5 mb-10" staggerDelay={100}>
