@@ -226,7 +226,9 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
 function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
   const { addXP, incrementPuzzlesSolved, updatePuzzleRating, trackPuzzleFailure, incrementCombo, resetCombo, recordPerfectSolve, profile } = useGame()
   const { settings, updateSetting } = useSettings()
-  const { playSound, triggerHaptic } = useSoundAndHaptics()
+  const { playSound, triggerHaptic, setSoundEnabled } = useSoundAndHaptics()
+  // Sync sound toggle from settings into hook instance
+  useEffect(() => { setSoundEnabled(settings.soundEnabled) }, [settings.soundEnabled, setSoundEnabled])
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
   const [status, setStatus] = useState<'playing' | 'correct' | 'wrong' | 'complete' | 'opponent-moving'>('playing')
@@ -825,7 +827,9 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
 function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => void }) {
   const { addXP } = useGame()
   const { settings } = useSettings()
-  const { playSound, triggerHaptic } = useSoundAndHaptics()
+  const { playSound, triggerHaptic, setSoundEnabled } = useSoundAndHaptics()
+  // Sync sound toggle from settings into hook instance
+  useEffect(() => { setSoundEnabled(settings.soundEnabled) }, [settings.soundEnabled, setSoundEnabled])
 
   // Shuffle puzzles for rush mode
   const shuffled = useMemo(() => [...PUZZLES].sort(() => Math.random() - 0.5), [])

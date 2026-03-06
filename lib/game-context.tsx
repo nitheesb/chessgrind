@@ -321,8 +321,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const today = new Date().toDateString()
     setProfile(prev => {
       const newDates = { ...prev.activityDates }
+      const isFirstActivityToday = !newDates[today]
       newDates[today] = (newDates[today] || 0) + 1
-      return { ...prev, activityDates: newDates }
+      // Increment w-streak mission once per day
+      const missions = isFirstActivityToday
+        ? prev.weeklyMissions.map(m => {
+            if (m.id !== 'w-streak') return m
+            const np = Math.min(m.progress + 1, m.target)
+            return { ...m, progress: np, completed: np >= m.target }
+          })
+        : prev.weeklyMissions
+      return {
+        ...prev,
+        activityDates: newDates,
+        weeklyMissions: missions,
+        lastDailyDate: today,
+      }
     })
   }, [])
 
