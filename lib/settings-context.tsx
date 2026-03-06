@@ -10,7 +10,8 @@ export interface AppSettings {
   showHints: boolean
   theme: 'dark' | 'light' | 'system'
   pieceStyle: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
-  boardStyle: 'green' | 'brown' | 'blue' | 'purple' | 'pink'
+  boardStyle: 'green' | 'brown' | 'blue' | 'purple' | 'pink' | 'tournament' | 'ocean'
+  reducedMotion: boolean
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -22,6 +23,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   pieceStyle: 'standard',
   boardStyle: 'green',
+  reducedMotion: false,
 }
 
 interface SettingsContextType {
@@ -58,6 +60,33 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
     } catch { }
   }, [settings, loaded])
+
+  // Apply theme class to html element
+  useEffect(() => {
+    if (!loaded) return
+    const root = document.documentElement
+    if (settings.theme === 'dark') {
+      root.classList.add('dark')
+    } else if (settings.theme === 'light') {
+      root.classList.remove('dark')
+    } else {
+      // system
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      if (prefersDark) root.classList.add('dark')
+      else root.classList.remove('dark')
+    }
+  }, [settings.theme, loaded])
+
+  // Apply reduced-motion class to html element
+  useEffect(() => {
+    if (!loaded) return
+    const root = document.documentElement
+    if (settings.reducedMotion) {
+      root.classList.add('reduce-motion')
+    } else {
+      root.classList.remove('reduce-motion')
+    }
+  }, [settings.reducedMotion, loaded])
 
   const updateSetting = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }))

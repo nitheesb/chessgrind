@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard } from '@/components/chess/chessboard'
+import { EvalBar } from '@/components/chess/eval-bar'
 import { PUZZLES, getDifficultyBg } from '@/lib/chess-data'
 import type { Puzzle } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
@@ -25,6 +26,12 @@ import {
   Trophy,
   FlipVertical,
   RefreshCw,
+  Volume2,
+  VolumeX,
+  Minus,
+  Plus,
+  Flame,
+  Target,
 } from 'lucide-react'
 
 interface PuzzlesPageProps {
@@ -35,6 +42,7 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
   const [activePuzzle, setActivePuzzle] = useState<Puzzle | null>(null)
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all')
   const [filterTheme, setFilterTheme] = useState<string>('all')
+  const [rushMinutes, setRushMinutes] = useState<3 | 5 | null>(null)
 
   const filteredPuzzles = useMemo(() => {
     let result = PUZZLES
@@ -48,6 +56,10 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
     PUZZLES.forEach(p => p.themes.forEach(t => themes.add(t)))
     return Array.from(themes).sort()
   }, [])
+
+  if (rushMinutes) {
+    return <PuzzleRushMode minutes={rushMinutes} onBack={() => setRushMinutes(null)} />
+  }
 
   if (activePuzzle) {
     return (
@@ -83,8 +95,33 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div>
-          <h1 className="text-xl font-display font-bold text-foreground shimmer-text">Puzzle Rush</h1>
+          <h1 className="text-xl font-display font-bold text-foreground shimmer-text">Puzzles</h1>
           <p className="text-xs text-muted-foreground">{PUZZLES.length} puzzles to solve</p>
+        </div>
+      </motion.div>
+
+      {/* Puzzle Rush buttons (Feature 3) */}
+      <motion.div variants={staggerItem} className="glass-card p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Flame className="w-4 h-4 text-orange-400" />
+          <h2 className="text-sm font-semibold text-foreground">Puzzle Rush</h2>
+          <span className="text-[10px] text-muted-foreground">Solve as many as you can!</span>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setRushMinutes(3)}
+            className="flex-1 py-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold text-sm hover:bg-orange-500/20 transition-all flex items-center justify-center gap-2"
+          >
+            <Timer className="w-4 h-4" />
+            3 min Rush
+          </button>
+          <button
+            onClick={() => setRushMinutes(5)}
+            className="flex-1 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary font-semibold text-sm hover:bg-primary/20 transition-all flex items-center justify-center gap-2"
+          >
+            <Timer className="w-4 h-4" />
+            5 min Rush
+          </button>
         </div>
       </motion.div>
 
@@ -188,7 +225,7 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
 
 function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
   const { addXP, incrementPuzzlesSolved, updatePuzzleRating, trackPuzzleFailure, incrementCombo, resetCombo, recordPerfectSolve, profile } = useGame()
-  const { settings } = useSettings()
+  const { settings, updateSetting } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
@@ -198,14 +235,30 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   const [highlightSquares, setHighlightSquares] = useState<string[]>([])
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
   const [hintArrow, setHintArrow] = useState<{ from: string; to: string } | null>(null)
-  const [hintActive, setHintActive] = useState(false)
+  // Feature 4: multi-level hints (0=none, 1=piece, 2=target, 3=full arrow)
+  const [hintLevel, setHintLevel] = useState(0)
+  const hintLevelRef = useRef(0)
   const processingRef = useRef(false)
-  const hintActiveRef = useRef(false)
   const hadWrongMoveRef = useRef(false)
   const [wrongMoveHint, setWrongMoveHint] = useState<string | null>(null)
   const [boardFlipped, setBoardFlipped] = useState(false)
   const [showCoords, setShowCoords] = useState(true)
   const [earnedXP, setEarnedXP] = useState(0)
+  // Feature 5: board size
+  const [boardSize, setBoardSize] = useState(() => {
+    if (typeof window === 'undefined') return 360
+    const stored = localStorage.getItem('chessvault_board_size')
+    if (stored) return Math.min(Math.max(parseInt(stored), 280), 600)
+    return Math.min(480, window.innerWidth - 48)
+  })
+  const updateBoardSize = (delta: number) => {
+    setBoardSize(prev => {
+      const maxSize = typeof window !== 'undefined' ? Math.min(600, window.innerWidth - 48) : 600
+      const next = Math.min(Math.max(prev + delta, 280), maxSize)
+      localStorage.setItem('chessvault_board_size', String(next))
+      return next
+    })
+  }
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -281,10 +334,11 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             completePuzzle()
           } else {
             setStatus('playing')
-            if (hintActiveRef.current) {
+            // Maintain hint level if active
+            if (hintLevelRef.current >= 2) {
               const newHint = calculateHint(opponentGame, nextIndex)
-              setHintArrow(newHint)
               if (newHint) {
+                setHintArrow(newHint)
                 setHighlightSquares([newHint.from, newHint.to])
               }
             }
@@ -360,15 +414,29 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     }
   }, [game, moveIndex, puzzle, status, completePuzzle, playOpponentMove, resetCombo, trackPuzzleFailure, playSound, triggerHaptic])
 
+  // Feature 4: multi-level hint handler
   const handleHint = useCallback(() => {
+    if (hintLevel >= 3) return
+    const nextLevel = hintLevel + 1
+    setHintLevel(nextLevel)
+    hintLevelRef.current = nextLevel
     const hint = calculateHint(game, moveIndex)
-    if (hint) {
+    if (!hint) return
+
+    if (nextLevel === 1) {
+      // Level 1: highlight source piece only
+      setHighlightSquares([hint.from])
+      setHintArrow(null)
+    } else if (nextLevel === 2) {
+      // Level 2: highlight both squares
+      setHighlightSquares([hint.from, hint.to])
+      setHintArrow(null)
+    } else {
+      // Level 3: full arrow
       setHintArrow(hint)
       setHighlightSquares([hint.from, hint.to])
-      setHintActive(true)
-      hintActiveRef.current = true
     }
-  }, [game, moveIndex, calculateHint])
+  }, [game, moveIndex, calculateHint, hintLevel])
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
@@ -384,6 +452,8 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     setHintArrow(null)
     setHighlightSquares([])
     setWrongMoveHint(null)
+    setHintLevel(0)
+    hintLevelRef.current = 0
     hadWrongMoveRef.current = false
     processingRef.current = false
     setTimer(0)
@@ -393,7 +463,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'h' || e.key === 'H') {
-        if (status === 'playing' && !hintActive) {
+        if (status === 'playing' && hintLevel < 3) {
           handleHint()
         }
       } else if (e.key === 'n' || e.key === 'N') {
@@ -406,10 +476,17 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [status, hintActive, handleHint, onNext, onBack])
+  }, [status, hintLevel, handleHint, onNext, onBack])
 
   const isWhiteToMove = game.turn() === 'w'
   const canInteract = status === 'playing'
+
+  const hintButtonLabel =
+    hintLevel === 0 ? 'Hint: Piece' :
+    hintLevel === 1 ? 'Hint: Target' :
+    hintLevel === 2 ? 'Hint: Full' : 'Active'
+  // XP cost: 5 per level
+  const hintXPCost = hintLevel * 5
 
   return (
     <motion.div
@@ -437,6 +514,16 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Sound toggle (Feature 8) */}
+          <button
+            onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
+            className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center"
+            title={settings.soundEnabled ? 'Mute' : 'Unmute'}
+          >
+            {settings.soundEnabled
+              ? <Volume2 className="w-3.5 h-3.5 text-foreground" />
+              : <VolumeX className="w-3.5 h-3.5 text-muted-foreground" />}
+          </button>
           <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-secondary text-xs font-mono text-foreground">
             <Timer className="w-3 h-3 text-muted-foreground" />
             {formatTime(timer)}
@@ -466,29 +553,32 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         </span>
       </motion.div>
 
-      {/* Board */}
+      {/* Board + Eval Bar (Feature 1 & 5) */}
       <div className="flex justify-center">
-        <div className={`gradient-border-card ${canInteract ? 'breathing-glow' : ''}`}>
-          <Chessboard
-            fen={game.fen()}
-            size={Math.min(360, typeof window !== 'undefined' ? window.innerWidth - 48 : 360)}
-            interactive={canInteract}
-            onMove={handleMove}
-            highlightSquares={highlightSquares}
-            lastMove={lastMove || undefined}
-            showCoordinates={showCoords}
-            hintArrow={hintArrow}
-            showHintArrow={!!hintArrow}
-            isCheck={game.isCheck()}
-            boardStyle={settings.boardStyle}
-            pieceStyle={settings.pieceStyle}
-            flipped={boardFlipped}
-          />
+        <div className="flex items-stretch gap-2">
+          <EvalBar game={game} size={boardSize} thickness={20} vertical />
+          <div className={`gradient-border-card ${canInteract ? 'breathing-glow' : ''}`}>
+            <Chessboard
+              fen={game.fen()}
+              size={boardSize}
+              interactive={canInteract}
+              onMove={handleMove}
+              highlightSquares={highlightSquares}
+              lastMove={lastMove || undefined}
+              showCoordinates={showCoords}
+              hintArrow={hintArrow}
+              showHintArrow={!!hintArrow}
+              isCheck={game.isCheck()}
+              boardStyle={settings.boardStyle}
+              pieceStyle={settings.pieceStyle}
+              flipped={boardFlipped}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Board controls */}
-      <div className="flex items-center justify-center gap-2">
+      {/* Board controls (Feature 5 + 8) */}
+      <div className="flex items-center justify-center gap-2 flex-wrap">
         <button
           onClick={() => setBoardFlipped(!boardFlipped)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-xs transition-colors"
@@ -503,6 +593,14 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
           }`}
         >
           Coords
+        </button>
+        {/* Board size controls */}
+        <button onClick={() => updateBoardSize(-20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
+          <Minus className="w-3 h-3 text-muted-foreground" />
+        </button>
+        <span className="text-[10px] text-muted-foreground font-mono">{boardSize}px</span>
+        <button onClick={() => updateBoardSize(20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
+          <Plus className="w-3 h-3 text-muted-foreground" />
         </button>
       </div>
 
@@ -580,6 +678,9 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
                 {earnedXP > puzzle.xpReward && (
                   <span className="text-[10px] font-bold text-orange-400 ml-1">🔥 Bonus!</span>
                 )}
+                {hintXPCost > 0 && (
+                  <span className="text-[10px] text-muted-foreground ml-1">(-{hintXPCost} hints)</span>
+                )}
               </motion.div>
             </div>
             <motion.button
@@ -595,21 +696,36 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             />
           </motion.div>
         )}
-        {(status === 'playing' || status === 'opponent-moving') && status !== 'complete' && (
+        {(status === 'playing' || status === 'opponent-moving') && (
           <motion.div
             key="playing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center justify-center"
+            className="flex flex-col items-center gap-2"
           >
-            <motion.button
-              onClick={handleHint}
-              disabled={hintActive || status === 'opponent-moving'}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/10 border border-accent/20 text-accent text-sm font-medium disabled:opacity-40 transition-all"
-            >
-              <Lightbulb className="w-4 h-4" />
-              {hintActive ? 'Hint Active' : 'Show Hint'}
-            </motion.button>
+            {/* Feature 4: Multi-level hint button */}
+            <div className="flex items-center gap-2">
+              <motion.button
+                onClick={handleHint}
+                disabled={hintLevel >= 3 || status === 'opponent-moving'}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/10 border border-accent/20 text-accent text-sm font-medium disabled:opacity-40 transition-all"
+              >
+                <Lightbulb className="w-4 h-4" />
+                {hintButtonLabel}
+              </motion.button>
+            </div>
+            {/* Hint level dots */}
+            {hintLevel > 0 && (
+              <div className="flex items-center gap-1">
+                {[1, 2, 3].map(l => (
+                  <div
+                    key={l}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${l <= hintLevel ? 'bg-accent' : 'bg-secondary'}`}
+                  />
+                ))}
+                <span className="text-[10px] text-muted-foreground ml-1">-{hintLevel * 5} XP</span>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -652,6 +768,272 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             ))}
           </div>
         )}
+      </div>
+    </motion.div>
+  )
+}
+
+// Feature 3: Puzzle Rush Mode
+function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => void }) {
+  const { addXP } = useGame()
+  const { settings } = useSettings()
+  const { playSound, triggerHaptic } = useSoundAndHaptics()
+
+  // Shuffle puzzles for rush mode
+  const shuffled = useMemo(() => [...PUZZLES].sort(() => Math.random() - 0.5), [])
+  const [puzzleIdx, setPuzzleIdx] = useState(0)
+  const [game, setGame] = useState(() => new Chess(shuffled[0].fen))
+  const [timeLeft, setTimeLeft] = useState(minutes * 60)
+  const [score, setScore] = useState(0)
+  const [misses, setMisses] = useState(0)
+  const [streak, setStreak] = useState(0)
+  const [bestStreak, setBestStreak] = useState(0)
+  const [phase, setPhase] = useState<'playing' | 'feedback' | 'end'>('playing')
+  const [feedbackType, setFeedbackType] = useState<'correct' | 'miss' | null>(null)
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
+  const [moveIndex, setMoveIndex] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const processingRef = useRef(false)
+
+  const currentPuzzle = shuffled[puzzleIdx]
+
+  // Countdown timer
+  useEffect(() => {
+    if (phase === 'end') return
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!)
+          setPhase('end')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [phase])
+
+  const goToNextPuzzle = useCallback(() => {
+    const nextIdx = puzzleIdx + 1
+    if (nextIdx >= shuffled.length) {
+      setPhase('end')
+      return
+    }
+    setPuzzleIdx(nextIdx)
+    setGame(new Chess(shuffled[nextIdx].fen))
+    setMoveIndex(0)
+    setLastMove(null)
+    processingRef.current = false
+    setPhase('playing')
+  }, [puzzleIdx, shuffled])
+
+  const showFeedback = useCallback((type: 'correct' | 'miss') => {
+    setFeedbackType(type)
+    setPhase('feedback')
+    setTimeout(() => {
+      goToNextPuzzle()
+    }, type === 'correct' ? 700 : 1500)
+  }, [goToNextPuzzle])
+
+  const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
+    if (phase !== 'playing' || processingRef.current) return false
+    processingRef.current = true
+
+    const expectedMove = currentPuzzle.moves[moveIndex]
+    if (!expectedMove) { processingRef.current = false; return false }
+
+    try {
+      const gameCopy = new Chess(game.fen())
+      const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
+      if (!move) { processingRef.current = false; return false }
+
+      if (move.san === expectedMove) {
+        playSound('move')
+        setGame(gameCopy)
+        setLastMove({ from, to })
+        const nextMoveIndex = moveIndex + 1
+
+        if (nextMoveIndex >= currentPuzzle.moves.length) {
+          // Puzzle solved!
+          setScore(s => s + 1)
+          setStreak(s => {
+            const ns = s + 1
+            setBestStreak(b => Math.max(b, ns))
+            return ns
+          })
+          playSound('success')
+          triggerHaptic('success')
+          showFeedback('correct')
+        } else {
+          // Play opponent move
+          setMoveIndex(nextMoveIndex)
+          setTimeout(() => {
+            const oppGame = new Chess(gameCopy.fen())
+            const oppMove = oppGame.move(currentPuzzle.moves[nextMoveIndex])
+            if (oppMove) {
+              setGame(oppGame)
+              setLastMove({ from: oppMove.from, to: oppMove.to })
+              setMoveIndex(nextMoveIndex + 1)
+            }
+            processingRef.current = false
+          }, 400)
+        }
+        return true
+      } else {
+        // Wrong move
+        setMisses(m => m + 1)
+        setStreak(0)
+        playSound('fail')
+        triggerHaptic('error')
+        showFeedback('miss')
+        return false
+      }
+    } catch {
+      processingRef.current = false
+      return false
+    }
+  }, [game, moveIndex, currentPuzzle, phase, showFeedback, playSound, triggerHaptic])
+
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
+  const total = score + misses
+  const accuracy = total > 0 ? Math.round((score / total) * 100) : 0
+  const xpEarned = score * 5
+
+  if (phase === 'end') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex flex-col gap-5 pb-8"
+      >
+        <div className="glass-card p-6 flex flex-col items-center gap-4 glow-primary">
+          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+            <Trophy className="w-8 h-8 text-primary" />
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-display font-bold text-foreground">{score}</p>
+            <p className="text-sm text-muted-foreground">Puzzles Solved</p>
+          </div>
+          <div className="grid grid-cols-3 gap-4 w-full">
+            <div className="text-center">
+              <p className="text-lg font-bold text-foreground">{accuracy}%</p>
+              <p className="text-[10px] text-muted-foreground">Accuracy</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-foreground">{bestStreak}</p>
+              <p className="text-[10px] text-muted-foreground">Best Streak</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-primary">+{xpEarned}</p>
+              <p className="text-[10px] text-muted-foreground">XP Earned</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 w-full">
+            <button
+              onClick={onBack}
+              className="flex-1 py-3 rounded-lg bg-secondary text-foreground font-semibold text-sm"
+            >
+              Back to Puzzles
+            </button>
+            <button
+              onClick={() => {
+                addXP(xpEarned)
+                onBack()
+              }}
+              className="flex-1 py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2"
+            >
+              <Zap className="w-4 h-4" /> Claim XP
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
+  const rushBoardSize = typeof window !== 'undefined' ? Math.min(380, window.innerWidth - 48) : 360
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="flex flex-col gap-3 pb-8"
+    >
+      {/* Rush header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Flame className="w-5 h-5 text-orange-400" />
+          <span className="text-sm font-bold text-foreground">{minutes} Min Rush</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-mono text-sm font-bold ${timeLeft <= 30 ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-secondary text-foreground'}`}>
+            <Timer className="w-3.5 h-3.5" />
+            {formatTime(timeLeft)}
+          </div>
+          <button
+            onClick={() => { if (timerRef.current) clearInterval(timerRef.current); setPhase('end') }}
+            className="px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground text-xs"
+          >
+            Give Up
+          </button>
+        </div>
+      </div>
+
+      {/* Score bar */}
+      <div className="flex items-center justify-between glass-card p-3">
+        <div className="flex items-center gap-3">
+          <div className="text-center">
+            <p className="text-lg font-bold text-primary">{score}</p>
+            <p className="text-[10px] text-muted-foreground">Score</p>
+          </div>
+          {streak > 1 && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-500/10 border border-orange-500/20">
+              <Flame className="w-3.5 h-3.5 text-orange-400" />
+              <span className="text-xs font-bold text-orange-400">{streak}x</span>
+            </div>
+          )}
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-muted-foreground">Puzzle {puzzleIdx + 1}/{shuffled.length}</p>
+        </div>
+      </div>
+
+      {/* Board */}
+      <div className="flex justify-center relative">
+        <Chessboard
+          fen={game.fen()}
+          size={rushBoardSize}
+          interactive={phase === 'playing'}
+          onMove={handleMove}
+          lastMove={lastMove || undefined}
+          isCheck={game.isCheck()}
+          boardStyle={settings.boardStyle}
+          pieceStyle={settings.pieceStyle}
+        />
+        {/* Feedback overlay */}
+        <AnimatePresence>
+          {phase === 'feedback' && feedbackType && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 flex items-center justify-center rounded-xl"
+              style={{ backgroundColor: feedbackType === 'correct' ? 'rgba(52,211,153,0.2)' : 'rgba(239,68,68,0.2)' }}
+            >
+              <div className={`px-6 py-3 rounded-xl font-bold text-lg ${feedbackType === 'correct' ? 'bg-primary text-white' : 'bg-destructive text-white'}`}>
+                {feedbackType === 'correct' ? '✓ Correct!' : '✗ Miss'}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Puzzle info */}
+      <div className="flex items-center justify-between">
+        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${getDifficultyBg(currentPuzzle.difficulty)}`}>
+          {currentPuzzle.difficulty}
+        </span>
+        <span className="text-[10px] text-muted-foreground">{currentPuzzle.title}</span>
+        <span className="text-[10px] text-muted-foreground">Rating: {currentPuzzle.rating}</span>
       </div>
     </motion.div>
   )

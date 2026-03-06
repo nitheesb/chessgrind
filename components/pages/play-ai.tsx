@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard, CapturedPieces } from '@/components/chess/chessboard'
+import { EvalBar } from '@/components/chess/eval-bar'
 import { AI_LEVELS } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
@@ -23,6 +24,10 @@ import {
   Timer,
   ChevronDown,
   ChevronUp,
+  Volume2,
+  VolumeX,
+  Minus,
+  Plus,
 } from 'lucide-react'
 
 interface PlayAIProps {
@@ -241,7 +246,7 @@ function GameSession({
   onBack: () => void
 }) {
   const { addXP, incrementGamesPlayed } = useGame()
-  const { settings } = useSettings()
+  const { settings, updateSetting } = useSettings()
   const [game, setGame] = useState(() => new Chess())
   const [gameOver, setGameOver] = useState(false)
   const [result, setResult] = useState<string>('')
@@ -250,6 +255,22 @@ function GameSession({
   const [moveHistory, setMoveHistory] = useState<string[]>([])
   const [isThinking, setIsThinking] = useState(false)
   const [showResignConfirm, setShowResignConfirm] = useState(false)
+
+  // Board size state (Feature 5)
+  const [boardSize, setBoardSize] = useState(() => {
+    if (typeof window === 'undefined') return 360
+    const stored = localStorage.getItem('chessvault_board_size')
+    if (stored) return Math.min(Math.max(parseInt(stored), 280), 600)
+    return Math.min(480, window.innerWidth - 48)
+  })
+  const updateBoardSize = (delta: number) => {
+    setBoardSize(prev => {
+      const maxSize = typeof window !== 'undefined' ? Math.min(600, window.innerWidth - 48) : 600
+      const next = Math.min(Math.max(prev + delta, 280), maxSize)
+      localStorage.setItem('chessvault_board_size', String(next))
+      return next
+    })
+  }
 
   // Timer state
   const [whiteTime, setWhiteTime] = useState(timeControl.minutes * 60)
@@ -506,8 +527,6 @@ function GameSession({
     return `${m}:${s.toString().padStart(2, '0')}`
   }
 
-  const boardSize = typeof window !== 'undefined' ? Math.min(360, window.innerWidth - 48) : 360
-
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -528,16 +547,28 @@ function GameSession({
             <p className="text-[10px] text-muted-foreground">Rating: {aiConfig.rating}</p>
           </div>
         </div>
-        {isThinking && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="w-3 h-3 border-2 border-accent border-t-transparent rounded-full"
-            />
-            <span className="text-xs text-accent font-medium">Thinking...</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Sound toggle (Feature 8) */}
+          <button
+            onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
+            className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center"
+            title={settings.soundEnabled ? 'Mute sounds' : 'Enable sounds'}
+          >
+            {settings.soundEnabled
+              ? <Volume2 className="w-4 h-4 text-foreground" />
+              : <VolumeX className="w-4 h-4 text-muted-foreground" />}
+          </button>
+          {isThinking && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                className="w-3 h-3 border-2 border-accent border-t-transparent rounded-full"
+              />
+              <span className="text-xs text-accent font-medium">Thinking...</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Opponent info (top) */}
@@ -561,20 +592,34 @@ function GameSession({
         )}
       </div>
 
-      {/* Board */}
+      {/* Board + Eval Bar (Feature 1 & 5) */}
       <div className="flex justify-center">
-        <Chessboard
-          fen={game.fen()}
-          size={boardSize}
-          interactive={isPlayerTurn && !gameOver}
-          flipped={playerColor === 'b'}
-          onMove={handlePlayerMove}
-          lastMove={lastMove || undefined}
-          showCoordinates
-          isCheck={game.isCheck()}
-          boardStyle={settings.boardStyle}
-          pieceStyle={settings.pieceStyle}
-        />
+        <div className="flex items-stretch gap-2">
+          <EvalBar game={game} size={boardSize} thickness={20} vertical />
+          <Chessboard
+            fen={game.fen()}
+            size={boardSize}
+            interactive={isPlayerTurn && !gameOver}
+            flipped={playerColor === 'b'}
+            onMove={handlePlayerMove}
+            lastMove={lastMove || undefined}
+            showCoordinates
+            isCheck={game.isCheck()}
+            boardStyle={settings.boardStyle}
+            pieceStyle={settings.pieceStyle}
+          />
+        </div>
+      </div>
+
+      {/* Board size controls (Feature 5) + sound toggle */}
+      <div className="flex items-center justify-center gap-2">
+        <button onClick={() => updateBoardSize(-20)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center" title="Smaller board">
+          <Minus className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
+        <span className="text-xs text-muted-foreground font-mono w-12 text-center">{boardSize}px</span>
+        <button onClick={() => updateBoardSize(20)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center" title="Larger board">
+          <Plus className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
       </div>
 
       {/* Player info (bottom) */}

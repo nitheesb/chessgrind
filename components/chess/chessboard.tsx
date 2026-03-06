@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from '
 import { ChessPiece, parseFEN } from './chess-pieces'
 import { getGlobalSoundHaptics } from '@/lib/use-sound-haptics'
 
-export type BoardStyle = 'green' | 'brown' | 'blue' | 'purple' | 'pink'
+export type BoardStyle = 'green' | 'brown' | 'blue' | 'purple' | 'pink' | 'tournament' | 'ocean'
 
 export const BOARD_THEMES: Record<BoardStyle, { light: string; dark: string; selectedLight: string; selectedDark: string }> = {
   green: { light: '#ebecd0', dark: '#739552', selectedLight: '#f7f769', selectedDark: '#bbcb2b' },
@@ -12,6 +12,8 @@ export const BOARD_THEMES: Record<BoardStyle, { light: string; dark: string; sel
   blue: { light: '#dee3e6', dark: '#8ca2ad', selectedLight: '#c3d9e6', selectedDark: '#6f9bb3' },
   purple: { light: '#e8dff0', dark: '#9068b0', selectedLight: '#d8c4f0', selectedDark: '#a87cd4' },
   pink: { light: '#f5dce0', dark: '#d4778a', selectedLight: '#f7b4c4', selectedDark: '#e8607a' },
+  tournament: { light: '#f5f5f5', dark: '#2d2d2d', selectedLight: '#e8e82a', selectedDark: '#b0b000' },
+  ocean: { light: '#c9e8f0', dark: '#4a8fa8', selectedLight: '#aee5f5', selectedDark: '#2a7090' },
 }
 
 interface ChessboardProps {
@@ -32,6 +34,9 @@ interface ChessboardProps {
   boardStyle?: BoardStyle
   pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
   isCheck?: boolean
+  arrows?: Array<{ from: string; to: string; color?: string }>
+  onArrowDraw?: (arrows: Array<{ from: string; to: string; color?: string }>) => void
+  allowArrowDrawing?: boolean
 }
 
 const squareToIndex = (square: string) => ({
@@ -55,6 +60,8 @@ const Square = memo(function Square({
   squareSize,
   onClick,
   onTouchStart,
+  onMouseDown,
+  onMouseUp,
   interactive,
   theme,
   pieceStyle,
@@ -70,6 +77,8 @@ const Square = memo(function Square({
   squareSize: number
   onClick: () => void
   onTouchStart: (e: React.TouchEvent) => void
+  onMouseDown?: (e: React.MouseEvent) => void
+  onMouseUp?: (e: React.MouseEvent) => void
   interactive: boolean
   theme: typeof BOARD_THEMES[BoardStyle]
   pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
@@ -93,6 +102,8 @@ const Square = memo(function Square({
       }}
       onClick={onClick}
       onTouchStart={onTouchStart}
+      onMouseDown={onMouseDown}
+      onMouseUp={onMouseUp}
     >
       {/* Check indicator on king */}
       {isInCheck && (
@@ -341,6 +352,9 @@ export function Chessboard({
   boardStyle = 'green',
   pieceStyle = 'standard',
   isCheck = false,
+  arrows: externalArrows = [],
+  onArrowDraw,
+  allowArrowDrawing = false,
 }: ChessboardProps) {
   // Support both flipped and orientation props
   const isFlipped = orientation ? orientation === 'black' : flipped
@@ -350,6 +364,9 @@ export function Chessboard({
   const [dragPiece, setDragPiece] = useState<{ piece: string; from: string; x: number; y: number } | null>(null)
   const [animating, setAnimating] = useState<{ piece: string; from: string; to: string } | null>(null)
   const [promotionPending, setPromotionPending] = useState<{ from: string; to: string; color: 'w' | 'b' } | null>(null)
+  // Arrow drawing state
+  const [drawnArrows, setDrawnArrows] = useState<Array<{ from: string; to: string; color?: string }>>([])
+  const rightDragRef = useRef<{ from: string | null; modifiers: { ctrl: boolean; shift: boolean } }>({ from: null, modifiers: { ctrl: false, shift: false } })
   const boardRef = useRef<HTMLDivElement>(null)
   const prevFenRef = useRef(fen)
   const squareSize = size / 8
@@ -400,8 +417,72 @@ export function Chessboard({
     col: isFlipped ? 7 - displayCol : displayCol,
   }), [isFlipped])
 
+  // Get display coordinates for a square (for SVG arrows)
+  const getSquareCenter = useCallback((square: string) => {
+    const { row, col } = squareToIndex(square)
+    const displayCol = isFlipped ? 7 - col : col
+    const displayRow = isFlipped ? 7 - row : row
+    return {
+      x: (displayCol + 0.5) * squareSize,
+      y: (displayRow + 0.5) * squareSize,
+    }
+  }, [squareSize, isFlipped])
+
+  // Arrow color helper
+  const getArrowColor = (color?: string) => {
+    if (color === 'red') return 'rgba(220,50,50,0.85)'
+    if (color === 'blue') return 'rgba(50,100,220,0.85)'
+    return 'rgba(0,200,80,0.85)'
+  }
+
+  // All arrows to render (external + drawn)
+  const allArrows = useMemo(() => [...externalArrows, ...drawnArrows], [externalArrows, drawnArrows])
+
+  // Handle right-click mousedown (start arrow)
+  const handleMouseDown = useCallback((e: React.MouseEvent, displayRow: number, displayCol: number) => {
+    if (e.button !== 2 || !allowArrowDrawing) return
+    e.preventDefault()
+    const { row, col } = getActualCoords(displayRow, displayCol)
+    const square = indexToSquare(row, col)
+    rightDragRef.current = { from: square, modifiers: { ctrl: e.ctrlKey, shift: e.shiftKey } }
+  }, [allowArrowDrawing, getActualCoords])
+
+  // Handle right-click mouseup (complete arrow)
+  const handleMouseUp = useCallback((e: React.MouseEvent, displayRow: number, displayCol: number) => {
+    if (e.button !== 2 || !allowArrowDrawing) return
+    e.preventDefault()
+    const { from, modifiers } = rightDragRef.current
+    if (!from) return
+    const { row, col } = getActualCoords(displayRow, displayCol)
+    const to = indexToSquare(row, col)
+    if (from === to) {
+      rightDragRef.current = { from: null, modifiers: { ctrl: false, shift: false } }
+      return
+    }
+    const color = modifiers.ctrl ? 'red' : modifiers.shift ? 'blue' : 'green'
+    setDrawnArrows(prev => {
+      // Toggle off if same arrow exists
+      const exists = prev.findIndex(a => a.from === from && a.to === to)
+      if (exists >= 0) return prev.filter((_, i) => i !== exists)
+      return [...prev, { from, to, color }]
+    })
+    if (onArrowDraw) {
+      setDrawnArrows(prev => {
+        onArrowDraw(prev)
+        return prev
+      })
+    }
+    rightDragRef.current = { from: null, modifiers: { ctrl: false, shift: false } }
+  }, [allowArrowDrawing, getActualCoords, onArrowDraw])
+
   const handleSquareClick = useCallback((displayRow: number, displayCol: number) => {
     if (!interactive) return
+
+    // Left-click clears drawn arrows
+    if (allowArrowDrawing && drawnArrows.length > 0) {
+      setDrawnArrows([])
+      if (onArrowDraw) onArrowDraw([])
+    }
 
     const { row, col } = getActualCoords(displayRow, displayCol)
     const square = indexToSquare(row, col)
@@ -446,7 +527,7 @@ export function Chessboard({
       soundHaptics.triggerHaptic('selection')
       setSelectedSquare(square)
     }
-  }, [interactive, selectedSquare, board, onMove, getActualCoords])
+  }, [interactive, selectedSquare, board, onMove, getActualCoords, allowArrowDrawing, drawnArrows.length, onArrowDraw])
 
   const handleTouchStart = useCallback((e: React.TouchEvent, displayRow: number, displayCol: number) => {
     if (!interactive) return
@@ -561,6 +642,7 @@ export function Chessboard({
           height: size,
           boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08), inset 0 2px 4px rgba(255,255,255,0.05)',
         }}
+        onContextMenu={(e) => e.preventDefault()}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
@@ -589,6 +671,8 @@ export function Chessboard({
               squareSize={squareSize}
               onClick={() => handleSquareClick(displayRow, displayCol)}
               onTouchStart={(e) => handleTouchStart(e, displayRow, displayCol)}
+              onMouseDown={(e: React.MouseEvent) => handleMouseDown(e, displayRow, displayCol)}
+              onMouseUp={(e: React.MouseEvent) => handleMouseUp(e, displayRow, displayCol)}
               interactive={interactive && !promotionPending}
               theme={theme}
               pieceStyle={pieceStyle}
@@ -658,6 +742,65 @@ export function Chessboard({
             flipped={isFlipped}
           />
         ) : null}
+
+        {/* SVG arrows overlay */}
+        {allArrows.length > 0 && (
+          <svg
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: size,
+              height: size,
+              pointerEvents: 'none',
+              zIndex: 40,
+            }}
+          >
+            <defs>
+              {['green', 'red', 'blue'].map(c => {
+                const fill = getArrowColor(c)
+                return (
+                  <marker
+                    key={c}
+                    id={`arrowhead-${c}`}
+                    markerWidth="4"
+                    markerHeight="4"
+                    refX="2"
+                    refY="2"
+                    orient="auto"
+                  >
+                    <polygon points="0 0, 4 2, 0 4" fill={fill} />
+                  </marker>
+                )
+              })}
+            </defs>
+            {allArrows.map((arrow, idx) => {
+              const from = getSquareCenter(arrow.from)
+              const to = getSquareCenter(arrow.to)
+              const color = arrow.color || 'green'
+              const stroke = getArrowColor(color)
+              const shaft = squareSize * 0.15
+              // Shorten end slightly for arrowhead
+              const dx = to.x - from.x
+              const dy = to.y - from.y
+              const len = Math.sqrt(dx * dx + dy * dy)
+              const endX = to.x - (dx / len) * shaft * 2
+              const endY = to.y - (dy / len) * shaft * 2
+              return (
+                <line
+                  key={idx}
+                  x1={from.x}
+                  y1={from.y}
+                  x2={endX}
+                  y2={endY}
+                  stroke={stroke}
+                  strokeWidth={shaft}
+                  strokeLinecap="round"
+                  markerEnd={`url(#arrowhead-${color})`}
+                />
+              )
+            })}
+          </svg>
+        )}
       </div>
 
       {/* Dragged piece */}

@@ -15,6 +15,10 @@ import {
   RotateCcw,
   ChevronRight,
   Sparkles,
+  Sun,
+  Moon,
+  Monitor,
+  Zap,
 } from 'lucide-react'
 
 const container = {
@@ -87,7 +91,7 @@ function SettingRow({
 
 // Board style preview
 function BoardStylePreview({ style, selected, onSelect }: { 
-  style: 'green' | 'brown' | 'blue' | 'purple' | 'pink'
+  style: 'green' | 'brown' | 'blue' | 'purple' | 'pink' | 'tournament' | 'ocean'
   selected: boolean
   onSelect: () => void 
 }) {
@@ -97,6 +101,8 @@ function BoardStylePreview({ style, selected, onSelect }: {
     blue: { light: '#dee3e6', dark: '#8ca2ad' },
     purple: { light: '#e8dff0', dark: '#9068b0' },
     pink: { light: '#f5dce0', dark: '#d4778a' },
+    tournament: { light: '#f5f5f5', dark: '#2d2d2d' },
+    ocean: { light: '#c9e8f0', dark: '#4a8fa8' },
   }
   const c = colors[style]
   
@@ -132,7 +138,7 @@ function BoardStylePreview({ style, selected, onSelect }: {
 
 // Piece style preview
 function PieceStylePreview({ style, label, selected, onSelect }: { 
-  style: 'standard' | 'neo' | 'classic' | 'minimal'
+  style: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
   label: string
   selected: boolean
   onSelect: () => void 
@@ -266,11 +272,58 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
       {/* Appearance */}
       <motion.div variants={item} className="glass-card p-4">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+          Appearance
+        </h2>
+
+        {/* Theme selector */}
+        <div className="py-3 border-b border-border/50">
+          <p className="text-sm font-medium text-foreground mb-2">Theme</p>
+          <div className="flex gap-2">
+            {([
+              { id: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4" /> },
+              { id: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
+              { id: 'system', label: 'System', icon: <Monitor className="w-4 h-4" /> },
+            ] as const).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => {
+                  playSound('click')
+                  triggerHaptic('selection')
+                  updateSetting('theme', t.id)
+                }}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                  settings.theme === t.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-muted-foreground'
+                }`}
+              >
+                {t.icon}
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <SettingRow
+          icon={<Zap className="w-5 h-5" />}
+          label="Reduce Motion"
+          description="Minimize animations and transitions"
+        >
+          <Toggle
+            enabled={settings.reducedMotion}
+            onChange={(v) => updateSetting('reducedMotion', v)}
+          />
+        </SettingRow>
+      </motion.div>
+
+      {/* Board Style */}
+      <motion.div variants={item} className="glass-card p-4">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
           Board Style
         </h2>
         
-        <div className="flex gap-3 py-3">
-          {(['green', 'brown', 'blue', 'purple', 'pink'] as const).map((style) => (
+        <div className="flex flex-wrap gap-3 py-3">
+          {(['green', 'brown', 'blue', 'purple', 'pink', 'tournament', 'ocean'] as const).map((style) => (
             <BoardStylePreview
               key={style}
               style={style}
