@@ -382,16 +382,16 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           {/* Move History */}
           <div className="glass-card p-5">
             <h3 className="text-sm font-semibold text-foreground mb-3">Move History</h3>
-            <div className="max-h-48 overflow-y-auto space-y-1">
+            <div className="max-h-48 overflow-y-auto">
               {moveHistory.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">No moves yet</p>
               ) : (
-                <div className="grid grid-cols-2 gap-1">
-                  {moveHistory.map((move, i) => (
-                    <div key={i} className={`text-sm px-2 py-1 rounded ${
-                      i % 2 === 0 ? 'bg-secondary/50' : ''
-                    }`}>
-                      {i % 2 === 0 && <span className="text-muted-foreground">{Math.floor(i/2) + 1}.</span>} {move}
+                <div className="space-y-0.5 font-mono text-sm">
+                  {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => (
+                    <div key={i} className={`flex gap-2 px-2 py-0.5 rounded ${i % 2 === 0 ? 'bg-secondary/30' : ''}`}>
+                      <span className="text-muted-foreground w-6 text-right">{i + 1}.</span>
+                      <span className="w-16 text-foreground">{moveHistory[i * 2]}</span>
+                      <span className="w-16 text-foreground/70">{moveHistory[i * 2 + 1] || ''}</span>
                     </div>
                   ))}
                 </div>

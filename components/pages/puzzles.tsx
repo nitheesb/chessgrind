@@ -24,6 +24,7 @@ import {
   Star,
   Trophy,
   FlipVertical,
+  RefreshCw,
 } from 'lucide-react'
 
 interface PuzzlesPageProps {
@@ -375,6 +376,19 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     return `${m}:${s.toString().padStart(2, '0')}`
   }
 
+  const handleRetry = useCallback(() => {
+    setGame(new Chess(puzzle.fen))
+    setMoveIndex(0)
+    setStatus('playing')
+    setLastMove(null)
+    setHintArrow(null)
+    setHighlightSquares([])
+    setWrongMoveHint(null)
+    hadWrongMoveRef.current = false
+    processingRef.current = false
+    setTimer(0)
+  }, [puzzle.fen])
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -518,7 +532,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             animate={{ opacity: 1, scale: 1, x: [0, -5, 5, -5, 5, 0] }}
             exit={{ opacity: 0 }}
             transition={{ x: { duration: 0.4 } }}
-            className="flex flex-col items-center gap-1 py-2"
+            className="flex flex-col items-center gap-2 py-2"
           >
             <div className="flex items-center gap-2">
               <X className="w-5 h-5 text-destructive" />
@@ -527,6 +541,12 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             {wrongMoveHint && (
               <span className="text-xs text-muted-foreground">Expected: <strong>{wrongMoveHint}</strong></span>
             )}
+            <button
+              onClick={handleRetry}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-secondary text-xs font-medium text-foreground"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Retry
+            </button>
           </motion.div>
         )}
         {status === 'complete' && (
