@@ -619,6 +619,19 @@ function GameSession({
         </div>
       )}
 
+      {/* Move list (compact horizontal scroll) */}
+      {moveHistory.length > 0 && !gameOver && (
+        <div className="flex gap-1 overflow-x-auto py-1 scrollbar-hide">
+          {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => (
+            <div key={i} className="flex-shrink-0 text-[11px] font-mono px-1.5 py-0.5 rounded bg-secondary/50">
+              <span className="text-muted-foreground">{i + 1}.</span>{' '}
+              <span className="text-foreground">{moveHistory[i * 2]}</span>
+              {moveHistory[i * 2 + 1] && <span className="text-foreground/70"> {moveHistory[i * 2 + 1]}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Resign confirmation */}
       <AnimatePresence>
         {showResignConfirm && (
