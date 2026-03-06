@@ -16,6 +16,7 @@ import {
   Cpu,
   User,
   ChevronLeft,
+  ChevronRight,
   Zap,
 } from 'lucide-react'
 
@@ -34,11 +35,11 @@ const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; descr
   master: { name: 'Master', depth: 4, description: 'The ultimate test', color: 'red' },
 }
 
-const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string }> = {
-  emerald: { border: 'border-emerald-500', bg: 'bg-emerald-500/10', text: 'text-emerald-500' },
-  blue: { border: 'border-blue-500', bg: 'bg-blue-500/10', text: 'text-blue-500' },
-  purple: { border: 'border-purple-500', bg: 'bg-purple-500/10', text: 'text-purple-500' },
-  red: { border: 'border-red-500', bg: 'bg-red-500/10', text: 'text-red-500' },
+const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string; activeStyle: string }> = {
+  emerald: { border: 'border-emerald-500', bg: 'bg-emerald-500/10', text: 'text-emerald-500', activeStyle: 'shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/50' },
+  blue: { border: 'border-blue-500', bg: 'bg-blue-500/10', text: 'text-blue-500', activeStyle: 'shadow-[0_0_20px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/50' },
+  purple: { border: 'border-purple-500', bg: 'bg-purple-500/10', text: 'text-purple-500', activeStyle: 'shadow-[0_0_20px_rgba(168,85,247,0.15)] ring-1 ring-purple-500/50' },
+  red: { border: 'border-red-500', bg: 'bg-red-500/10', text: 'text-red-500', activeStyle: 'shadow-[0_0_20px_rgba(239,68,68,0.15)] ring-1 ring-red-500/50' },
 }
 
 export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
@@ -67,7 +68,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     if (currentGame.isGameOver()) return
 
     setThinking(true)
-    
+
     setTimeout(() => {
       const moves = currentGame.moves({ verbose: true })
       if (moves.length === 0) return
@@ -148,13 +149,13 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
       const newGame = new Chess(currentGame.fen())
       const move = newGame.move(bestMove)
-      
+
       if (move) {
         setGame(newGame)
         setLastMove({ from: move.from, to: move.to })
         setMoveHistory(prev => [...prev, move.san])
         playSound(move.captured ? 'capture' : 'move')
-        
+
         if (newGame.isGameOver()) {
           if (timerRef.current) clearInterval(timerRef.current)
           if (newGame.isCheckmate()) {
@@ -172,19 +173,19 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     if (gameStatus !== 'playing' || thinking) return false
     if ((playerColor === 'white' && game.turn() !== 'w') ||
-        (playerColor === 'black' && game.turn() !== 'b')) return false
+      (playerColor === 'black' && game.turn() !== 'b')) return false
 
     try {
       const newGame = new Chess(game.fen())
       const move = newGame.move({ from, to, promotion: promotion || 'q' })
-      
+
       if (move) {
         setGame(newGame)
         setLastMove({ from, to })
         setMoveHistory(prev => [...prev, move.san])
         playSound(move.captured ? 'capture' : 'move')
         triggerHaptic('medium')
-        
+
         if (newGame.isGameOver()) {
           if (timerRef.current) clearInterval(timerRef.current)
           if (newGame.isCheckmate()) {
@@ -200,7 +201,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         }
         return true
       }
-    } catch {}
+    } catch { }
     return false
   }, [game, gameStatus, thinking, playerColor, difficulty, playSound, triggerHaptic, addXP, makeAIMove])
 
@@ -212,7 +213,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     setLastMove(null)
     setMoveHistory([])
     setTimer(0)
-    
+
     if (playerColor === 'black') {
       setTimeout(() => makeAIMove(new Chess()), 500)
     }
@@ -262,15 +263,18 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                   playSound('click')
                   setDifficulty(key)
                 }}
-                className={`p-5 rounded-2xl border-2 transition-all ${
-                  difficulty === key
-                    ? `${COLOR_CLASSES[config.color].border} ${COLOR_CLASSES[config.color].bg}`
-                    : 'border-border hover:border-border/80 bg-card'
-                }`}
+                className={`p-6 rounded-2xl border transition-all duration-300 relative overflow-hidden group ${difficulty === key
+                  ? `${COLOR_CLASSES[config.color].border} ${COLOR_CLASSES[config.color].bg} ${COLOR_CLASSES[config.color].activeStyle}`
+                  : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
+                  }`}
               >
-                <Cpu className={`w-8 h-8 mb-3 mx-auto ${difficulty === key ? COLOR_CLASSES[config.color].text : 'text-muted-foreground'}`} />
-                <h3 className="font-semibold text-foreground mb-1">{config.name}</h3>
-                <p className="text-xs text-muted-foreground">{config.description}</p>
+                {/* Subtle gradient hover block */}
+                {difficulty !== key && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                )}
+                <Cpu className={`w-8 h-8 mb-4 mx-auto relative z-10 transition-colors ${difficulty === key ? COLOR_CLASSES[config.color].text : 'text-muted-foreground group-hover:text-foreground'}`} />
+                <h3 className="font-semibold text-foreground mb-1.5 relative z-10 tracking-wide">{config.name}</h3>
+                <p className="text-xs text-muted-foreground relative z-10">{config.description}</p>
               </motion.button>
             ))}
           </div>
@@ -287,30 +291,33 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                   playSound('click')
                   setPlayerColor(color === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : color)
                 }}
-                className={`px-8 py-4 rounded-2xl border-2 flex items-center gap-3 transition-all ${
-                  playerColor === color || (color !== 'random' && playerColor === color)
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border bg-card hover:border-border/80'
-                }`}
+                className={`px-8 py-4 rounded-2xl border transition-all duration-300 flex items-center gap-3 relative overflow-hidden group ${playerColor === color || (color !== 'random' && playerColor === color)
+                  ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(52,211,153,0.15)] ring-1 ring-primary/50'
+                  : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
+                  }`}
               >
-                <span className={`w-6 h-6 rounded-full ${
-                  color === 'white' ? 'bg-white border-2 border-gray-300' :
-                  color === 'black' ? 'bg-gray-800' :
-                  'bg-gradient-to-br from-white to-gray-800 border border-gray-500'
-                }`} />
-                <span className="font-semibold text-foreground capitalize">{color}</span>
+                {/* Subtle gradient hover block */}
+                {!(playerColor === color || (color !== 'random' && playerColor === color)) && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                )}
+                <span className={`w-6 h-6 rounded-full relative z-10 shadow-inner ${color === 'white' ? 'bg-white border text-black' :
+                  color === 'black' ? 'bg-zinc-900 border border-white/20' :
+                    'bg-gradient-to-br from-white to-zinc-900 border border-white/20'
+                  }`} />
+                <span className="font-semibold text-foreground capitalize relative z-10 tracking-wide">{color}</span>
               </motion.button>
             ))}
           </div>
         </div>
 
         {/* Start Button */}
-        <div className="text-center">
+        <div className="text-center mt-6">
           <motion.button
             onClick={startGame}
-            className="px-12 py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-lg"
+            className="px-14 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-[0_0_30px_rgba(52,211,153,0.3)] hover:shadow-[0_0_40px_rgba(52,211,153,0.5)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group"
           >
-            Start Game
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+            <span className="relative z-10 flex items-center justify-center gap-2">Start Game <ChevronRight className="w-5 h-5" /></span>
           </motion.button>
         </div>
       </div>
@@ -340,9 +347,8 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
           {/* Players */}
           <div className="glass-card p-5 space-y-4">
-            <div className={`flex items-center gap-3 p-3 rounded-xl ${
-              game.turn() === (playerColor === 'white' ? 'b' : 'w') ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/50'
-            }`}>
+            <div className={`flex items-center gap-3 p-3 rounded-xl ${game.turn() === (playerColor === 'white' ? 'b' : 'w') ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/50'
+              }`}>
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
                 <Cpu className="w-5 h-5 text-white" />
               </div>
@@ -354,10 +360,9 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               )}
             </div>
-            
-            <div className={`flex items-center gap-3 p-3 rounded-xl ${
-              game.turn() === (playerColor === 'white' ? 'w' : 'b') ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/50'
-            }`}>
+
+            <div className={`flex items-center gap-3 p-3 rounded-xl ${game.turn() === (playerColor === 'white' ? 'w' : 'b') ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/50'
+              }`}>
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
               </div>
@@ -435,13 +440,12 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               <div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`mb-4 p-4 rounded-xl text-center font-semibold ${
-                  gameStatus === 'won' 
-                    ? 'bg-emerald-500/10 text-emerald-500' 
-                    : gameStatus === 'lost'
+                className={`mb-4 p-4 rounded-xl text-center font-semibold ${gameStatus === 'won'
+                  ? 'bg-emerald-500/10 text-emerald-500'
+                  : gameStatus === 'lost'
                     ? 'bg-red-500/10 text-red-500'
                     : 'bg-amber-500/10 text-amber-500'
-                }`}
+                  }`}
               >
                 {gameStatus === 'won' && (
                   <span className="flex items-center justify-center gap-2">

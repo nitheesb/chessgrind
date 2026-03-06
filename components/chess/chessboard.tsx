@@ -9,9 +9,9 @@ export type BoardStyle = 'green' | 'brown' | 'blue' | 'purple' | 'pink'
 export const BOARD_THEMES: Record<BoardStyle, { light: string; dark: string; selectedLight: string; selectedDark: string }> = {
   green: { light: '#ebecd0', dark: '#739552', selectedLight: '#f7f769', selectedDark: '#bbcb2b' },
   brown: { light: '#f0d9b5', dark: '#b58863', selectedLight: '#f7ec59', selectedDark: '#daa520' },
-  blue:  { light: '#dee3e6', dark: '#8ca2ad', selectedLight: '#c3d9e6', selectedDark: '#6f9bb3' },
-  purple:{ light: '#e8dff0', dark: '#9068b0', selectedLight: '#d8c4f0', selectedDark: '#a87cd4' },
-  pink:  { light: '#f5dce0', dark: '#d4778a', selectedLight: '#f7b4c4', selectedDark: '#e8607a' },
+  blue: { light: '#dee3e6', dark: '#8ca2ad', selectedLight: '#c3d9e6', selectedDark: '#6f9bb3' },
+  purple: { light: '#e8dff0', dark: '#9068b0', selectedLight: '#d8c4f0', selectedDark: '#a87cd4' },
+  pink: { light: '#f5dce0', dark: '#d4778a', selectedLight: '#f7b4c4', selectedDark: '#e8607a' },
 }
 
 interface ChessboardProps {
@@ -39,7 +39,7 @@ const squareToIndex = (square: string) => ({
   col: square.charCodeAt(0) - 97
 })
 
-const indexToSquare = (row: number, col: number) => 
+const indexToSquare = (row: number, col: number) =>
   String.fromCharCode(97 + col) + (8 - row)
 
 // Memoized square component for performance
@@ -106,7 +106,7 @@ const Square = memo(function Square({
 
       {/* Move indicator - dot for empty, ring for capture */}
       {isHighlighted && (
-        <div 
+        <div
           style={{
             position: 'absolute',
             inset: 0,
@@ -145,6 +145,7 @@ const Square = memo(function Square({
           alignItems: 'center',
           justifyContent: 'center',
           pointerEvents: 'none',
+          filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))',
         }}>
           <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
         </div>
@@ -194,10 +195,10 @@ function AnimatedPiece({
       if (!startTimeRef.current) startTimeRef.current = timestamp
       const elapsed = timestamp - startTimeRef.current
       const progress = Math.min(elapsed / duration, 1)
-      
+
       // Ease out cubic for snappy feel
       const eased = 1 - Math.pow(1 - progress, 3)
-      
+
       setPosition({
         x: fromPos.x + (toPos.x - fromPos.x) * eased,
         y: fromPos.y + (toPos.y - fromPos.y) * eased,
@@ -344,7 +345,7 @@ export function Chessboard({
   // Support both flipped and orientation props
   const isFlipped = orientation ? orientation === 'black' : flipped
   const theme = BOARD_THEMES[boardStyle]
-  
+
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [dragPiece, setDragPiece] = useState<{ piece: string; from: string; x: number; y: number } | null>(null)
   const [animating, setAnimating] = useState<{ piece: string; from: string; to: string } | null>(null)
@@ -401,7 +402,7 @@ export function Chessboard({
 
   const handleSquareClick = useCallback((displayRow: number, displayCol: number) => {
     if (!interactive) return
-    
+
     const { row, col } = getActualCoords(displayRow, displayCol)
     const square = indexToSquare(row, col)
     const piece = board[row]?.[col]
@@ -541,24 +542,24 @@ export function Chessboard({
     <div className="relative inline-block select-none touch-none group/board">
       {/* Animated gradient border */}
       <div
-        className="absolute -inset-[2px] rounded-xl opacity-40 group-hover/board:opacity-70 transition-opacity duration-500"
+        className="absolute -inset-[3px] rounded-xl opacity-50 group-hover/board:opacity-100 transition-opacity duration-700"
         style={{
-          background: 'conic-gradient(from var(--border-angle, 0deg), transparent 0%, rgba(52,211,153,0.4) 10%, transparent 20%, transparent 50%, rgba(56,145,255,0.3) 60%, transparent 70%)',
-          animation: 'border-spin 4s linear infinite',
+          background: 'conic-gradient(from var(--border-angle, 0deg), transparent 0%, rgba(16,185,129,0.5) 10%, transparent 20%, transparent 50%, rgba(99,102,241,0.4) 60%, transparent 70%)',
+          animation: 'border-spin 6s linear infinite',
           WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
           WebkitMaskComposite: 'xor',
           maskComposite: 'exclude',
-          padding: '2px',
-          borderRadius: '12px',
+          padding: '3px',
+          borderRadius: '14px',
         }}
       />
       <div
         ref={boardRef}
-        className="relative overflow-hidden rounded-xl"
-        style={{ 
-          width: size, 
+        className="relative overflow-hidden rounded-xl bg-black"
+        style={{
+          width: size,
           height: size,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08), inset 0 2px 4px rgba(255,255,255,0.05)',
         }}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -755,8 +756,8 @@ export const MiniChessboard = memo(function MiniChessboard({ fen, size = 120, bo
   return (
     <div
       className="relative rounded overflow-hidden"
-      style={{ 
-        width: size, 
+      style={{
+        width: size,
         height: size,
         boxShadow: '0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05)',
       }}
@@ -806,7 +807,7 @@ export function CapturedPieces({ fen, color, pieceSize = 16 }: { fen: string; co
   const captured = useMemo(() => {
     const board = parseFEN(fen)
     const currentCount: Record<string, Record<string, number>> = { w: { P: 0, N: 0, B: 0, R: 0, Q: 0 }, b: { P: 0, N: 0, B: 0, R: 0, Q: 0 } }
-    
+
     for (let r = 0; r < 8; r++) {
       for (let c = 0; c < 8; c++) {
         const piece = board[r]?.[c]
