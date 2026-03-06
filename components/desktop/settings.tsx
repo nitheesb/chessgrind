@@ -184,10 +184,10 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
         <h2 className="text-lg font-semibold text-foreground mb-4">Piece Style</h2>
         <div className="grid grid-cols-5 gap-4">
           {[{ id: 'standard', name: 'Standard', fill: '#fff', stroke: '#000', strokeWidth: 1.5 },
-            { id: 'neo', name: 'Neo', fill: '#f8f8f8', stroke: '#555', strokeWidth: 1.5 },
-            { id: 'classic', name: 'Classic', fill: '#f5e6c8', stroke: '#4a3728', strokeWidth: 2 },
-            { id: 'minimal', name: 'Minimal', fill: '#fff', stroke: '#999', strokeWidth: 1 },
-            { id: 'pink', name: 'Rose', fill: '#fce4ec', stroke: '#d4778a', strokeWidth: 1.5 },
+          { id: 'neo', name: 'Neo', fill: '#f8f8f8', stroke: '#555', strokeWidth: 1.5 },
+          { id: 'classic', name: 'Classic', fill: '#f5e6c8', stroke: '#4a3728', strokeWidth: 2 },
+          { id: 'minimal', name: 'Minimal', fill: '#fff', stroke: '#999', strokeWidth: 1 },
+          { id: 'pink', name: 'Rose', fill: '#fce4ec', stroke: '#d4778a', strokeWidth: 1.5 },
           ].map((ps) => (
             <motion.button
               key={ps.id}
@@ -202,7 +202,7 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
             >
               <div className="w-full flex items-center justify-center mb-3">
                 <svg viewBox="0 0 45 45" width={48} height={48}>
-                  <path 
+                  <path
                     d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z"
                     fill={ps.fill}
                     stroke={ps.stroke}
@@ -219,7 +219,7 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
       </div>
 
       {/* Theme */}
-      <div variants={item}>
+      <div>
         <h2 className="text-lg font-semibold text-foreground mb-4">Theme</h2>
         <div className="glass-card p-5">
           <div className="flex gap-4">

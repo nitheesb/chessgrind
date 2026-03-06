@@ -100,7 +100,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </motion.p>
               <motion.h1
-                className="text-5xl xl:text-6xl font-display font-bold hero-text-large mb-3"
+                className="text-5xl xl:text-6xl font-display font-bold hero-text-large mb-4 text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -108,14 +108,23 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 Welcome back,<br />
                 <TypewriterText text={profile.username + '.'} speed={60} delay={600} />
               </motion.h1>
-              <motion.p
-                className="text-muted-foreground text-lg"
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
+                className="flex items-center gap-4 mt-6"
               >
-                Continue your chess mastery journey
-              </motion.p>
+                <button
+                  onClick={() => handleNavigate('puzzles')}
+                  className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-[0_0_20px_rgba(52,211,153,0.3)] hover:shadow-[0_0_25px_rgba(52,211,153,0.5)] hover:-translate-y-0.5 transition-all text-sm flex items-center gap-2"
+                >
+                  <Play className="w-4 h-4" fill="currentColor" />
+                  Continue Training
+                </button>
+                <p className="text-muted-foreground text-sm">
+                  Resume your chess mastery journey
+                </p>
+              </motion.div>
             </div>
             <div
               className="flex items-center gap-6"
@@ -232,24 +241,28 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
         <div className="col-span-2 space-y-7">
           {/* Quick Actions */}
           <div>
-            <h2 className="text-xl font-display font-semibold text-foreground mb-5">Quick Start</h2>
+            <h2 className="text-xl font-display font-semibold text-foreground mb-5 tracking-tight flex items-center gap-2">
+              <Zap className="w-5 h-5 text-primary" /> Quick Start
+            </h2>
             <RevealGrid className="grid grid-cols-2 gap-5" staggerDelay={120}>
               {quickActions.map((action, i) => (
                 <MagneticWrap key={action.id} strength={0.15}>
                   <TiltCard
-                    className="glass-card-hover p-7 text-left group relative overflow-hidden cursor-pointer"
+                    className="glass-card-hover p-7 text-left group relative overflow-hidden cursor-pointer h-full border border-white/5 hover:border-white/10"
                     intensity={12}
                     onClick={() => handleNavigate(action.id)}
                   >
                     {/* Hover gradient overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-500`} />
+                    <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.08] transition-opacity duration-500`} />
+                    {/* Animated sweep line */}
+                    <div className="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg] group-hover:animate-[shine-sweep_1.5s_ease-in-out_infinite]" />
 
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-5 shadow-lg relative z-10`}>
-                      <span className="text-white">{action.icon}</span>
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-5 shadow-[0_8px_16px_rgba(0,0,0,0.3)] relative z-10 ring-1 ring-white/20`}>
+                      <span className="text-white drop-shadow-md">{action.icon}</span>
                     </div>
-                    <h3 className="text-lg font-display font-semibold text-foreground mb-1 relative z-10">{action.label}</h3>
-                    <p className="text-sm text-muted-foreground relative z-10">{action.description}</p>
-                    <div className="flex items-center gap-1 mt-5 text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1 relative z-10">
+                    <h3 className="text-lg font-display font-semibold text-foreground mb-1.5 relative z-10 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-white/70 transition-all">{action.label}</h3>
+                    <p className="text-sm text-muted-foreground relative z-10 leading-relaxed">{action.description}</p>
+                    <div className="flex items-center gap-1 mt-6 text-primary text-sm font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-[-10px] group-hover:translate-x-0 relative z-10">
                       Start now <ChevronRight className="w-4 h-4" />
                     </div>
                   </TiltCard>
@@ -272,7 +285,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             <motion.button
               onClick={() => handleNavigate('openings')}
               className="w-full glass-card-hover p-6 flex items-center gap-6 text-left group"
-              
+
             >
               <div className="rounded-2xl overflow-hidden ring-1 ring-white/5 relative z-10" style={{ width: 120, height: 120 }}>
                 <MiniChessboard fen={OPENINGS[0].fen} size={120} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
@@ -299,40 +312,43 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
           {/* Daily Challenge */}
           <div>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-display font-semibold text-foreground">Daily Challenge</h2>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-xl glass-card">
+              <h2 className="text-xl font-display font-semibold text-foreground tracking-tight">Daily Challenge</h2>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-xl glass-card border border-white/5">
                 <Calendar className="w-3.5 h-3.5" />
                 {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </div>
             </div>
             <motion.button
               onClick={() => handleNavigate('puzzles')}
-              className="w-full glass-card-hover p-6 text-left relative overflow-hidden group"
-              
+              className="w-full glass-card-hover p-7 text-left relative overflow-hidden group border border-white/5 hover:border-white/10"
+
             >
               {profile.dailyChallengeCompleted && (
-                <div className="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium flex items-center gap-1 border border-emerald-500/20 z-10">
+                <div className="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-semibold flex items-center gap-1 border border-emerald-500/20 z-10 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
                   <Star className="w-3 h-3" /> Completed
                 </div>
               )}
-              <div className="flex justify-center mb-5 relative z-10">
-                <div className="rounded-2xl overflow-hidden shadow-lg ring-1 ring-white/5 group-hover:shadow-xl transition-shadow" style={{ width: 180, height: 180 }}>
+              {/* Subtle accent glow */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4 group-hover:bg-primary/10 transition-colors duration-500" />
+
+              <div className="flex justify-center mb-6 relative z-10">
+                <div className="rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.4)] ring-1 ring-white/10 group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] transition-all duration-300 transform group-hover:-translate-y-1" style={{ width: 180, height: 180 }}>
                   <MiniChessboard fen={dailyPuzzle?.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'} size={180} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
                 </div>
               </div>
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <span className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${dailyPuzzle?.difficulty === 'easy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                  dailyPuzzle?.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                    'bg-red-500/10 text-red-400 border-red-500/20'
+              <div className="flex items-center justify-between mb-5 relative z-10">
+                <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${dailyPuzzle?.difficulty === 'easy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' :
+                  dailyPuzzle?.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]' :
+                    'bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]'
                   }`}>
                   {dailyPuzzle?.difficulty}
                 </span>
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5">
                   <Clock className="w-3 h-3" /> {dailyPuzzle?.moves.length || 0} moves
                 </span>
               </div>
-              <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-semibold border border-primary/15 group-hover:from-primary/20 group-hover:to-primary/10 transition-all btn-shine relative z-10">
-                <Play className="w-4 h-4" />
+              <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-semibold border border-primary/20 group-hover:from-primary/20 group-hover:to-primary/10 transition-all btn-shine relative z-10 shadow-inner inline-flex w-full">
+                <Play className="w-4 h-4" fill="currentColor" />
                 {profile.dailyChallengeCompleted ? 'Play Again' : 'Solve Now'}
               </div>
             </motion.button>

@@ -198,22 +198,26 @@ export function DesktopShell() {
               <button
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-left transition-all duration-200 relative ${isActive
-                    ? 'bg-white/[0.1] text-foreground shadow-[0_0_16px_rgba(52,211,153,0.08)]'
-                    : 'text-muted-foreground hover:bg-white/[0.05] hover:text-foreground'
+                className={`w-full flex items-center gap-2.5 px-3 py-[9px] rounded-xl text-left transition-all duration-300 relative overflow-hidden group ${isActive
+                  ? 'bg-primary/10 text-primary font-semibold shadow-[0_0_20px_rgba(52,211,153,0.15)] ring-1 ring-primary/20'
+                  : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
                   }`}
               >
+                {/* Subtle gradient hover block */}
+                {!isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/[0.03] to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                )}
                 {isActive && (
                   <motion.div
                     layoutId="desktop-nav-indicator"
-                    className="absolute left-0 top-[6px] bottom-[6px] w-[2.5px] bg-primary rounded-r-full"
-                    transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                    className="absolute left-0 top-[6px] bottom-[6px] w-[3px] bg-primary rounded-r-full shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                    transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
                   />
                 )}
-                <span className={`flex-shrink-0 ${isActive ? 'text-primary' : ''}`}>
+                <span className={`flex-shrink-0 z-10 ${isActive ? 'text-primary drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]' : ''}`}>
                   {item.icon}
                 </span>
-                <span className="text-[13px] font-medium">{item.label}</span>
+                <span className="text-[13px] tracking-wide z-10">{item.label}</span>
               </button>
             )
           })}
@@ -227,15 +231,19 @@ export function DesktopShell() {
               <button
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-left transition-all duration-150 ${isActive
-                    ? 'bg-white/[0.1] text-foreground'
-                    : 'text-muted-foreground hover:bg-white/[0.05] hover:text-foreground'
+                className={`w-full flex items-center gap-2.5 px-3 py-[9px] rounded-xl text-left transition-all duration-300 relative overflow-hidden group ${isActive
+                  ? 'bg-primary/10 text-primary font-semibold shadow-[0_0_20px_rgba(52,211,153,0.15)] ring-1 ring-primary/20'
+                  : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
                   }`}
               >
-                <span className={`flex-shrink-0 ${isActive ? 'text-primary' : ''}`}>
+                {/* Subtle gradient hover block */}
+                {!isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/[0.03] to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                )}
+                <span className={`flex-shrink-0 z-10 ${isActive ? 'text-primary drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]' : ''}`}>
                   {item.icon}
                 </span>
-                <span className="text-[13px] font-medium">{item.label}</span>
+                <span className="text-[13px] tracking-wide z-10">{item.label}</span>
               </button>
             )
           })}
@@ -265,13 +273,13 @@ export function DesktopShell() {
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="min-h-screen"
           >
-          {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}
-          {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
-          {currentPage === 'openings' && <DesktopOpenings onNavigate={handleNavigate} />}
-          {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
-          {currentPage === 'traps' && <DesktopTraps onNavigate={handleNavigate} />}
-          {currentPage === 'profile' && <DesktopProfile onNavigate={handleNavigate} />}
-          {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
+            {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}
+            {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
+            {currentPage === 'openings' && <DesktopOpenings onNavigate={handleNavigate} />}
+            {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
+            {currentPage === 'traps' && <DesktopTraps onNavigate={handleNavigate} />}
+            {currentPage === 'profile' && <DesktopProfile onNavigate={handleNavigate} />}
+            {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
           </motion.div>
         </AnimatePresence>
       </main>
