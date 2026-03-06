@@ -44,9 +44,9 @@ const NAV_ITEMS: NavItem[] = [
 const NAV_ORDER: Page[] = ['dashboard', 'puzzles', 'openings', 'play', 'traps', 'profile', 'settings']
 
 export function AppShell() {
-  const { 
-    isLoggedIn, 
-    achievementAnimation, 
+  const {
+    isLoggedIn,
+    achievementAnimation,
     dismissAchievement,
     checkAndUpdateStreak,
   } = useGame()
@@ -116,13 +116,13 @@ export function AppShell() {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           >
-          {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
-          {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}
-          {currentPage === 'openings' && <OpeningsPage onBack={handleBack} />}
-          {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
-          {currentPage === 'traps' && <TrapsPage onBack={handleBack} />}
-          {currentPage === 'profile' && <ProfilePage onBack={handleBack} onNavigate={handleNavigate} />}
-          {currentPage === 'settings' && <SettingsPage onBack={handleBack} />}
+            {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
+            {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}
+            {currentPage === 'openings' && <OpeningsPage onBack={handleBack} />}
+            {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
+            {currentPage === 'traps' && <TrapsPage onBack={handleBack} />}
+            {currentPage === 'profile' && <ProfilePage onBack={handleBack} onNavigate={handleNavigate} />}
+            {currentPage === 'settings' && <SettingsPage onBack={handleBack} />}
           </motion.div>
         </AnimatePresence>
       </main>
@@ -143,14 +143,13 @@ export function AppShell() {
               <button
                 key={navItem.id}
                 onClick={() => handleNavClick(navItem.id)}
-                className={`relative flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors duration-200 ${
-                  isActive ? 'text-primary' : 'text-muted-foreground'
-                }`}
+                className={`relative flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors duration-200 ${isActive ? 'text-primary' : 'text-muted-foreground'
+                  }`}
               >
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[2px] rounded-full bg-primary"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[2px] rounded-full bg-primary shadow-[0_2px_10px_rgba(52,211,153,0.8)]"
                     transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
                   />
                 )}
@@ -163,14 +162,13 @@ export function AppShell() {
           })}
           <button
             onClick={() => handleNavClick('profile')}
-            className={`relative flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors duration-200 ${
-              currentPage === 'profile' ? 'text-primary' : 'text-muted-foreground'
-            }`}
+            className={`relative flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors duration-200 ${currentPage === 'profile' ? 'text-primary' : 'text-muted-foreground'
+              }`}
           >
             {currentPage === 'profile' && (
               <motion.div
                 layoutId="nav-indicator"
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[2px] rounded-full bg-primary"
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[2px] rounded-full bg-primary shadow-[0_2px_10px_rgba(52,211,153,0.8)]"
                 transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
               />
             )}

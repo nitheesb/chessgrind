@@ -84,37 +84,40 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
       </motion.div>
 
       {/* Color Selection */}
-      <motion.div variants={staggerItem} className="glass-card p-4">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Play as</p>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            onClick={() => setPlayerColor('w')}
-            className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl border transition-all glow-card ${
-              playerColor === 'w' ? 'border-primary bg-primary/10 gradient-border-card' : 'border-border bg-secondary'
-            }`}
-          >
-            <div className="w-8 h-8 rounded-full bg-foreground/90 border-2 border-foreground/20" />
-            <span className="text-xs font-medium text-foreground">White</span>
-          </button>
-          <button
-            onClick={() => setPlayerColor('b')}
-            className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl border transition-all glow-card ${
-              playerColor === 'b' ? 'border-primary bg-primary/10 gradient-border-card' : 'border-border bg-secondary'
-            }`}
-          >
-            <div className="w-8 h-8 rounded-full bg-muted-foreground/30 border-2 border-muted-foreground/10" />
-            <span className="text-xs font-medium text-foreground">Black</span>
-          </button>
-          <button
-            onClick={() => setPlayerColor(Math.random() > 0.5 ? 'w' : 'b')}
-            className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl border border-border bg-secondary glow-card"
-          >
-            <div className="w-8 h-8 rounded-full overflow-hidden flex">
-              <div className="w-4 h-8 bg-foreground/90" />
-              <div className="w-4 h-8 bg-muted-foreground/30" />
-            </div>
-            <span className="text-xs font-medium text-foreground">Random</span>
-          </button>
+      <motion.div variants={staggerItem} className="mb-4">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">Choose Your Side</p>
+        <div className="grid grid-cols-3 gap-3">
+          {(['w', 'b', 'random'] as const).map((color) => {
+            const isSelected = playerColor === color || (color !== 'random' && playerColor === color)
+
+            return (
+              <button
+                key={color}
+                onClick={() => setPlayerColor(color === 'random' ? (Math.random() > 0.5 ? 'w' : 'b') : color)}
+                className={`flex flex-col items-center gap-2.5 py-4 px-2 rounded-xl border transition-all duration-300 relative overflow-hidden group ${isSelected
+                    ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(52,211,153,0.15)] ring-1 ring-primary/50'
+                    : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
+                  }`}
+              >
+                {/* Subtle gradient hover block */}
+                {!isSelected && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                )}
+
+                {color === 'w' && <div className="w-8 h-8 rounded-full bg-white border text-black shadow-inner relative z-10" />}
+                {color === 'b' && <div className="w-8 h-8 rounded-full bg-zinc-900 border border-white/20 shadow-inner relative z-10" />}
+                {color === 'random' && (
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex shadow-inner border border-white/20 relative z-10">
+                    <div className="w-4 h-8 bg-white" />
+                    <div className="w-4 h-8 bg-zinc-900" />
+                  </div>
+                )}
+                <span className="text-xs font-semibold text-foreground capitalize tracking-wide relative z-10">
+                  {color === 'w' ? 'White' : color === 'b' ? 'Black' : 'Random'}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </motion.div>
 
@@ -146,11 +149,10 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
                   <button
                     key={tc.label}
                     onClick={() => setTimeControl(tc)}
-                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                      timeControl.label === tc.label
+                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${timeControl.label === tc.label
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-secondary text-muted-foreground'
-                    }`}
+                      }`}
                   >
                     {tc.label}
                   </button>
@@ -163,57 +165,64 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
 
       {/* AI Level Selection */}
       <motion.div variants={staggerItem}>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
           Select Difficulty
         </h2>
-        <div className="flex flex-col gap-2.5">
-          {AI_LEVELS.map((level) => (
-            <motion.button
-              key={level.level}
-              onClick={() => {
-                setSelectedLevel(level.level)
-                setGameStarted(true)
-              }}
-              className={`w-full p-4 rounded-xl border flex items-center gap-3 text-left transition-all glow-card ${
-                selectedLevel === level.level
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border bg-card/50 hover:border-border/80'
-              }`}
-            >
-              {/* Level indicator */}
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border"
-                style={{
-                  backgroundColor: `${level.color}10`,
-                  borderColor: `${level.color}30`,
+        <div className="flex flex-col gap-3">
+          {AI_LEVELS.map((level) => {
+            const isActive = selectedLevel === level.level
+
+            return (
+              <motion.button
+                key={level.level}
+                onClick={() => {
+                  setSelectedLevel(level.level)
+                  setGameStarted(true)
                 }}
+                style={{
+                  boxShadow: isActive ? `0 0 20px ${level.color}25` : undefined,
+                  borderColor: isActive ? level.color : undefined
+                }}
+                className={`w-full p-4 rounded-xl border flex items-center gap-3 text-left transition-all duration-300 relative overflow-hidden group ${isActive
+                    ? 'ring-1'
+                    : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
+                  }`}
               >
-                <Cpu className="w-5 h-5" style={{ color: level.color }} />
-              </div>
+                {/* Subtle gradient hover block */}
+                {!isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                )}
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-sm font-semibold text-foreground">{level.name}</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary text-muted-foreground">
-                    {level.rating}
-                  </span>
+                <div
+                  className="absolute inset-0 opacity-[0.03]"
+                  style={{ backgroundColor: isActive ? level.color : 'transparent' }}
+                />
+
+                {/* Level indicator */}
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border relative z-10"
+                  style={{
+                    backgroundColor: `${level.color}10`,
+                    borderColor: `${level.color}30`,
+                  }}
+                >
+                  <Cpu className={`w-6 h-6 transition-colors`} style={{ color: isActive ? level.color : undefined }} color={isActive ? undefined : 'currentColor'} />
                 </div>
-                <p className="text-[11px] text-muted-foreground">{level.description}</p>
-              </div>
 
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {Array.from({ length: Math.min(level.level, 5) }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-4 rounded-full"
-                    style={{ backgroundColor: level.color, opacity: 0.3 + (i * 0.15) }}
-                  />
-                ))}
-              </div>
+                <div className="flex-1 min-w-0 relative z-10">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-sm font-semibold text-foreground tracking-wide">{level.name}</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary text-muted-foreground">
+                      {level.rating}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground line-clamp-1">{level.description}</p>
+                </div>
 
-              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            </motion.button>
-          ))}
+                <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 group-hover:translate-x-1 group-hover:text-primary transition-all relative z-10" />
+              </motion.button>
+            )
+          })}
         </div>
       </motion.div>
     </motion.div>
@@ -279,7 +288,7 @@ function GameSession({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.turn(), gameOver, timeControl.minutes])
 
   const handleGameEnd = useCallback((reason: string, playerIsWinner: boolean) => {
@@ -337,7 +346,7 @@ function GameSession({
 
       const minimax = (g: Chess, d: number, alpha: number, beta: number, maximizing: boolean): number => {
         if (d === 0 || g.isGameOver()) return evaluate(g)
-        
+
         const gameMoves = g.moves()
         if (maximizing) {
           let maxEval = -Infinity
@@ -385,7 +394,7 @@ function GameSession({
           const testGame = new Chess(currentGame.fen())
           testGame.move(move)
           const score = -minimax(testGame, searchDepth - 1, -Infinity, Infinity, false) + Math.random() * randomFactor * 40
-          
+
           if (score > bestScore) {
             bestScore = score
             bestMoves = [move]
@@ -434,7 +443,7 @@ function GameSession({
     if (!isPlayerTurn && !gameOver && !isThinking) {
       makeAIMove(game)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlayerTurn, gameOver])
 
   const handlePlayerMove = useCallback((from: string, to: string, promotion?: string): boolean => {
@@ -543,11 +552,10 @@ function GameSession({
           </div>
         </div>
         {timeControl.minutes > 0 && (
-          <div className={`px-3 py-1.5 rounded-lg font-mono text-sm font-bold ${
-            game.turn() !== playerColor
+          <div className={`px-3 py-1.5 rounded-lg font-mono text-sm font-bold ${game.turn() !== playerColor
               ? 'bg-primary/10 text-primary border border-primary/20'
               : 'bg-secondary text-muted-foreground'
-          }`}>
+            }`}>
             {formatTime(playerColor === 'w' ? blackTime : whiteTime)}
           </div>
         )}
@@ -581,11 +589,10 @@ function GameSession({
           </div>
         </div>
         {timeControl.minutes > 0 && (
-          <div className={`px-3 py-1.5 rounded-lg font-mono text-sm font-bold ${
-            isPlayerTurn && !gameOver
+          <div className={`px-3 py-1.5 rounded-lg font-mono text-sm font-bold ${isPlayerTurn && !gameOver
               ? 'bg-primary/10 text-primary border border-primary/20'
               : 'bg-secondary text-muted-foreground'
-          }`}>
+            }`}>
             {formatTime(playerColor === 'w' ? whiteTime : blackTime)}
           </div>
         )}
@@ -671,9 +678,8 @@ function GameSession({
             <motion.div
               animate={playerWon ? { scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] } : {}}
               transition={{ duration: 0.6 }}
-              className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                playerWon ? 'bg-primary/20' : 'bg-secondary'
-              }`}
+              className={`w-16 h-16 rounded-full flex items-center justify-center ${playerWon ? 'bg-primary/20' : 'bg-secondary'
+                }`}
             >
               {playerWon ? (
                 <Trophy className="w-8 h-8 text-primary" />

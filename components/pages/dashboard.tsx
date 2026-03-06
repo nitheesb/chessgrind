@@ -22,6 +22,7 @@ import {
   TrendingUp,
   Calendar,
   Settings,
+  Play,
 } from 'lucide-react'
 import {
   AnimatedCounter,
@@ -108,14 +109,16 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <span className="text-xl font-bold text-white">{profile.username.charAt(0).toUpperCase()}</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground shimmer-text">
+            <h1 className="text-lg font-bold text-foreground shimmer-text mb-0.5">
               <TypewriterText text={profile.username} speed={60} />
             </h1>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Level {currentLevel.level}</span>
-              <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs text-primary font-medium">{currentLevel.title}</span>
-            </div>
+            <button
+              onClick={() => handleNavigate('puzzles')}
+              className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-semibold border border-primary/20 shadow-[0_0_10px_rgba(52,211,153,0.15)] hover:shadow-[0_0_15px_rgba(52,211,153,0.25)] hover:bg-primary/20 transition-all text-xs flex items-center gap-1.5"
+            >
+              <Play className="w-3 h-3" fill="currentColor" />
+              Continue Training
+            </button>
           </div>
         </div>
         <button
@@ -200,12 +203,17 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             key={action.id}
             onClick={() => handleNavigate(action.page)}
             whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-3 p-3.5 glass-card active:bg-white/[0.08] transition-colors w-full text-left"
+            className="flex items-center gap-3 p-3.5 glass-card-hover group relative overflow-hidden transition-colors w-full text-left border border-white/5 hover:border-white/10"
           >
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white shadow-sm shrink-0`}>
+            {/* Hover gradient overlay */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.08] transition-opacity duration-500`} />
+            {/* Animated sweep line */}
+            <div className="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg] group-hover:animate-[shine-sweep_1.5s_ease-in-out_infinite]" />
+
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white shadow-[0_4px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/20 shrink-0 relative z-10`}>
               {action.icon}
             </div>
-            <span className="text-sm font-semibold text-foreground">{action.label}</span>
+            <span className="text-sm font-semibold text-foreground relative z-10">{action.label}</span>
           </motion.button>
         ))}
       </motion.div>
@@ -233,11 +241,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             const isActive = idx < profile.streak % 7 || (profile.streak >= 7 && true)
             return (
               <div key={idx} className="flex flex-col items-center gap-1">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                  isActive
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${isActive
                     ? 'bg-amber-500 text-white'
                     : 'bg-secondary text-muted-foreground'
-                }`}>
+                  }`}>
                   {isActive ? '✓' : day}
                 </div>
               </div>
@@ -251,20 +258,23 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-sm font-semibold text-foreground shimmer-text">Daily Challenge</h2>
           {profile.dailyChallengeCompleted && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 font-medium">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold shadow-[0_0_10px_rgba(16,185,129,0.1)]">
               Completed ✓
             </span>
           )}
         </div>
         <motion.button
           onClick={() => handleNavigate('puzzles')}
-          className="w-full gradient-border-card bg-secondary rounded-xl p-3 flex items-center gap-3 text-left"
+          className="w-full glass-card-hover group relative overflow-hidden rounded-xl p-3 flex items-center gap-3 text-left border border-white/5 hover:border-white/10"
         >
-          <div className="relative overflow-hidden rounded-lg flex-shrink-0" style={{ width: 64, height: 64 }}>
+          {/* Subtle accent glow */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4 group-hover:bg-primary/10 transition-colors duration-500" />
+
+          <div className="relative overflow-hidden rounded-lg flex-shrink-0 shadow-[0_4px_15px_rgba(0,0,0,0.3)] ring-1 ring-white/10" style={{ width: 64, height: 64 }}>
             <MiniChessboard fen={dailyPuzzle.fen} size={64} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
             {profile.dailyChallengeCompleted && (
-              <div className="absolute inset-0 bg-green-500/30 backdrop-blur-[1px] flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+              <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[1px] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
                   <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
@@ -363,11 +373,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           {profile.achievements.slice(0, 5).map((achievement) => (
             <div
               key={achievement.id}
-              className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center text-xl ${
-                achievement.earned
+              className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center text-xl ${achievement.earned
                   ? 'bg-amber-500/10'
                   : 'bg-secondary opacity-40'
-              }`}
+                }`}
             >
               {achievement.earned ? achievement.icon : '🔒'}
             </div>
