@@ -295,7 +295,7 @@ function GameSession({
     if (timerRef.current) clearInterval(timerRef.current)
   }, [addXP, incrementGamesPlayed, aiLevel])
 
-  // Simple AI move using minimax-like evaluation
+  // Simple AI move using minimax with alpha-beta pruning
   const makeAIMove = useCallback((currentGame: Chess) => {
     if (currentGame.isGameOver()) return
 
@@ -306,61 +306,93 @@ function GameSession({
       if (moves.length === 0) return
 
       let selectedMove
-      const depth = aiConfig.depth
+      const depth = Math.min(aiConfig.depth, 4) // Cap at 4 for performance
+      const randomFactor = Math.max(0, 5 - depth) // More randomness at lower levels
 
-      if (depth <= 2) {
-        // Random with basic capture preference
+      const pieceValues: Record<string, number> = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 }
+
+      // Position bonus tables (simplified)
+      const centerBonus = (sq: string) => {
+        const file = sq.charCodeAt(0) - 97, rank = parseInt(sq[1]) - 1
+        return (3.5 - Math.abs(file - 3.5)) * 5 + (3.5 - Math.abs(rank - 3.5)) * 5
+      }
+
+      const evaluate = (g: Chess): number => {
+        if (g.isCheckmate()) return g.turn() === currentGame.turn() ? -99999 : 99999
+        if (g.isDraw() || g.isStalemate()) return 0
+
+        let score = 0
+        const board = g.board()
+        for (const row of board) {
+          for (const sq of row) {
+            if (!sq) continue
+            const val = pieceValues[sq.type] + centerBonus(sq.square)
+            score += sq.color === currentGame.turn() ? val : -val
+          }
+        }
+        // Mobility bonus
+        score += g.turn() === currentGame.turn() ? g.moves().length * 2 : -g.moves().length * 2
+        return score
+      }
+
+      const minimax = (g: Chess, d: number, alpha: number, beta: number, maximizing: boolean): number => {
+        if (d === 0 || g.isGameOver()) return evaluate(g)
+        
+        const gameMoves = g.moves()
+        if (maximizing) {
+          let maxEval = -Infinity
+          for (const m of gameMoves) {
+            g.move(m)
+            const ev = minimax(g, d - 1, alpha, beta, false)
+            g.undo()
+            maxEval = Math.max(maxEval, ev)
+            alpha = Math.max(alpha, ev)
+            if (beta <= alpha) break
+          }
+          return maxEval
+        } else {
+          let minEval = Infinity
+          for (const m of gameMoves) {
+            g.move(m)
+            const ev = minimax(g, d - 1, alpha, beta, true)
+            g.undo()
+            minEval = Math.min(minEval, ev)
+            beta = Math.min(beta, ev)
+            if (beta <= alpha) break
+          }
+          return minEval
+        }
+      }
+
+      if (depth <= 1) {
+        // Random with basic capture preference for easiest bot
         const captures = moves.filter(m => m.captured)
         const checks = moves.filter(m => m.san.includes('+'))
         if (checks.length > 0 && Math.random() > 0.5) {
           selectedMove = checks[Math.floor(Math.random() * checks.length)]
-        } else if (captures.length > 0 && Math.random() > 0.3) {
+        } else if (captures.length > 0 && Math.random() > 0.4) {
           selectedMove = captures[Math.floor(Math.random() * captures.length)]
         } else {
           selectedMove = moves[Math.floor(Math.random() * moves.length)]
         }
       } else {
-        // Better evaluation with piece values and positional scoring
-        const pieceValues: Record<string, number> = { p: 1, n: 3, b: 3.2, r: 5, q: 9, k: 0 }
-
+        // Minimax with alpha-beta pruning
         let bestScore = -Infinity
         let bestMoves: typeof moves = []
+        const searchDepth = depth
 
         for (const move of moves) {
-          let score = 0
-          // Capture value
-          if (move.captured) {
-            score += (pieceValues[move.captured] || 0) * 10
-          }
-          // Check bonus
           const testGame = new Chess(currentGame.fen())
           testGame.move(move)
-          if (testGame.isCheckmate()) {
-            score += 1000
-          } else if (testGame.isCheck()) {
-            score += 5
-          }
-          // Center control
-          const centerSquares = ['d4', 'd5', 'e4', 'e5']
-          if (centerSquares.includes(move.to)) score += 2
-          // Development bonus
-          if (['n', 'b'].includes(move.piece) && move.from[1] === '1') score += 3
-          // Castling bonus
-          if (move.san === 'O-O' || move.san === 'O-O-O') score += 8
-          // Randomness based on level (lower level = more random)
-          score += Math.random() * (20 / Math.sqrt(depth))
-
-          // Avoid moving king early
-          if (move.piece === 'k' && moveHistory.length < 20 && !move.san.startsWith('O')) score -= 5
-
+          const score = -minimax(testGame, searchDepth - 1, -Infinity, Infinity, false) + Math.random() * randomFactor * 40
+          
           if (score > bestScore) {
             bestScore = score
             bestMoves = [move]
-          } else if (score === bestScore) {
+          } else if (Math.abs(score - bestScore) < randomFactor * 10) {
             bestMoves.push(move)
           }
         }
-
         selectedMove = bestMoves[Math.floor(Math.random() * bestMoves.length)]
       }
 
@@ -395,7 +427,7 @@ function GameSession({
       }
       setIsThinking(false)
     }, 400 + Math.random() * 600) // Simulate thinking time
-  }, [aiConfig.depth, moveHistory.length, playerColor, timeControl.increment, handleGameEnd])
+  }, [aiConfig.depth, playerColor, timeControl.increment, handleGameEnd])
 
   // Trigger AI move when it's AI's turn
   useEffect(() => {
