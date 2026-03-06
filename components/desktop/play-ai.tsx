@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Chess } from 'chess.js'
-import { Chessboard } from '@/components/chess/chessboard'
+import { Chessboard, CapturedPieces } from '@/components/chess/chessboard'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
@@ -128,14 +128,14 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     }, 500 + Math.random() * 500)
   }, [difficulty, playSound])
 
-  const handleMove = useCallback((from: string, to: string): boolean => {
+  const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     if (gameStatus !== 'playing' || thinking) return false
     if ((playerColor === 'white' && game.turn() !== 'w') ||
         (playerColor === 'black' && game.turn() !== 'b')) return false
 
     try {
       const newGame = new Chess(game.fen())
-      const move = newGame.move({ from, to, promotion: 'q' })
+      const move = newGame.move({ from, to, promotion: promotion || 'q' })
       
       if (move) {
         setGame(newGame)
@@ -307,7 +307,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-foreground">{DIFFICULTY_CONFIG[difficulty].name} AI</p>
-                <p className="text-xs text-muted-foreground capitalize">{playerColor === 'white' ? 'Black' : 'White'}</p>
+                <CapturedPieces fen={game.fen()} color={playerColor === 'white' ? 'b' : 'w'} pieceSize={14} />
               </div>
               {thinking && (
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -322,7 +322,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-foreground">You</p>
-                <p className="text-xs text-muted-foreground capitalize">{playerColor}</p>
+                <CapturedPieces fen={game.fen()} color={playerColor === 'white' ? 'w' : 'b'} pieceSize={14} />
               </div>
             </div>
           </div>
@@ -369,6 +369,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
             </motion.button>
             <motion.button
               onClick={() => {
+                if (!window.confirm('Are you sure you want to resign?')) return
                 playSound('click')
                 setGameStatus('lost')
                 if (timerRef.current) clearInterval(timerRef.current)
@@ -420,6 +421,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 interactive={gameStatus === 'playing' && !thinking}
                 size={560}
                 highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
+                isCheck={game.isCheck()}
                 boardStyle={settings.boardStyle}
                 pieceStyle={settings.pieceStyle}
               />

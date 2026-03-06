@@ -205,7 +205,7 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
     }
   }, [moveIndex, opening.moves.length, isCompleted, addXP, incrementOpeningsLearned, playSound])
 
-  const handleMove = useCallback((from: string, to: string): boolean => {
+  const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     if (!isUserTurn || moveIndex >= opening.moves.length) return false
     const expected = expectedMove
     if (!expected) return false
@@ -213,7 +213,7 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
     if (from === expected.from && to === expected.to) {
       const newGame = new Chess(game.fen())
       try {
-        const move = newGame.move({ from, to, promotion: 'q' })
+        const move = newGame.move({ from, to, promotion: promotion || 'q' })
         if (move) {
           setLastMove({ from, to })
           setGame(newGame)
@@ -425,6 +425,7 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
                   showHint={showHint && isUserTurn && expectedMove ? expectedMove : undefined}
                   flipped={boardFlipped}
                   size={560}
+                  isCheck={game.isCheck()}
                   boardStyle={settings.boardStyle}
                   pieceStyle={settings.pieceStyle}
                 />

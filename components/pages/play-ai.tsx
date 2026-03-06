@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Chess } from 'chess.js'
-import { Chessboard } from '@/components/chess/chessboard'
+import { Chessboard, CapturedPieces } from '@/components/chess/chessboard'
 import { AI_LEVELS } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
@@ -405,12 +405,12 @@ function GameSession({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlayerTurn, gameOver])
 
-  const handlePlayerMove = useCallback((from: string, to: string): boolean => {
+  const handlePlayerMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     if (!isPlayerTurn || gameOver) return false
 
     try {
       const gameCopy = new Chess(game.fen())
-      const move = gameCopy.move({ from, to, promotion: 'q' })
+      const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
       if (!move) return false
 
       setGame(gameCopy)
@@ -507,7 +507,7 @@ function GameSession({
           </div>
           <div>
             <p className="text-xs font-semibold text-foreground">{aiConfig.name}</p>
-            <p className="text-[10px] text-muted-foreground">{playerColor === 'w' ? 'Black' : 'White'}</p>
+            <CapturedPieces fen={game.fen()} color={playerColor === 'w' ? 'b' : 'w'} pieceSize={14} />
           </div>
         </div>
         {timeControl.minutes > 0 && (
@@ -531,6 +531,7 @@ function GameSession({
           onMove={handlePlayerMove}
           lastMove={lastMove || undefined}
           showCoordinates
+          isCheck={game.isCheck()}
           boardStyle={settings.boardStyle}
           pieceStyle={settings.pieceStyle}
         />
@@ -544,7 +545,7 @@ function GameSession({
           </div>
           <div>
             <p className="text-xs font-semibold text-foreground">You</p>
-            <p className="text-[10px] text-muted-foreground">{playerColor === 'w' ? 'White' : 'Black'}</p>
+            <CapturedPieces fen={game.fen()} color={playerColor === 'w' ? 'w' : 'b'} pieceSize={14} />
           </div>
         </div>
         {timeControl.minutes > 0 && (
@@ -637,7 +638,7 @@ function GameSession({
             </motion.div>
             <div className="text-center">
               <p className="text-lg font-display font-bold text-foreground">
-                {playerWon ? 'Victory!' : result === 'Draw' ? 'Draw' : 'Defeat'}
+                {playerWon ? 'Victory!' : (result === 'Draw' || result === 'Stalemate') ? 'Draw' : 'Defeat'}
               </p>
               <p className="text-sm text-muted-foreground mt-1">{result}</p>
               <div className="flex items-center justify-center gap-1 mt-2">

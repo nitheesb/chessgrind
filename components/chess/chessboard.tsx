@@ -16,7 +16,7 @@ export const BOARD_THEMES: Record<BoardStyle, { light: string; dark: string; sel
 
 interface ChessboardProps {
   fen: string
-  onMove?: (from: string, to: string) => boolean
+  onMove?: (from: string, to: string, promotion?: string) => boolean
   interactive?: boolean
   flipped?: boolean
   orientation?: 'white' | 'black'
@@ -31,6 +31,7 @@ interface ChessboardProps {
   onPieceMove?: (captured: boolean) => void
   boardStyle?: BoardStyle
   pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+  isCheck?: boolean
 }
 
 const squareToIndex = (square: string) => ({
@@ -50,6 +51,7 @@ const Square = memo(function Square({
   isSelected,
   isLastMove,
   isHighlighted,
+  isInCheck,
   squareSize,
   onClick,
   onTouchStart,
@@ -64,6 +66,7 @@ const Square = memo(function Square({
   isSelected: boolean
   isLastMove: boolean
   isHighlighted: boolean
+  isInCheck: boolean
   squareSize: number
   onClick: () => void
   onTouchStart: (e: React.TouchEvent) => void
@@ -91,6 +94,16 @@ const Square = memo(function Square({
       onClick={onClick}
       onTouchStart={onTouchStart}
     >
+      {/* Check indicator on king */}
+      {isInCheck && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at center, rgba(255,0,0,0.6) 0%, rgba(255,0,0,0.3) 50%, transparent 70%)',
+          zIndex: 1,
+        }} />
+      )}
+
       {/* Move indicator - dot for empty, ring for capture */}
       {isHighlighted && (
         <div 
@@ -326,6 +339,7 @@ export function Chessboard({
   showHintArrow = false,
   boardStyle = 'green',
   pieceStyle = 'standard',
+  isCheck = false,
 }: ChessboardProps) {
   // Support both flipped and orientation props
   const isFlipped = orientation ? orientation === 'black' : flipped
@@ -334,6 +348,7 @@ export function Chessboard({
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [dragPiece, setDragPiece] = useState<{ piece: string; from: string; x: number; y: number } | null>(null)
   const [animating, setAnimating] = useState<{ piece: string; from: string; to: string } | null>(null)
+  const [promotionPending, setPromotionPending] = useState<{ from: string; to: string; color: 'w' | 'b' } | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
   const prevFenRef = useRef(fen)
   const squareSize = size / 8
@@ -342,6 +357,29 @@ export function Chessboard({
   const activeHint = hintArrow || showHint
 
   const board = useMemo(() => parseFEN(fen), [fen])
+
+  // Find king square for check highlighting
+  const checkSquare = useMemo(() => {
+    if (!isCheck) return null
+    // Determine whose turn it is from FEN
+    const turn = fen.split(' ')[1] || 'w'
+    const kingPiece = turn === 'w' ? 'wK' : 'bK'
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (board[r]?.[c] === kingPiece) return indexToSquare(r, c)
+      }
+    }
+    return null
+  }, [isCheck, fen, board])
+
+  // Check if a move is a pawn promotion
+  const isPromotionMove = useCallback((from: string, to: string) => {
+    const { row: fromRow, col: fromCol } = squareToIndex(from)
+    const piece = board[fromRow]?.[fromCol]
+    if (!piece || !piece.endsWith('P')) return false
+    const toRank = parseInt(to[1])
+    return (piece === 'wP' && toRank === 8) || (piece === 'bP' && toRank === 1)
+  }, [board])
 
   // Detect moves and animate
   useEffect(() => {
@@ -375,6 +413,14 @@ export function Chessboard({
         return
       }
       if (onMove) {
+        // Check for pawn promotion
+        if (isPromotionMove(selectedSquare, square)) {
+          const { row: fromRow, col: fromCol } = squareToIndex(selectedSquare)
+          const piece2 = board[fromRow]?.[fromCol]
+          setPromotionPending({ from: selectedSquare, to: square, color: piece2?.startsWith('w') ? 'w' : 'b' })
+          setSelectedSquare(null)
+          return
+        }
         const targetPiece = board[row]?.[col]
         const success = onMove(selectedSquare, square)
         if (success) {
@@ -417,8 +463,15 @@ export function Chessboard({
       setDragPiece({ piece, from: square, x: touch.clientX, y: touch.clientY })
       setSelectedSquare(square)
     } else if (selectedSquare) {
-      const targetPiece = board[row]?.[col]
       if (onMove) {
+        if (isPromotionMove(selectedSquare, square)) {
+          const { row: fromRow2, col: fromCol2 } = squareToIndex(selectedSquare)
+          const p = board[fromRow2]?.[fromCol2]
+          setPromotionPending({ from: selectedSquare, to: square, color: p?.startsWith('w') ? 'w' : 'b' })
+          setSelectedSquare(null)
+          return
+        }
+        const targetPiece = board[row]?.[col]
         const success = onMove(selectedSquare, square)
         if (success) {
           soundHaptics.playSound(targetPiece ? 'capture' : 'move')
@@ -456,6 +509,15 @@ export function Chessboard({
       const targetSquare = indexToSquare(row, col)
       const targetPiece = board[row]?.[col]
       if (targetSquare !== dragPiece.from && onMove) {
+        // Check for pawn promotion
+        if (isPromotionMove(dragPiece.from, targetSquare)) {
+          const { row: fromRow2, col: fromCol2 } = squareToIndex(dragPiece.from)
+          const p = board[fromRow2]?.[fromCol2]
+          setPromotionPending({ from: dragPiece.from, to: targetSquare, color: p?.startsWith('w') ? 'w' : 'b' })
+          setDragPiece(null)
+          setSelectedSquare(null)
+          return
+        }
         const success = onMove(dragPiece.from, targetSquare)
         if (success) {
           soundHaptics.playSound(targetPiece ? 'capture' : 'move')
@@ -522,10 +584,11 @@ export function Chessboard({
               isSelected={selectedSquare === square}
               isLastMove={lastMoveSet.has(square) && !animating}
               isHighlighted={highlightSet.has(square)}
+              isInCheck={checkSquare === square}
               squareSize={squareSize}
               onClick={() => handleSquareClick(displayRow, displayCol)}
               onTouchStart={(e) => handleTouchStart(e, displayRow, displayCol)}
-              interactive={interactive}
+              interactive={interactive && !promotionPending}
               theme={theme}
               pieceStyle={pieceStyle}
             />
@@ -612,6 +675,73 @@ export function Chessboard({
           <ChessPiece piece={dragPiece.piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
         </div>
       )}
+
+      {/* Promotion dialog */}
+      {promotionPending && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            borderRadius: '12px',
+          }}
+          onClick={() => setPromotionPending(null)}
+        >
+          <div
+            style={{
+              display: 'flex',
+              gap: 4,
+              padding: 8,
+              borderRadius: 12,
+              background: 'rgba(30,30,40,0.95)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {(['Q', 'R', 'B', 'N'] as const).map((p) => (
+              <button
+                key={p}
+                style={{
+                  width: squareSize * 1.1,
+                  height: squareSize * 1.1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(52,211,153,0.2)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                onClick={() => {
+                  if (onMove && promotionPending) {
+                    const soundHaptics = getGlobalSoundHaptics()
+                    const success = onMove(promotionPending.from, promotionPending.to, p.toLowerCase())
+                    if (success) {
+                      soundHaptics.playSound('move')
+                      soundHaptics.triggerHaptic('medium')
+                    }
+                  }
+                  setPromotionPending(null)
+                }}
+              >
+                <ChessPiece
+                  piece={`${promotionPending.color}${p}`}
+                  size={squareSize * 0.85}
+                  pieceStyle={pieceStyle}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -666,3 +796,54 @@ export const MiniChessboard = memo(function MiniChessboard({ fen, size = 120, bo
     </div>
   )
 })
+
+// Captured pieces & material balance display
+const STARTING_PIECES: Record<string, number> = { P: 8, N: 2, B: 2, R: 2, Q: 1 }
+const PIECE_VALUES: Record<string, number> = { P: 1, N: 3, B: 3, R: 5, Q: 9 }
+const PIECE_ORDER = ['Q', 'R', 'B', 'N', 'P']
+
+export function CapturedPieces({ fen, color, pieceSize = 16 }: { fen: string; color: 'w' | 'b'; pieceSize?: number }) {
+  const captured = useMemo(() => {
+    const board = parseFEN(fen)
+    const currentCount: Record<string, Record<string, number>> = { w: { P: 0, N: 0, B: 0, R: 0, Q: 0 }, b: { P: 0, N: 0, B: 0, R: 0, Q: 0 } }
+    
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const piece = board[r]?.[c]
+        if (piece) {
+          const side = piece[0] as 'w' | 'b'
+          const type = piece[1]
+          if (currentCount[side][type] !== undefined) currentCount[side][type]++
+        }
+      }
+    }
+
+    // Captured by 'color' = opponent's missing pieces
+    const opponent = color === 'w' ? 'b' : 'w'
+    const pieces: string[] = []
+    let materialDiff = 0
+
+    for (const type of PIECE_ORDER) {
+      const missing = STARTING_PIECES[type] - currentCount[opponent][type]
+      for (let i = 0; i < missing; i++) pieces.push(`${opponent}${type}`)
+      materialDiff += (currentCount[color][type] - currentCount[opponent][type]) * PIECE_VALUES[type]
+    }
+
+    return { pieces, advantage: materialDiff }
+  }, [fen, color])
+
+  if (captured.pieces.length === 0 && captured.advantage <= 0) return null
+
+  return (
+    <div className="flex items-center gap-0.5 min-h-[20px]">
+      {captured.pieces.map((p, i) => (
+        <div key={i} style={{ marginLeft: i > 0 ? -pieceSize * 0.3 : 0 }}>
+          <ChessPiece piece={p} size={pieceSize} />
+        </div>
+      ))}
+      {captured.advantage > 0 && (
+        <span className="text-xs font-bold text-muted-foreground ml-1">+{captured.advantage}</span>
+      )}
+    </div>
+  )
+}

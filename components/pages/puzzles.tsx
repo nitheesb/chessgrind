@@ -186,7 +186,7 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
 }
 
 function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
-  const { addXP, incrementPuzzlesSolved, trackPuzzleFailure, incrementCombo, resetCombo, recordPerfectSolve, profile } = useGame()
+  const { addXP, incrementPuzzlesSolved, updatePuzzleRating, trackPuzzleFailure, incrementCombo, resetCombo, recordPerfectSolve, profile } = useGame()
   const { settings } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
@@ -201,6 +201,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   const processingRef = useRef(false)
   const hintActiveRef = useRef(false)
   const hadWrongMoveRef = useRef(false)
+  const [wrongMoveHint, setWrongMoveHint] = useState<string | null>(null)
   const [boardFlipped, setBoardFlipped] = useState(false)
   const [showCoords, setShowCoords] = useState(true)
   const [earnedXP, setEarnedXP] = useState(0)
@@ -247,11 +248,12 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     // Delay XP popup slightly so combo overlay appears first
     setTimeout(() => addXP(totalXP), 300)
     incrementPuzzlesSolved()
+    updatePuzzleRating(puzzle.rating, true, timer)
     
     if (isPerfect) {
       recordPerfectSolve()
     }
-  }, [puzzle.xpReward, addXP, incrementPuzzlesSolved, incrementCombo, recordPerfectSolve, playSound, triggerHaptic])
+  }, [puzzle.xpReward, puzzle.rating, timer, addXP, incrementPuzzlesSolved, updatePuzzleRating, incrementCombo, recordPerfectSolve, playSound, triggerHaptic])
 
   // Play opponent's move automatically
   const playOpponentMove = useCallback((currentGame: Chess, currentMoveIndex: number) => {
@@ -298,7 +300,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     }, 600)
   }, [puzzle.moves, completePuzzle, calculateHint])
 
-  const handleMove = useCallback((from: string, to: string): boolean => {
+  const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     if (status !== 'playing' || processingRef.current) return false
     processingRef.current = true
 
@@ -310,7 +312,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
 
     try {
       const gameCopy = new Chess(game.fen())
-      const move = gameCopy.move({ from, to, promotion: 'q' })
+      const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
 
       if (!move) {
         processingRef.current = false
@@ -342,12 +344,13 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
         setStatus('wrong')
         hadWrongMoveRef.current = true
         setHintArrow(null)
+        setWrongMoveHint(expectedMove)
         playSound('fail')
         triggerHaptic('error')
         resetCombo()
         trackPuzzleFailure(puzzle.themes)
         processingRef.current = false
-        setTimeout(() => setStatus('playing'), 1500)
+        setTimeout(() => { setStatus('playing'); setWrongMoveHint(null) }, 2000)
         return false
       }
     } catch {
@@ -462,6 +465,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             showCoordinates={showCoords}
             hintArrow={hintArrow}
             showHintArrow={!!hintArrow}
+            isCheck={game.isCheck()}
             boardStyle={settings.boardStyle}
             pieceStyle={settings.pieceStyle}
             flipped={boardFlipped}
@@ -514,10 +518,15 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             animate={{ opacity: 1, scale: 1, x: [0, -5, 5, -5, 5, 0] }}
             exit={{ opacity: 0 }}
             transition={{ x: { duration: 0.4 } }}
-            className="flex items-center justify-center gap-2 py-2"
+            className="flex flex-col items-center gap-1 py-2"
           >
-            <X className="w-5 h-5 text-destructive" />
-            <span className="text-sm font-semibold text-destructive">Wrong move. Try again!</span>
+            <div className="flex items-center gap-2">
+              <X className="w-5 h-5 text-destructive" />
+              <span className="text-sm font-semibold text-destructive">Wrong move. Try again!</span>
+            </div>
+            {wrongMoveHint && (
+              <span className="text-xs text-muted-foreground">Expected: <strong>{wrongMoveHint}</strong></span>
+            )}
           </motion.div>
         )}
         {status === 'complete' && (
