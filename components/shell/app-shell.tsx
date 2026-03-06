@@ -130,10 +130,10 @@ export function AppShell() {
       {/* Bottom Navigation Bar — Apple Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
         style={{
-          background: 'rgba(255, 255, 255, 0.03)',
-          backdropFilter: 'saturate(180%) blur(24px)',
-          WebkitBackdropFilter: 'saturate(180%) blur(24px)',
-          borderTop: '0.5px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(255, 255, 255, 0.04)',
+          backdropFilter: 'saturate(180%) blur(32px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(32px)',
+          borderTop: '0.5px solid rgba(255, 255, 255, 0.10)',
         }}
       >
         <div className="max-w-lg mx-auto flex items-stretch justify-around">
