@@ -321,10 +321,10 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
       } else {
         setStatus('wrong')
         hadWrongMoveRef.current = true
+        setHintArrow(null)
         resetCombo()
         playSound('fail')
         triggerHaptic('error')
-        updatePuzzleRating(puzzle.rating, false, timer)
         trackPuzzleFailure(puzzle.themes)
         processingRef.current = false
         return false
