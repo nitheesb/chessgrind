@@ -336,7 +336,9 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           onClick={() => {
             playSound('click')
             triggerHaptic('medium')
-            resetSettings()
+            if (window.confirm('Reset all settings to defaults? This cannot be undone.')) {
+              resetSettings()
+            }
           }}
           className="w-full flex items-center justify-between py-4 text-left"
         >

@@ -34,6 +34,13 @@ const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; descr
   master: { name: 'Master', depth: 4, description: 'The ultimate test', color: 'red' },
 }
 
+const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string }> = {
+  emerald: { border: 'border-emerald-500', bg: 'bg-emerald-500/10', text: 'text-emerald-500' },
+  blue: { border: 'border-blue-500', bg: 'bg-blue-500/10', text: 'text-blue-500' },
+  purple: { border: 'border-purple-500', bg: 'bg-purple-500/10', text: 'text-purple-500' },
+  red: { border: 'border-red-500', bg: 'bg-red-500/10', text: 'text-red-500' },
+}
+
 export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const { addXP } = useGame()
   const { settings } = useSettings()
@@ -216,11 +223,11 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 }}
                 className={`p-5 rounded-2xl border-2 transition-all ${
                   difficulty === key
-                    ? `border-${config.color}-500 bg-${config.color}-500/10`
+                    ? `${COLOR_CLASSES[config.color].border} ${COLOR_CLASSES[config.color].bg}`
                     : 'border-border hover:border-border/80 bg-card'
                 }`}
               >
-                <Cpu className={`w-8 h-8 mb-3 mx-auto ${difficulty === key ? `text-${config.color}-500` : 'text-muted-foreground'}`} />
+                <Cpu className={`w-8 h-8 mb-3 mx-auto ${difficulty === key ? COLOR_CLASSES[config.color].text : 'text-muted-foreground'}`} />
                 <h3 className="font-semibold text-foreground mb-1">{config.name}</h3>
                 <p className="text-xs text-muted-foreground">{config.description}</p>
               </motion.button>
@@ -232,20 +239,24 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         <div className="mb-10">
           <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Choose Your Side</h2>
           <div className="flex justify-center gap-4">
-            {(['white', 'black'] as const).map((color) => (
+            {(['white', 'black', 'random'] as const).map((color) => (
               <motion.button
                 key={color}
                 onClick={() => {
                   playSound('click')
-                  setPlayerColor(color)
+                  setPlayerColor(color === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : color)
                 }}
                 className={`px-8 py-4 rounded-2xl border-2 flex items-center gap-3 transition-all ${
-                  playerColor === color
+                  playerColor === color || (color !== 'random' && playerColor === color)
                     ? 'border-primary bg-primary/10'
                     : 'border-border bg-card hover:border-border/80'
                 }`}
               >
-                <span className={`w-6 h-6 rounded-full ${color === 'white' ? 'bg-white border-2 border-gray-300' : 'bg-gray-800'}`} />
+                <span className={`w-6 h-6 rounded-full ${
+                  color === 'white' ? 'bg-white border-2 border-gray-300' :
+                  color === 'black' ? 'bg-gray-800' :
+                  'bg-gradient-to-br from-white to-gray-800 border border-gray-500'
+                }`} />
                 <span className="font-semibold text-foreground capitalize">{color}</span>
               </motion.button>
             ))}

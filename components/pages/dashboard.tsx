@@ -133,21 +133,21 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <Zap className="w-4 h-4" />
           </div>
           <p className="text-lg font-bold text-foreground"><OdometerCounter value={profile.xp} /></p>
-          <p className="text-[10px] text-muted-foreground">XP</p>
+          <p className="text-[11px] text-muted-foreground font-medium">Total XP</p>
         </div>
         <div className="glow-card bg-secondary rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 text-green-500 mb-1">
             <Flame className="w-4 h-4" />
           </div>
           <p className="text-lg font-bold text-foreground"><OdometerCounter value={profile.streak} /></p>
-          <p className="text-[10px] text-muted-foreground">Day Streak</p>
+          <p className="text-[11px] text-muted-foreground font-medium">Day Streak</p>
         </div>
         <div className="glow-card bg-secondary rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 text-blue-500 mb-1">
             <TrendingUp className="w-4 h-4" />
           </div>
           <p className="text-lg font-bold text-foreground"><OdometerCounter value={profile.rating} /></p>
-          <p className="text-[10px] text-muted-foreground">Rating</p>
+          <p className="text-[11px] text-muted-foreground font-medium">Rating</p>
         </div>
       </motion.div>
 
@@ -159,6 +159,21 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </div>
         <XPBar />
       </motion.div>
+
+      {/* Welcome banner for new users */}
+      {profile.xp === 0 && profile.puzzlesSolved === 0 && (
+        <motion.div variants={staggerItem} className="rounded-2xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 p-4">
+          <h2 className="text-sm font-bold text-foreground mb-1">👋 Welcome to ChessVault!</h2>
+          <p className="text-xs text-muted-foreground mb-3">Start with a quick puzzle to earn your first XP and begin your journey.</p>
+          <motion.button
+            onClick={() => handleNavigate('puzzles')}
+            whileTap={{ scale: 0.97 }}
+            className="px-4 py-2 rounded-lg bg-emerald-500 text-white text-xs font-semibold"
+          >
+            Solve Your First Puzzle →
+          </motion.button>
+        </motion.div>
+      )}
 
       {/* Streak Warning */}
       <motion.div variants={staggerItem}>
@@ -179,17 +194,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       )}
 
       {/* Quick Actions */}
-      <motion.div variants={staggerItem} className="grid grid-cols-4 gap-2">
+      <motion.div variants={staggerItem} className="grid grid-cols-2 gap-2.5">
         {quickActions.map((action) => (
           <motion.button
             key={action.id}
             onClick={() => handleNavigate(action.page)}
-            className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary active:bg-secondary/70 transition-colors w-full"
+            whileTap={{ scale: 0.97 }}
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-secondary active:bg-secondary/70 transition-colors w-full text-left"
           >
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white shadow-sm`}>
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white shadow-sm shrink-0`}>
               {action.icon}
             </div>
-            <span className="text-[11px] font-medium text-foreground">{action.label}</span>
+            <span className="text-sm font-semibold text-foreground">{action.label}</span>
           </motion.button>
         ))}
       </motion.div>
