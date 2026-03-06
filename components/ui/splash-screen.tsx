@@ -20,7 +20,7 @@ function Particle({ delay, x, size }: { delay: number; x: number; size: number }
         height: size,
         left: `${x}%`,
         bottom: '-5%',
-        background: `radial-gradient(circle, rgba(48,209,88,${0.3 + Math.random() * 0.3}) 0%, transparent 70%)`,
+        background: `radial-gradient(circle, rgba(52,211,153,${0.3 + Math.random() * 0.3}) 0%, transparent 70%)`,
       }}
       initial={{ y: 0, opacity: 0, scale: 0 }}
       animate={{
@@ -42,7 +42,7 @@ export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenPro
   const [show, setShow] = useState(true)
   const [phase, setPhase] = useState(0)
   const [particles] = useState(() =>
-    Array.from({ length: 20 }, (_, i) => ({
+    Array.from({ length: 10 }, (_, i) => ({
       id: i,
       delay: 0.3 + Math.random() * 1.2,
       x: Math.random() * 100,
@@ -69,29 +69,29 @@ export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenPro
           exit={{ opacity: 0, filter: 'blur(8px)' }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden"
-          style={{ background: 'linear-gradient(180deg, hsl(228 20% 4%) 0%, hsl(228 25% 2%) 100%)' }}
+          style={{ background: 'linear-gradient(180deg, hsl(230 20% 4%) 0%, hsl(230 25% 2%) 100%)' }}
         >
           {/* Ambient orbs — morphing */}
           <div className="absolute inset-0 overflow-hidden">
             <motion.div
               className="absolute w-[700px] h-[700px] rounded-full morph-blob"
               style={{
-                background: 'radial-gradient(circle, rgba(48, 209, 88, 0.12) 0%, transparent 60%)',
+                background: 'radial-gradient(circle, rgba(52, 211, 153, 0.12) 0%, transparent 60%)',
                 top: '5%',
                 left: '15%',
               }}
               animate={{ scale: [1, 1.3, 1], rotate: [0, 30, 0] }}
-              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 3, repeat: 0, ease: 'easeInOut' }}
             />
             <motion.div
               className="absolute w-[500px] h-[500px] rounded-full morph-blob"
               style={{
-                background: 'radial-gradient(circle, rgba(120, 80, 255, 0.08) 0%, transparent 60%)',
+                background: 'radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 60%)',
                 bottom: '5%',
                 right: '15%',
               }}
               animate={{ scale: [1.2, 1, 1.2], rotate: [30, 0, 30] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 3, repeat: 0, ease: 'easeInOut' }}
             />
             <motion.div
               className="absolute w-[300px] h-[300px] rounded-full"
@@ -101,7 +101,7 @@ export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenPro
                 right: '30%',
               }}
               animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 2.5, repeat: 0, ease: 'easeInOut' }}
             />
           </div>
 
@@ -122,7 +122,7 @@ export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenPro
                 top: `${8 + ((i * 17) % 70)}%`,
                 left: `${5 + ((i * 19) % 80)}%`,
                 color: 'rgba(255,255,255,0.025)',
-                textShadow: '0 0 40px rgba(48,209,88,0.03)',
+                textShadow: '0 0 40px rgba(52,211,153,0.03)',
               }}
               initial={{ opacity: 0, scale: 0.5, rotate: -20 + i * 8 }}
               animate={{

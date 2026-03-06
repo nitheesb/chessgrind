@@ -115,7 +115,7 @@ export function DesktopLogin() {
             bottom: '10%', right: '10%',
           }} />
           <div className="absolute w-[300px] h-[300px] rounded-full" style={{
-            background: 'radial-gradient(circle, rgba(48, 209, 88, 0.06) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(52, 211, 153, 0.06) 0%, transparent 70%)',
             top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           }} />
         </div>

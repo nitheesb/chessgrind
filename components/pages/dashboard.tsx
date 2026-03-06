@@ -128,21 +128,21 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Stats Row */}
       <motion.div variants={staggerItem} className="grid grid-cols-3 gap-2">
-        <div className="glow-card bg-secondary rounded-xl p-3 text-center">
+        <div className="glass-card p-3 text-center">
           <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
             <Zap className="w-4 h-4" />
           </div>
           <p className="text-lg font-bold text-foreground"><OdometerCounter value={profile.xp} /></p>
           <p className="text-[11px] text-muted-foreground font-medium">Total XP</p>
         </div>
-        <div className="glow-card bg-secondary rounded-xl p-3 text-center">
+        <div className="glass-card p-3 text-center">
           <div className="flex items-center justify-center gap-1 text-green-500 mb-1">
             <Flame className="w-4 h-4" />
           </div>
           <p className="text-lg font-bold text-foreground"><OdometerCounter value={profile.streak} /></p>
           <p className="text-[11px] text-muted-foreground font-medium">Day Streak</p>
         </div>
-        <div className="glow-card bg-secondary rounded-xl p-3 text-center">
+        <div className="glass-card p-3 text-center">
           <div className="flex items-center justify-center gap-1 text-blue-500 mb-1">
             <TrendingUp className="w-4 h-4" />
           </div>
@@ -152,7 +152,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </motion.div>
 
       {/* Level Progress */}
-      <motion.div variants={staggerItem} className="bg-secondary rounded-xl p-4">
+      <motion.div variants={staggerItem} className="glass-card p-4">
         <div className="flex items-center justify-between text-xs mb-2">
           <span className="text-muted-foreground">Level {currentLevel.level}</span>
           <span className="text-primary font-medium">{Math.round(progress)}%</span>
@@ -200,7 +200,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             key={action.id}
             onClick={() => handleNavigate(action.page)}
             whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-3 p-3.5 rounded-xl bg-secondary active:bg-secondary/70 transition-colors w-full text-left"
+            className="flex items-center gap-3 p-3.5 glass-card active:bg-white/[0.08] transition-colors w-full text-left"
           >
             <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white shadow-sm shrink-0`}>
               {action.icon}

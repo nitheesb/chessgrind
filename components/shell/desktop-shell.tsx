@@ -140,8 +140,8 @@ export function DesktopShell() {
         className="fixed left-0 top-0 bottom-0 z-40 flex flex-col w-[220px]"
         style={{
           background: 'rgba(255, 255, 255, 0.04)',
-          backdropFilter: 'saturate(180%) blur(32px)',
-          WebkitBackdropFilter: 'saturate(180%) blur(32px)',
+          backdropFilter: 'saturate(150%) blur(20px)',
+          WebkitBackdropFilter: 'saturate(150%) blur(20px)',
           borderRight: '0.5px solid rgba(255, 255, 255, 0.10)',
           boxShadow: 'inset -0.5px 0 0 0 rgba(255,255,255,0.05), 4px 0 24px rgba(0,0,0,0.1)',
         }}

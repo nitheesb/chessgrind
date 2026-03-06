@@ -14,6 +14,7 @@ import {
   Sun,
   Monitor,
   ChevronLeft,
+  RotateCcw,
 } from 'lucide-react'
 
 
@@ -23,7 +24,7 @@ interface DesktopSettingsProps {
 }
 
 export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
-  const { settings, updateSetting } = useSettings()
+  const { settings, updateSetting, resetSettings } = useSettings()
   const { playSound } = useSoundAndHaptics()
 
   const toggleSetting = (key: keyof typeof settings) => {
@@ -244,6 +245,27 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Reset Settings */}
+      <div>
+        <button
+          onClick={() => {
+            playSound('click')
+            if (window.confirm('Reset all settings to defaults? This cannot be undone.')) {
+              resetSettings()
+            }
+          }}
+          className="flex items-center gap-3 px-5 py-4 rounded-xl glass-card hover:bg-destructive/10 transition-colors group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive">
+            <RotateCcw className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground group-hover:text-destructive transition-colors">Reset Settings</p>
+            <p className="text-xs text-muted-foreground">Restore default settings</p>
+          </div>
+        </button>
       </div>
     </div>
   )
