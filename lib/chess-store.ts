@@ -1,6 +1,18 @@
 // Client-side game state store using React context pattern
 // This manages the ephemeral game state; backend sync is handled separately
 
+export interface WeeklyMission {
+  id: string
+  title: string
+  description: string
+  target: number
+  progress: number
+  xpReward: number
+  completed: boolean
+  icon: string
+  weekStart: string
+}
+
 export interface UserProfile {
   username: string
   avatar: string
@@ -28,6 +40,21 @@ export interface UserProfile {
   perfectSolves: number
   lastActiveDate: string
   dailyBonusClaimed: boolean
+  // Activity tracking
+  activityDates: Record<string, number>
+  // Recent games
+  recentGames: Array<{
+    id: string
+    date: string
+    result: 'win' | 'loss' | 'draw'
+    opponent: string
+    moves: number
+    pgn?: string
+  }>
+  // Puzzle rating history
+  puzzleRatingHistory: Array<{ date: string; rating: number }>
+  // Weekly missions
+  weeklyMissions: WeeklyMission[]
 }
 
 export interface Achievement {
@@ -120,6 +147,10 @@ export const DEFAULT_PROFILE: UserProfile = {
   perfectSolves: 0,
   lastActiveDate: '',
   dailyBonusClaimed: false,
+  activityDates: {},
+  recentGames: [],
+  puzzleRatingHistory: [],
+  weeklyMissions: [],
 }
 
 // Get XP multiplier based on combo count

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard, CapturedPieces } from '@/components/chess/chessboard'
+import { EvalBar } from '@/components/chess/eval-bar'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
@@ -18,6 +19,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  Volume2,
+  VolumeX,
+  Minus,
+  Plus,
 } from 'lucide-react'
 
 
@@ -44,7 +49,7 @@ const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string; 
 
 export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const { addXP } = useGame()
-  const { settings } = useSettings()
+  const { settings, updateSetting } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [gameStarted, setGameStarted] = useState(false)
   const [difficulty, setDifficulty] = useState<Difficulty>('intermediate')
@@ -56,6 +61,15 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const [thinking, setThinking] = useState(false)
   const [timer, setTimer] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [boardSize, setBoardSize] = useState(520)
+  const updateBoardSize = (delta: number) => {
+    setBoardSize(prev => Math.min(Math.max(prev + delta, 360), 600))
+  }
+  const [premove, setPremove] = useState<{ from: string; to: string; promotion?: string } | null>(null)
+  const [notationView, setNotationView] = useState<'list' | 'condensed'>('list')
+  const [copiedPGN, setCopiedPGN] = useState(false)
+  const notationRef = useRef<HTMLDivElement>(null)
+  const isPlayerTurn = game.turn() === (playerColor === 'white' ? 'w' : 'b')
 
   useEffect(() => {
     if (gameStarted && gameStatus === 'playing') {
@@ -172,8 +186,11 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
   const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     if (gameStatus !== 'playing' || thinking) return false
-    if ((playerColor === 'white' && game.turn() !== 'w') ||
-      (playerColor === 'black' && game.turn() !== 'b')) return false
+    // Store as premove when it's AI's turn
+    if (!isPlayerTurn) {
+      setPremove({ from, to, promotion })
+      return true
+    }
 
     try {
       const newGame = new Chess(game.fen())
@@ -203,7 +220,36 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
       }
     } catch { }
     return false
-  }, [game, gameStatus, thinking, playerColor, difficulty, playSound, triggerHaptic, addXP, makeAIMove])
+  }, [game, gameStatus, thinking, isPlayerTurn, difficulty, playSound, triggerHaptic, addXP, makeAIMove])
+
+  // Execute premove when it becomes the player's turn
+  useEffect(() => {
+    if (isPlayerTurn && premove && gameStatus === 'playing') {
+      const { from, to, promotion } = premove
+      setPremove(null)
+      try {
+        const newGame = new Chess(game.fen())
+        const move = newGame.move({ from, to, promotion: promotion || 'q' })
+        if (!move) return
+        setGame(newGame)
+        setLastMove({ from, to })
+        setMoveHistory(prev => [...prev, move.san])
+        playSound(move.captured ? 'capture' : 'move')
+        if (newGame.isGameOver()) {
+          if (timerRef.current) clearInterval(timerRef.current)
+          if (newGame.isCheckmate()) {
+            setGameStatus('won')
+            addXP(50 * (Object.keys(DIFFICULTY_CONFIG).indexOf(difficulty) + 1))
+          } else {
+            setGameStatus('draw')
+          }
+        } else {
+          setTimeout(() => makeAIMove(newGame), 300)
+        }
+      } catch { /* illegal premove — discard */ }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlayerTurn])
 
   const startGame = useCallback(() => {
     playSound('click')
@@ -228,6 +274,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     setMoveHistory([])
     setTimer(0)
     setThinking(false)
+    setPremove(null)
     if (timerRef.current) clearInterval(timerRef.current)
   }, [playSound])
 
@@ -236,6 +283,35 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
+
+  const generatePGN = useCallback(() => {
+    const date = new Date().toISOString().split('T')[0].replace(/-/g, '.')
+    const pgnResult = gameStatus === 'draw' ? '1/2-1/2' :
+      gameStatus === 'won' ? (playerColor === 'white' ? '1-0' : '0-1') :
+      gameStatus === 'lost' ? (playerColor === 'white' ? '0-1' : '1-0') : '*'
+    const whitePlayer = playerColor === 'white' ? 'You' : `${DIFFICULTY_CONFIG[difficulty].name} AI`
+    const blackPlayer = playerColor === 'black' ? 'You' : `${DIFFICULTY_CONFIG[difficulty].name} AI`
+    const headers = [
+      '[Event "ChessVault Game"]',
+      `[Date "${date}"]`,
+      `[White "${whitePlayer}"]`,
+      `[Black "${blackPlayer}"]`,
+      `[Result "${pgnResult}"]`,
+    ].join('\n')
+    const movePairs = Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => {
+      const w = moveHistory[i * 2] || ''
+      const b = moveHistory[i * 2 + 1] ? ' ' + moveHistory[i * 2 + 1] : ''
+      return `${i + 1}. ${w}${b}`
+    })
+    return `${headers}\n\n${movePairs.join(' ')} ${pgnResult}`
+  }, [gameStatus, playerColor, difficulty, moveHistory])
+
+  // Auto-scroll notation to latest move
+  useEffect(() => {
+    if (notationRef.current) {
+      notationRef.current.scrollTop = notationRef.current.scrollHeight
+    }
+  }, [moveHistory.length])
 
   if (!gameStarted) {
     return (
@@ -386,19 +462,52 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
           {/* Move History */}
           <div className="glass-card p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Move History</h3>
-            <div className="max-h-48 overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-foreground">Move History</h3>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setNotationView('list')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${notationView === 'list' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  List
+                </button>
+                <button
+                  onClick={() => setNotationView('condensed')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${notationView === 'condensed' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  Compact
+                </button>
+              </div>
+            </div>
+            <div ref={notationRef} className="max-h-48 overflow-y-auto scrollbar-hide">
               {moveHistory.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">No moves yet</p>
-              ) : (
+              ) : notationView === 'list' ? (
                 <div className="space-y-0.5 font-mono text-sm">
-                  {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => (
-                    <div key={i} className={`flex gap-2 px-2 py-0.5 rounded ${i % 2 === 0 ? 'bg-secondary/30' : ''}`}>
-                      <span className="text-muted-foreground w-6 text-right">{i + 1}.</span>
-                      <span className="w-16 text-foreground">{moveHistory[i * 2]}</span>
-                      <span className="w-16 text-foreground/70">{moveHistory[i * 2 + 1] || ''}</span>
-                    </div>
-                  ))}
+                  {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => {
+                    const isLastPair = i === Math.ceil(moveHistory.length / 2) - 1
+                    return (
+                      <div key={i} className={`flex gap-2 px-2 py-0.5 rounded ${isLastPair ? 'bg-primary/10' : i % 2 === 0 ? 'bg-secondary/30' : ''}`}>
+                        <span className="text-muted-foreground w-6 text-right">{i + 1}.</span>
+                        <span className={`w-16 ${isLastPair && moveHistory.length % 2 !== 0 ? 'text-primary font-bold' : 'text-foreground'}`}>{moveHistory[i * 2]}</span>
+                        <span className={`w-16 ${isLastPair && moveHistory.length % 2 === 0 ? 'text-primary font-bold' : 'text-foreground/70'}`}>{moveHistory[i * 2 + 1] || ''}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-x-1 gap-y-0.5 font-mono text-sm">
+                  {moveHistory.map((move, idx) => {
+                    const isLast = idx === moveHistory.length - 1
+                    return (
+                      <span key={idx} className="inline-flex items-center gap-0.5">
+                        {idx % 2 === 0 && (
+                          <span className="text-muted-foreground">{Math.floor(idx / 2) + 1}.</span>
+                        )}
+                        <span className={isLast ? 'text-primary font-bold' : 'text-foreground'}>{move}</span>
+                      </span>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -457,19 +566,45 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               </div>
             )}
 
-            {/* Board */}
-            <div className="flex justify-center">
-              <Chessboard
-                fen={game.fen()}
-                onMove={handleMove}
-                orientation={playerColor}
-                interactive={gameStatus === 'playing' && !thinking}
-                size={560}
-                highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
-                isCheck={game.isCheck()}
-                boardStyle={settings.boardStyle}
-                pieceStyle={settings.pieceStyle}
-              />
+            {/* Board with EvalBar */}
+            <div className="flex justify-center items-stretch gap-3">
+              <EvalBar game={game} size={boardSize} thickness={20} vertical />
+              <div>
+                <Chessboard
+                  fen={game.fen()}
+                  onMove={handleMove}
+                  orientation={playerColor}
+                  interactive={gameStatus === 'playing' && !thinking}
+                  size={boardSize}
+                  highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
+                  arrows={premove ? [{ from: premove.from, to: premove.to, color: 'orange' }] : []}
+                  isCheck={game.isCheck()}
+                  boardStyle={settings.boardStyle}
+                  pieceStyle={settings.pieceStyle}
+                  allowArrowDrawing
+                />
+              </div>
+            </div>
+
+            {/* Board controls */}
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <button
+                onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
+                className="px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground hover:bg-secondary/80 transition-colors text-xs flex items-center gap-1.5"
+                title={settings.soundEnabled ? 'Mute' : 'Unmute'}
+              >
+                {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              </button>
+              <button onClick={() => updateBoardSize(-20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
+                <Minus className="w-3 h-3 text-muted-foreground" />
+              </button>
+              <span className="text-[11px] text-muted-foreground font-mono w-16 text-center">{boardSize}px</span>
+              <button onClick={() => updateBoardSize(20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
+                <Plus className="w-3 h-3 text-muted-foreground" />
+              </button>
+              {premove && (
+                <span className="text-[11px] text-orange-400 font-medium ml-2">Premove set</span>
+              )}
             </div>
 
             {/* Reward info */}
@@ -490,14 +625,44 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               <div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-6 flex gap-4 justify-center"
+                className="mt-6 flex flex-col items-center gap-3"
               >
-                <motion.button
-                  onClick={resetGame}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold"
-                >
-                  Play Again
-                </motion.button>
+                <div className="flex gap-4 justify-center">
+                  <motion.button
+                    onClick={resetGame}
+                    className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold"
+                  >
+                    Play Again
+                  </motion.button>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      const pgn = generatePGN()
+                      const blob = new Blob([pgn], { type: 'text/plain' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `chessvault-game-${Date.now()}.pgn`
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                    className="px-4 py-2 rounded-lg bg-secondary text-muted-foreground text-sm font-medium hover:text-foreground transition-colors"
+                  >
+                    ↓ Download PGN
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatePGN()).then(() => {
+                        setCopiedPGN(true)
+                        setTimeout(() => setCopiedPGN(false), 2000)
+                      })
+                    }}
+                    className="px-4 py-2 rounded-lg bg-secondary text-muted-foreground text-sm font-medium hover:text-foreground transition-colors"
+                  >
+                    {copiedPGN ? '✓ Copied!' : '⎘ Copy PGN'}
+                  </button>
+                </div>
               </div>
             )}
           </div>

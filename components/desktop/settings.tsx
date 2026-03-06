@@ -71,6 +71,12 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
           description: 'Automatically promote pawns to queen',
           icon: <MousePointer className="w-5 h-5" />,
         },
+        {
+          key: 'reducedMotion' as const,
+          label: 'Reduce Motion',
+          description: 'Minimize animations and transitions',
+          icon: <Monitor className="w-5 h-5" />,
+        },
       ],
     },
   ]
@@ -81,6 +87,8 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
     { id: 'blue', name: 'Ocean', light: '#dee3e6', dark: '#8ca2ad' },
     { id: 'purple', name: 'Royal', light: '#e8d0e8', dark: '#9070a0' },
     { id: 'pink', name: 'Rose', light: '#f5dce0', dark: '#d4778a' },
+    { id: 'tournament', name: 'Tournament', light: '#f5f5f5', dark: '#2d2d2d' },
+    { id: 'ocean', name: 'Deep Sea', light: '#c9e8f0', dark: '#4a8fa8' },
   ]
 
   return (
@@ -142,7 +150,7 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
       {/* Board Style */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-foreground mb-4">Board Style</h2>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-4 lg:grid-cols-7 gap-4">
           {boardStyles.map((style) => (
             <motion.button
               key={style.id}

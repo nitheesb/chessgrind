@@ -1,8 +1,9 @@
 'use client'
 
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
-import { type UserProfile, DEFAULT_PROFILE, getLevelInfo, LEVELS, ALL_ACHIEVEMENTS, calculatePuzzleRating, getComboMultiplier, getDailyBonusXP } from './chess-store'
+import { type UserProfile, DEFAULT_PROFILE, getLevelInfo, LEVELS, ALL_ACHIEVEMENTS, calculatePuzzleRating, getComboMultiplier, getDailyBonusXP, type WeeklyMission } from './chess-store'
 import { authApi, userApi, type UserProfileResponse } from './api-client'
+import { generateWeeklyMissions, getWeekStart } from './weekly-missions'
 
 interface GameContextType {
   profile: UserProfile
@@ -44,6 +45,9 @@ interface GameContextType {
   isBackendEnabled: boolean
   hasSeenOnboarding: boolean
   setHasSeenOnboarding: (seen: boolean) => void
+  recordActivity: () => void
+  addRecentGame: (game: { id: string; date: string; result: 'win' | 'loss' | 'draw'; opponent: string; moves: number; pgn?: string }) => void
+  updateWeeklyMission: (id: string, increment: number) => void
 }
 
 const GameContext = createContext<GameContextType | null>(null)
@@ -89,6 +93,10 @@ function mapApiUserToProfile(apiUser: UserProfileResponse): UserProfile {
     perfectSolves: (apiUser as Record<string, unknown>).perfectSolves as number || 0,
     lastActiveDate: '',
     dailyBonusClaimed: false,
+    activityDates: (apiUser as Record<string, unknown>).activityDates as Record<string, number> || {},
+    recentGames: (apiUser as Record<string, unknown>).recentGames as UserProfile['recentGames'] || [],
+    puzzleRatingHistory: (apiUser as Record<string, unknown>).puzzleRatingHistory as UserProfile['puzzleRatingHistory'] || [],
+    weeklyMissions: (apiUser as Record<string, unknown>).weeklyMissions as WeeklyMission[] || [],
   }
 }
 
@@ -103,6 +111,11 @@ function loadProfileFromStorage(): UserProfile | null {
       // Reset transient state
       parsed.combo = 0
       parsed.dailyBonusClaimed = false
+      // Ensure new fields exist
+      if (!parsed.activityDates) parsed.activityDates = {}
+      if (!parsed.recentGames) parsed.recentGames = []
+      if (!parsed.puzzleRatingHistory) parsed.puzzleRatingHistory = []
+      if (!parsed.weeklyMissions) parsed.weeklyMissions = []
       return parsed
     }
   } catch { /* corrupt data — ignore */ }
@@ -166,6 +179,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('chessvault_onboarding_seen', String(seen))
     }
   }, [])
+
+  // Check and refresh weekly missions if it's a new week
+  useEffect(() => {
+    if (!isLoggedIn) return
+    const weekStart = getWeekStart()
+    setProfile(prev => {
+      if (prev.weeklyMissions.length === 0 || prev.weeklyMissions[0].weekStart !== weekStart.toISOString()) {
+        return { ...prev, weeklyMissions: generateWeeklyMissions(weekStart) }
+      }
+      return prev
+    })
+  }, [isLoggedIn])
 
   // Check for existing session on mount
   useEffect(() => {
@@ -292,7 +317,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (typeof window !== 'undefined') localStorage.removeItem(STORAGE_KEY)
   }, [isBackendEnabled])
 
+  const recordActivity = useCallback(() => {
+    const today = new Date().toDateString()
+    setProfile(prev => {
+      const newDates = { ...prev.activityDates }
+      newDates[today] = (newDates[today] || 0) + 1
+      return { ...prev, activityDates: newDates }
+    })
+  }, [])
+
   const addXP = useCallback((amount: number) => {
+    recordActivity()
     setProfile(prev => {
       const newXP = prev.xp + amount
       const oldLevelInfo = getLevelInfo(prev.xp)
@@ -332,17 +367,38 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const incrementGamesPlayed = useCallback(() => {
-    setProfile(prev => ({ ...prev, gamesPlayed: prev.gamesPlayed + 1 }))
+    setProfile(prev => {
+      const missions = prev.weeklyMissions.map(m => {
+        if (m.id !== 'w-games') return m
+        const np = Math.min(m.progress + 1, m.target)
+        return { ...m, progress: np, completed: np >= m.target }
+      })
+      return { ...prev, gamesPlayed: prev.gamesPlayed + 1, weeklyMissions: missions }
+    })
     setPendingSync(true)
   }, [])
 
   const incrementPuzzlesSolved = useCallback(() => {
-    setProfile(prev => ({ ...prev, puzzlesSolved: prev.puzzlesSolved + 1 }))
+    setProfile(prev => {
+      const missions = prev.weeklyMissions.map(m => {
+        if (m.id !== 'w-puzzles') return m
+        const np = Math.min(m.progress + 1, m.target)
+        return { ...m, progress: np, completed: np >= m.target }
+      })
+      return { ...prev, puzzlesSolved: prev.puzzlesSolved + 1, weeklyMissions: missions }
+    })
     setPendingSync(true)
   }, [])
 
   const incrementOpeningsLearned = useCallback(() => {
-    setProfile(prev => ({ ...prev, openingsLearned: prev.openingsLearned + 1 }))
+    setProfile(prev => {
+      const missions = prev.weeklyMissions.map(m => {
+        if (m.id !== 'w-openings') return m
+        const np = Math.min(m.progress + 1, m.target)
+        return { ...m, progress: np, completed: np >= m.target }
+      })
+      return { ...prev, openingsLearned: prev.openingsLearned + 1, weeklyMissions: missions }
+    })
     setPendingSync(true)
   }, [])
 
@@ -449,11 +505,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const updatePuzzleRating = useCallback((puzzleRating: number, solved: boolean, timeSeconds: number) => {
     setProfile(prev => {
       const newRating = calculatePuzzleRating(prev.puzzleRating, puzzleRating, solved, timeSeconds)
+      const newHistory = [...prev.puzzleRatingHistory, { date: new Date().toISOString(), rating: newRating }]
       return {
         ...prev,
         puzzleRating: newRating,
         puzzlesAttempted: prev.puzzlesAttempted + 1,
         puzzlesCorrect: solved ? prev.puzzlesCorrect + 1 : prev.puzzlesCorrect,
+        puzzleRatingHistory: newHistory.slice(-100),
       }
     })
     setPendingSync(true)
@@ -467,6 +525,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
       })
       return { ...prev, failedPuzzleThemes: updated }
     })
+  }, [])
+
+  const addRecentGame = useCallback((game: { id: string; date: string; result: 'win' | 'loss' | 'draw'; opponent: string; moves: number; pgn?: string }) => {
+    setProfile(prev => ({
+      ...prev,
+      recentGames: [game, ...prev.recentGames].slice(0, 10),
+    }))
+    setPendingSync(true)
+  }, [])
+
+  const updateWeeklyMission = useCallback((id: string, increment: number) => {
+    setProfile(prev => {
+      const missions = prev.weeklyMissions.map(m => {
+        if (m.id !== id) return m
+        const newProgress = Math.min(m.progress + increment, m.target)
+        return { ...m, progress: newProgress, completed: newProgress >= m.target }
+      })
+      return { ...prev, weeklyMissions: missions }
+    })
+    setPendingSync(true)
   }, [])
 
   const dismissXPAnimation = useCallback(() => setXPAnimation({ show: false, amount: 0 }), [])
@@ -582,6 +660,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         isBackendEnabled,
         hasSeenOnboarding,
         setHasSeenOnboarding,
+        recordActivity,
+        addRecentGame,
+        updateWeeklyMission,
       }}
     >
       {children}

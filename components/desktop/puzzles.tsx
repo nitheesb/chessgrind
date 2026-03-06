@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { AnimatedCounter } from '@/components/ui/animated-components'
 import { Chess } from 'chess.js'
 import { Chessboard } from '@/components/chess/chessboard'
+import { EvalBar } from '@/components/chess/eval-bar'
+import { Skeleton, SkeletonPuzzleList } from '@/components/ui/skeleton'
 import { PUZZLES, getDifficultyBg } from '@/lib/chess-data'
 import type { Puzzle } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
@@ -27,6 +29,11 @@ import {
   Target,
   Clock,
   TrendingUp,
+  Volume2,
+  VolumeX,
+  Minus,
+  Plus,
+  Flame,
 } from 'lucide-react'
 
 interface DesktopPuzzlesProps {
@@ -38,6 +45,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
   const { playSound } = useSoundAndHaptics()
   const [activePuzzle, setActivePuzzle] = useState<Puzzle | null>(null)
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all')
+  const [rushMinutes, setRushMinutes] = useState<3 | 5 | null>(null)
 
   const filteredPuzzles = useMemo(() => {
     if (filterDifficulty === 'all') return PUZZLES
@@ -51,6 +59,12 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
       ? Math.round((profile.puzzlesCorrect / profile.puzzlesAttempted) * 100) 
       : 0,
     rating: profile.puzzleRating || 800,
+  }
+
+  if (rushMinutes) {
+    return (
+      <PuzzleRushMode minutes={rushMinutes} onBack={() => setRushMinutes(null)} />
+    )
   }
 
   if (activePuzzle) {
@@ -100,6 +114,31 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
           <Trophy className="w-6 h-6 text-amber-500 mx-auto mb-2" />
           <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.total} /></p>
           <p className="text-sm text-muted-foreground">Total Puzzles</p>
+        </div>
+      </div>
+
+      {/* Puzzle Rush */}
+      <div className="glass-card p-5 mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Flame className="w-4 h-4 text-orange-400" />
+          <h2 className="text-sm font-semibold text-foreground">Puzzle Rush</h2>
+          <span className="text-xs text-muted-foreground">Solve as many as you can!</span>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => { playSound('click'); setRushMinutes(3) }}
+            className="flex-1 py-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold text-sm hover:bg-orange-500/20 transition-all flex items-center justify-center gap-2"
+          >
+            <Timer className="w-4 h-4" />
+            3 min Rush
+          </button>
+          <button
+            onClick={() => { playSound('click'); setRushMinutes(5) }}
+            className="flex-1 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary font-semibold text-sm hover:bg-primary/20 transition-all flex items-center justify-center gap-2"
+          >
+            <Timer className="w-4 h-4" />
+            5 min Rush
+          </button>
         </div>
       </div>
 
@@ -172,22 +211,27 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
 
 function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
   const { addXP, incrementPuzzlesSolved, updatePuzzleRating, trackPuzzleFailure, incrementCombo, resetCombo, recordPerfectSolve, profile } = useGame()
-  const { settings } = useSettings()
+  const { settings, updateSetting } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
   const [status, setStatus] = useState<'playing' | 'correct' | 'wrong' | 'complete' | 'opponent-moving'>('playing')
-  const [hintActive, setHintActive] = useState(false)
-  const hintActiveRef = useRef(false)
+  const [hintLevel, setHintLevel] = useState(0)
+  const hintLevelRef = useRef(0)
   const [timer, setTimer] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
+  const [highlightSquares, setHighlightSquares] = useState<string[]>([])
   const [hintArrow, setHintArrow] = useState<{ from: string; to: string } | null>(null)
   const [moveHistory, setMoveHistory] = useState<string[]>([])
   const processingRef = useRef(false)
   const hadWrongMoveRef = useRef(false)
   const [wrongMoveHint, setWrongMoveHint] = useState<string | null>(null)
   const [earnedXP, setEarnedXP] = useState(0)
+  const [boardSize, setBoardSize] = useState(520)
+  const updateBoardSize = (delta: number) => {
+    setBoardSize(prev => Math.min(Math.max(prev + delta, 360), 600))
+  }
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -264,9 +308,12 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
             completePuzzle()
           } else {
             setStatus('playing')
-            if (hintActiveRef.current) {
+            if (hintLevelRef.current >= 2) {
               const newHint = calculateHint(opponentGame, nextIndex)
-              setHintArrow(newHint)
+              if (newHint) {
+                setHintArrow(newHint)
+                setHighlightSquares([newHint.from, newHint.to])
+              }
             }
           }
         } else {
@@ -302,6 +349,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
         setGame(gameCopy)
         setLastMove({ from, to })
         setHintArrow(null)
+        setHighlightSquares([])
         setMoveHistory(prev => [...prev, move.san])
         
         const nextMoveIndex = moveIndex + 1
@@ -345,24 +393,43 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     setStatus('playing')
     setLastMove(null)
     setHintArrow(null)
-    setHintActive(false)
-    hintActiveRef.current = false
+    setHighlightSquares([])
+    setHintLevel(0)
+    hintLevelRef.current = 0
     setMoveHistory([])
     setTimer(0)
     processingRef.current = false
+    hadWrongMoveRef.current = false
     if (timerRef.current) clearInterval(timerRef.current)
     timerRef.current = setInterval(() => setTimer(prev => prev + 1), 1000)
   }, [puzzle.fen, playSound])
 
   const handleShowHint = useCallback(() => {
+    if (hintLevel >= 3) return
     playSound('click')
+    const nextLevel = hintLevel + 1
+    setHintLevel(nextLevel)
+    hintLevelRef.current = nextLevel
     const hint = calculateHint(game, moveIndex)
-    if (hint) {
+    if (!hint) return
+
+    if (nextLevel === 1) {
+      setHighlightSquares([hint.from])
+      setHintArrow(null)
+    } else if (nextLevel === 2) {
+      setHighlightSquares([hint.from, hint.to])
+      setHintArrow(null)
+    } else {
       setHintArrow(hint)
-      setHintActive(true)
-      hintActiveRef.current = true
+      setHighlightSquares([hint.from, hint.to])
     }
-  }, [game, moveIndex, calculateHint, playSound])
+  }, [game, moveIndex, calculateHint, hintLevel, playSound])
+
+  const hintButtonLabel =
+    hintLevel === 0 ? 'Hint: Piece' :
+    hintLevel === 1 ? 'Hint: Target' :
+    hintLevel === 2 ? 'Hint: Full' : 'Active'
+  const hintXPCost = hintLevel * 5
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -386,15 +453,15 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
           className="space-y-6"
         >
           <button
-            onClick={() => {
-              playSound('click')
-              onBack()
-            }}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            Back to puzzles
-          </button>
+              onClick={() => {
+                playSound('click')
+                onBack()
+              }}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              Back to puzzles
+            </button>
 
           <div className="glass-card p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -453,11 +520,14 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
           <div className="flex gap-3">
             <motion.button
               onClick={handleShowHint}
-              disabled={status !== 'playing'}
-              className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground font-medium flex items-center justify-center gap-2 hover:bg-secondary/80 disabled:opacity-50 transition-all"
+              disabled={status !== 'playing' || hintLevel >= 3}
+              className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground font-medium flex flex-col items-center justify-center gap-1 hover:bg-secondary/80 disabled:opacity-50 transition-all"
             >
-              <Lightbulb className="w-5 h-5" />
-              Hint
+              <div className="flex items-center gap-1.5">
+                <Lightbulb className="w-4 h-4" />
+                <span className="text-sm">{hintButtonLabel}</span>
+              </div>
+              {hintXPCost > 0 && <span className="text-[10px] text-orange-400">-{hintXPCost} XP</span>}
             </motion.button>
             <motion.button
               onClick={handleRetry}
@@ -466,6 +536,13 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
               <RefreshCw className="w-5 h-5" />
               Retry
             </motion.button>
+            <button
+              onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
+              className="px-3 py-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 transition-all"
+              title={settings.soundEnabled ? 'Mute' : 'Unmute'}
+            >
+              {settings.soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            </button>
           </div>
         </motion.div>
 
@@ -520,20 +597,35 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
               </motion.div>
             </AnimatePresence>
 
-            {/* Chessboard */}
-            <div className="flex justify-center">
-              <Chessboard
-                fen={game.fen()}
-                onMove={handleMove}
-                orientation={puzzle.playerColor || 'white'}
-                interactive={status === 'playing'}
-                size={560}
-                highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
-                showHint={hintArrow}
-                isCheck={game.isCheck()}
-                boardStyle={settings.boardStyle}
-                pieceStyle={settings.pieceStyle}
-              />
+            {/* Chessboard with eval bar */}
+            <div className="flex justify-center items-stretch gap-3">
+              <EvalBar game={game} size={boardSize} thickness={20} vertical />
+              <div>
+                <Chessboard
+                  fen={game.fen()}
+                  onMove={handleMove}
+                  orientation={puzzle.playerColor || 'white'}
+                  interactive={status === 'playing'}
+                  size={boardSize}
+                  highlightSquares={highlightSquares.length > 0 ? highlightSquares : (lastMove ? [lastMove.from, lastMove.to] : [])}
+                  showHint={hintArrow}
+                  isCheck={game.isCheck()}
+                  boardStyle={settings.boardStyle}
+                  pieceStyle={settings.pieceStyle}
+                  allowArrowDrawing
+                />
+              </div>
+            </div>
+
+            {/* Board size controls */}
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <button onClick={() => updateBoardSize(-20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
+                <Minus className="w-3 h-3 text-muted-foreground" />
+              </button>
+              <span className="text-[11px] text-muted-foreground font-mono w-16 text-center">{boardSize}px</span>
+              <button onClick={() => updateBoardSize(20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
+                <Plus className="w-3 h-3 text-muted-foreground" />
+              </button>
             </div>
 
             {/* Complete Actions */}
@@ -591,5 +683,163 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
         </motion.div>
       </div>
     </motion.div>
+  )
+}
+
+function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => void }) {
+  const { addXP, incrementPuzzlesSolved } = useGame()
+  const { settings } = useSettings()
+  const { playSound } = useSoundAndHaptics()
+  const [timeLeft, setTimeLeft] = useState(minutes * 60)
+  const [solved, setSolved] = useState(0)
+  const [failed, setFailed] = useState(0)
+  const [puzzleIdx, setPuzzleIdx] = useState(() => Math.floor(Math.random() * PUZZLES.length))
+  const [game, setGame] = useState(() => new Chess(PUZZLES[puzzleIdx].fen))
+  const [moveIndex, setMoveIndex] = useState(0)
+  const [status, setStatus] = useState<'playing' | 'correct' | 'wrong' | 'done' | 'opponent-moving'>('playing')
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
+  const processingRef = useRef(false)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const puzzle = PUZZLES[puzzleIdx]
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!)
+          setStatus('done')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [])
+
+  const nextPuzzle = useCallback(() => {
+    const nextIdx = (puzzleIdx + 1) % PUZZLES.length
+    setPuzzleIdx(nextIdx)
+    setGame(new Chess(PUZZLES[nextIdx].fen))
+    setMoveIndex(0)
+    setLastMove(null)
+    setStatus('playing')
+    processingRef.current = false
+  }, [puzzleIdx])
+
+  const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
+    if (status !== 'playing' || processingRef.current) return false
+    processingRef.current = true
+
+    const expectedMove = puzzle.moves[moveIndex]
+    if (!expectedMove) { processingRef.current = false; return false }
+
+    try {
+      const gameCopy = new Chess(game.fen())
+      const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
+      if (!move) { processingRef.current = false; return false }
+
+      if (move.san === expectedMove) {
+        setGame(gameCopy)
+        setLastMove({ from, to })
+        const nextIdx = moveIndex + 1
+        if (nextIdx >= puzzle.moves.length) {
+          setSolved(s => s + 1)
+          addXP(puzzle.xpReward)
+          incrementPuzzlesSolved()
+          playSound('success')
+          setTimeout(() => nextPuzzle(), 800)
+        } else {
+          setMoveIndex(nextIdx)
+          setStatus('correct')
+          playSound('move')
+          setTimeout(() => {
+            try {
+              const opGame = new Chess(gameCopy.fen())
+              const opMove = opGame.move(puzzle.moves[nextIdx])
+              if (opMove) {
+                setGame(opGame)
+                setLastMove({ from: opMove.from, to: opMove.to })
+                setMoveIndex(nextIdx + 1)
+              }
+              setStatus('playing')
+            } catch { setStatus('playing') }
+            processingRef.current = false
+          }, 500)
+          return true
+        }
+        processingRef.current = false
+        return true
+      } else {
+        setFailed(f => f + 1)
+        setStatus('wrong')
+        playSound('fail')
+        processingRef.current = false
+        setTimeout(() => nextPuzzle(), 1000)
+        return false
+      }
+    } catch { processingRef.current = false; return false }
+  }, [status, game, moveIndex, puzzle, addXP, incrementPuzzlesSolved, nextPuzzle, playSound])
+
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
+
+  if (status === 'done') {
+    return (
+      <div className="p-8 max-w-2xl mx-auto text-center">
+        <div className="glass-card p-10">
+          <Trophy className="w-16 h-16 text-amber-400 mx-auto mb-4" />
+          <h2 className="text-3xl font-bold text-foreground mb-2">Puzzle Rush Over!</h2>
+          <p className="text-muted-foreground mb-6">{minutes} minute challenge complete</p>
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="glass-card p-5 text-center">
+              <p className="text-4xl font-bold text-primary">{solved}</p>
+              <p className="text-sm text-muted-foreground">Solved</p>
+            </div>
+            <div className="glass-card p-5 text-center">
+              <p className="text-4xl font-bold text-red-400">{failed}</p>
+              <p className="text-sm text-muted-foreground">Failed</p>
+            </div>
+          </div>
+          <button onClick={onBack} className="px-8 py-3 rounded-xl bg-primary text-primary-foreground font-semibold">
+            Back to Puzzles
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-8 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft className="w-5 h-5" /> Exit Rush
+        </button>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 font-bold">
+            <Check className="w-4 h-4" /> {solved}
+          </div>
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-xl ${timeLeft < 30 ? 'bg-red-500/10 text-red-400' : 'bg-secondary text-foreground'}`}>
+            <Timer className="w-5 h-5" /> {formatTime(timeLeft)}
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 font-bold">
+            <X className="w-4 h-4" /> {failed}
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-center">
+        <Chessboard
+          fen={game.fen()}
+          onMove={handleMove}
+          orientation={puzzle.playerColor || 'white'}
+          interactive={status === 'playing'}
+          size={500}
+          highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
+          isCheck={game.isCheck()}
+          boardStyle={settings.boardStyle}
+          pieceStyle={settings.pieceStyle}
+          allowArrowDrawing
+        />
+      </div>
+    </div>
   )
 }

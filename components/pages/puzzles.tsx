@@ -260,6 +260,10 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     })
   }
 
+  // Keyboard move input
+  const [keyboardInput, setKeyboardInput] = useState('')
+  const [keyboardError, setKeyboardError] = useState(false)
+
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setTimer(prev => prev + 1)
@@ -603,6 +607,50 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
           <Plus className="w-3 h-3 text-muted-foreground" />
         </button>
       </div>
+
+      {/* Keyboard move input */}
+      {status === 'playing' && (
+        <div className="flex items-center gap-2 px-1">
+          <input
+            type="text"
+            value={keyboardInput}
+            onChange={e => setKeyboardInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                const input = keyboardInput.trim()
+                if (!input) return
+                let success = false
+                try {
+                  const gameCopy = new Chess(game.fen())
+                  const move = gameCopy.move(input)
+                  if (move) {
+                    success = handleMove(move.from, move.to, move.promotion)
+                  }
+                } catch {
+                  if (input.length >= 4) {
+                    const from = input.slice(0, 2)
+                    const to = input.slice(2, 4)
+                    const promotion = input.length > 4 ? input[4] : undefined
+                    success = handleMove(from, to, promotion)
+                  }
+                }
+                if (success) {
+                  setKeyboardInput('')
+                  setKeyboardError(false)
+                } else {
+                  setKeyboardError(true)
+                  setTimeout(() => setKeyboardError(false), 1500)
+                }
+              }
+            }}
+            placeholder="Type move (e.g. e2e4, Nf3)"
+            className={`flex-1 px-3 py-1.5 rounded-lg bg-secondary text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 transition-all ${
+              keyboardError ? 'ring-1 ring-destructive animate-shake' : 'ring-primary/30 focus:ring-primary'
+            }`}
+          />
+        </div>
+      )}
 
       {/* Status feedback */}
       <AnimatePresence mode="wait">

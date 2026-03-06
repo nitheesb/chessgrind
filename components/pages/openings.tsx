@@ -119,6 +119,17 @@ export function OpeningsPage({ onBack }: OpeningsPageProps) {
               </div>
               <p className="text-sm font-semibold text-foreground truncate">{opening.name}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{opening.description}</p>
+              {/* Win rate bar */}
+              <div className="mt-1.5 flex items-center gap-0.5 h-1.5 rounded-full overflow-hidden" title={`White ${opening.winRate.white}% | Draw ${opening.winRate.draw}% | Black ${opening.winRate.black}%`}>
+                <div className="bg-white h-full rounded-l-full" style={{ width: `${opening.winRate.white}%` }} />
+                <div className="bg-zinc-500 h-full" style={{ width: `${opening.winRate.draw}%` }} />
+                <div className="bg-zinc-900 h-full rounded-r-full border border-white/10" style={{ width: `${opening.winRate.black}%` }} />
+              </div>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-[9px] text-white/70">W{opening.winRate.white}%</span>
+                <span className="text-[9px] text-muted-foreground">D{opening.winRate.draw}%</span>
+                <span className="text-[9px] text-white/40">B{opening.winRate.black}%</span>
+              </div>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </button>
@@ -259,12 +270,16 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-0.5">
+            <span>Openings</span>
+            <ChevronRight className="w-3 h-3 shrink-0" />
+            <span className="truncate">{opening.name}</span>
+          </div>
           <div className="flex items-center gap-2">
             <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary text-muted-foreground">
               {opening.eco}
             </span>
           </div>
-          <h1 className="text-lg font-bold text-foreground truncate mt-0.5">{opening.name}</h1>
         </div>
       </div>
 

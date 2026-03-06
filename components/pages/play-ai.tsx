@@ -34,6 +34,37 @@ interface PlayAIProps {
   onBack: () => void
 }
 
+function CheckmateCelebration({ show }: { show: boolean }) {
+  if (!show) return null
+  const colors = ['#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6', '#06b6d4']
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
+      {Array.from({ length: 20 }, (_, i) => {
+        const color = colors[i % colors.length]
+        const left = 30 + Math.random() * 40
+        const delay = Math.random() * 0.5
+        const duration = 1 + Math.random() * 1
+        const size = 6 + Math.random() * 8
+        return (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${left}%`,
+              top: '45%',
+              width: size,
+              height: size,
+              borderRadius: '50%',
+              backgroundColor: color,
+              animation: `confetti-fly-${i % 4} ${duration}s ${delay}s ease-out forwards`,
+            }}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
 type TimeControl = { label: string; minutes: number; increment: number }
 
 const TIME_CONTROLS: TimeControl[] = [
@@ -245,16 +276,21 @@ function GameSession({
   timeControl: TimeControl
   onBack: () => void
 }) {
-  const { addXP, incrementGamesPlayed } = useGame()
+  const { addXP, incrementGamesPlayed, addRecentGame } = useGame()
   const { settings, updateSetting } = useSettings()
   const [game, setGame] = useState(() => new Chess())
   const [gameOver, setGameOver] = useState(false)
   const [result, setResult] = useState<string>('')
   const [playerWon, setPlayerWon] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
   const [moveHistory, setMoveHistory] = useState<string[]>([])
   const [isThinking, setIsThinking] = useState(false)
   const [showResignConfirm, setShowResignConfirm] = useState(false)
+  const [premove, setPremove] = useState<{ from: string; to: string; promotion?: string } | null>(null)
+  const [notationView, setNotationView] = useState<'list' | 'condensed'>('list')
+  const [copiedPGN, setCopiedPGN] = useState(false)
+  const notationRef = useRef<HTMLDivElement>(null)
 
   // Board size state (Feature 5)
   const [boardSize, setBoardSize] = useState(() => {
@@ -271,6 +307,10 @@ function GameSession({
       return next
     })
   }
+
+  // Keyboard move input
+  const [keyboardInput, setKeyboardInput] = useState('')
+  const [keyboardError, setKeyboardError] = useState(false)
 
   // Timer state
   const [whiteTime, setWhiteTime] = useState(timeControl.minutes * 60)
@@ -316,14 +356,24 @@ function GameSession({
     setGameOver(true)
     setResult(reason)
     setPlayerWon(playerIsWinner)
+    setPremove(null)
     incrementGamesPlayed()
     if (playerIsWinner) {
       addXP(20 + aiLevel * 10)
+      setShowCelebration(true)
+      setTimeout(() => setShowCelebration(false), 2000)
     } else {
       addXP(5)
     }
     if (timerRef.current) clearInterval(timerRef.current)
-  }, [addXP, incrementGamesPlayed, aiLevel])
+    addRecentGame({
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+      result: playerIsWinner ? 'win' : (reason === 'Draw' || reason === 'Stalemate') ? 'draw' : 'loss',
+      opponent: aiConfig.name,
+      moves: moveHistory.length,
+    })
+  }, [addXP, incrementGamesPlayed, aiLevel, addRecentGame, aiConfig.name, moveHistory.length])
 
   // Simple AI move using minimax with alpha-beta pruning
   const makeAIMove = useCallback((currentGame: Chess) => {
@@ -468,7 +518,12 @@ function GameSession({
   }, [isPlayerTurn, gameOver])
 
   const handlePlayerMove = useCallback((from: string, to: string, promotion?: string): boolean => {
-    if (!isPlayerTurn || gameOver) return false
+    if (gameOver) return false
+    // Store as premove when it's AI's turn
+    if (!isPlayerTurn) {
+      setPremove({ from, to, promotion })
+      return true // optimistic
+    }
 
     try {
       const gameCopy = new Chess(game.fen())
@@ -503,6 +558,26 @@ function GameSession({
     }
   }, [game, isPlayerTurn, gameOver, playerColor, timeControl.increment, handleGameEnd])
 
+  // Execute premove when it becomes player's turn
+  useEffect(() => {
+    if (isPlayerTurn && premove && !gameOver) {
+      const { from, to, promotion } = premove
+      setPremove(null)
+      try {
+        const gameCopy = new Chess(game.fen())
+        const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
+        if (!move) return // premove was illegal, silently discard
+        setGame(gameCopy)
+        setLastMove({ from, to })
+        setMoveHistory(prev => [...prev, move.san])
+        if (gameCopy.isCheckmate()) handleGameEnd('Checkmate', true)
+        else if (gameCopy.isDraw()) handleGameEnd('Draw', false)
+        else if (gameCopy.isStalemate()) handleGameEnd('Stalemate', false)
+      } catch { /* illegal premove — discard */ }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlayerTurn])
+
   const handleResign = useCallback(() => {
     handleGameEnd('Resignation', false)
     setShowResignConfirm(false)
@@ -517,9 +592,38 @@ function GameSession({
     setMoveHistory([])
     setIsThinking(false)
     setShowResignConfirm(false)
+    setPremove(null)
     setWhiteTime(timeControl.minutes * 60)
     setBlackTime(timeControl.minutes * 60)
   }, [timeControl.minutes])
+
+  const generatePGN = useCallback(() => {
+    const date = new Date().toISOString().split('T')[0].replace(/-/g, '.')
+    let pgnResult = '*'
+    if (result === 'Draw' || result === 'Stalemate') pgnResult = '1/2-1/2'
+    else if (playerWon) pgnResult = playerColor === 'w' ? '1-0' : '0-1'
+    else if (gameOver) pgnResult = playerColor === 'w' ? '0-1' : '1-0'
+    const headers = [
+      '[Event "ChessVault Game"]',
+      `[Date "${date}"]`,
+      `[White "${playerColor === 'w' ? 'You' : aiConfig.name}"]`,
+      `[Black "${playerColor === 'b' ? 'You' : aiConfig.name}"]`,
+      `[Result "${pgnResult}"]`,
+    ].join('\n')
+    const movePairs = Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => {
+      const w = moveHistory[i * 2] || ''
+      const b = moveHistory[i * 2 + 1] ? ' ' + moveHistory[i * 2 + 1] : ''
+      return `${i + 1}. ${w}${b}`
+    })
+    return `${headers}\n\n${movePairs.join(' ')} ${pgnResult}`
+  }, [result, playerWon, playerColor, gameOver, aiConfig.name, moveHistory])
+
+  // Auto-scroll notation to latest move
+  useEffect(() => {
+    if (notationRef.current) {
+      notationRef.current.scrollTop = notationRef.current.scrollHeight
+    }
+  }, [moveHistory.length])
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
@@ -533,6 +637,7 @@ function GameSession({
       animate={{ opacity: 1, x: 0 }}
       className="flex flex-col gap-3 pb-8"
     >
+      <CheckmateCelebration show={showCelebration} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -607,6 +712,7 @@ function GameSession({
             isCheck={game.isCheck()}
             boardStyle={settings.boardStyle}
             pieceStyle={settings.pieceStyle}
+            arrows={premove ? [{ from: premove.from, to: premove.to, color: 'orange' }] : []}
           />
         </div>
       </div>
@@ -621,6 +727,52 @@ function GameSession({
           <Plus className="w-3.5 h-3.5 text-muted-foreground" />
         </button>
       </div>
+
+      {/* Keyboard move input */}
+      {!gameOver && (
+        <div className="flex items-center gap-2 px-1">
+          <input
+            type="text"
+            value={keyboardInput}
+            onChange={e => setKeyboardInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                const input = keyboardInput.trim()
+                if (!input) return
+                let success = false
+                try {
+                  // Try SAN notation first
+                  const gameCopy = new Chess(game.fen())
+                  const move = gameCopy.move(input)
+                  if (move) {
+                    success = handlePlayerMove(move.from, move.to, move.promotion)
+                  }
+                } catch {
+                  // Try coordinate notation (e.g. e2e4, e7e8q)
+                  if (input.length >= 4) {
+                    const from = input.slice(0, 2)
+                    const to = input.slice(2, 4)
+                    const promotion = input.length > 4 ? input[4] : undefined
+                    success = handlePlayerMove(from, to, promotion)
+                  }
+                }
+                if (success) {
+                  setKeyboardInput('')
+                  setKeyboardError(false)
+                } else {
+                  setKeyboardError(true)
+                  setTimeout(() => setKeyboardError(false), 1500)
+                }
+              }
+            }}
+            placeholder="Type move (e.g. e2e4, Nf3)"
+            className={`flex-1 px-3 py-1.5 rounded-lg bg-secondary text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 transition-all ${
+              keyboardError ? 'ring-1 ring-destructive animate-shake' : 'ring-primary/30 focus:ring-primary'
+            }`}
+          />
+        </div>
+      )}
 
       {/* Player info (bottom) */}
       <div className="flex items-center justify-between glass-card p-3">
@@ -651,6 +803,14 @@ function GameSession({
             <span className="text-xs text-muted-foreground">
               {isPlayerTurn ? 'Your turn' : 'AI is thinking...'}
             </span>
+            {premove && (
+              <button
+                onClick={() => setPremove(null)}
+                className="ml-1 px-2 py-0.5 rounded bg-orange-500/10 border border-orange-500/30 text-orange-400 text-[10px] font-medium"
+              >
+                Pre-move: cancel
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -759,6 +919,34 @@ function GameSession({
                 Rematch
               </button>
             </div>
+            <div className="flex items-center gap-2 w-full">
+              <button
+                onClick={() => {
+                  const pgn = generatePGN()
+                  const blob = new Blob([pgn], { type: 'text/plain' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `chessvault-game-${Date.now()}.pgn`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                }}
+                className="flex-1 py-2 rounded-lg bg-secondary text-muted-foreground text-xs font-medium hover:text-foreground transition-colors"
+              >
+                ↓ Download PGN
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(generatePGN()).then(() => {
+                    setCopiedPGN(true)
+                    setTimeout(() => setCopiedPGN(false), 2000)
+                  })
+                }}
+                className="flex-1 py-2 rounded-lg bg-secondary text-muted-foreground text-xs font-medium hover:text-foreground transition-colors"
+              >
+                {copiedPGN ? '✓ Copied!' : '⎘ Copy PGN'}
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -766,16 +954,54 @@ function GameSession({
       {/* Move History */}
       {moveHistory.length > 0 && (
         <div className="glass-card p-3">
-          <p className="text-xs text-muted-foreground font-medium mb-2">Moves</p>
-          <div className="flex flex-wrap gap-x-1 gap-y-0.5 max-h-24 overflow-y-auto">
-            {moveHistory.map((move, idx) => (
-              <span key={idx} className="inline-flex items-center gap-0.5">
-                {idx % 2 === 0 && (
-                  <span className="text-[10px] text-muted-foreground">{Math.floor(idx / 2) + 1}.</span>
-                )}
-                <span className="text-xs font-mono text-foreground">{move}</span>
-              </span>
-            ))}
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-muted-foreground font-medium">Moves ({Math.ceil(moveHistory.length / 2)})</p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setNotationView('list')}
+                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${notationView === 'list' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                List
+              </button>
+              <button
+                onClick={() => setNotationView('condensed')}
+                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${notationView === 'condensed' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Compact
+              </button>
+            </div>
+          </div>
+          <div ref={notationRef} className="max-h-32 overflow-y-auto scrollbar-hide">
+            {notationView === 'list' ? (
+              <div className="space-y-0.5">
+                {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => {
+                  const isLastPair = i === Math.ceil(moveHistory.length / 2) - 1
+                  return (
+                    <div key={i} className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono ${isLastPair ? 'bg-primary/10' : ''}`}>
+                      <span className="text-muted-foreground w-5 text-right shrink-0">{i + 1}.</span>
+                      <span className={`w-14 ${isLastPair && moveHistory.length % 2 !== 0 ? 'text-primary font-bold' : 'text-foreground'}`}>{moveHistory[i * 2]}</span>
+                      {moveHistory[i * 2 + 1] && (
+                        <span className={`w-14 ${isLastPair ? 'text-primary font-bold' : 'text-foreground/70'}`}>{moveHistory[i * 2 + 1]}</span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-x-1 gap-y-0.5">
+                {moveHistory.map((move, idx) => {
+                  const isLast = idx === moveHistory.length - 1
+                  return (
+                    <span key={idx} className="inline-flex items-center gap-0.5">
+                      {idx % 2 === 0 && (
+                        <span className="text-[10px] text-muted-foreground">{Math.floor(idx / 2) + 1}.</span>
+                      )}
+                      <span className={`text-xs font-mono ${isLast ? 'text-primary font-bold' : 'text-foreground'}`}>{move}</span>
+                    </span>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

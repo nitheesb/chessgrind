@@ -19,8 +19,19 @@ import {
 } from 'lucide-react'
 import { AnimatedCounter } from '@/components/ui/animated-components'
 import { TiltCard, OdometerCounter, RevealGrid } from '@/components/ui/effects'
+import { ActivityHeatmap } from '@/components/ui/activity-heatmap'
+import { RatingGraph } from '@/components/ui/rating-graph'
 
-
+function getTimeAgo(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return `${diffDays}d ago`
+  return `${Math.floor(diffDays / 7)}w ago`
+}
 
 interface DesktopProfileProps {
   onNavigate: (page: string) => void
@@ -140,6 +151,51 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
           ))}
         </RevealGrid>
       </div>
+
+      {/* Activity Heatmap */}
+      <div className="mb-8">
+        <h2 className="text-lg font-display font-semibold text-foreground mb-4">Activity</h2>
+        <div className="glass-card p-6">
+          <ActivityHeatmap activityDates={profile.activityDates} />
+        </div>
+      </div>
+
+      {/* Rating Graph */}
+      {profile.puzzleRatingHistory && profile.puzzleRatingHistory.length > 2 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-display font-semibold text-foreground mb-4">Puzzle Rating History</h2>
+          <div className="glass-card p-6">
+            <RatingGraph data={profile.puzzleRatingHistory} width={600} height={120} />
+          </div>
+        </div>
+      )}
+
+      {/* Recent Games */}
+      {profile.recentGames && profile.recentGames.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-display font-semibold text-foreground mb-4">Recent Games</h2>
+          <div className="glass-card p-6">
+            <div className="flex flex-col gap-1">
+              {profile.recentGames.slice(0, 8).map((game) => (
+                <div key={game.id} className="flex items-center gap-3 py-2 border-b border-border/20 last:border-0">
+                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                    game.result === 'win' ? 'bg-emerald-500/10 text-emerald-400' :
+                    game.result === 'draw' ? 'bg-amber-500/10 text-amber-400' :
+                    'bg-red-500/10 text-red-400'
+                  }`}>
+                    {game.result === 'win' ? 'W' : game.result === 'draw' ? 'D' : 'L'}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">vs {game.opponent}</p>
+                    <p className="text-xs text-muted-foreground">{game.moves} moves</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">{getTimeAgo(game.date)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Weakness Analysis */}
       {Object.keys(profile.failedPuzzleThemes || {}).length > 0 && (

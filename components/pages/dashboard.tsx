@@ -10,6 +10,8 @@ import { XPBar, StatCard } from '@/components/ui/xp-animations'
 import { MiniChessboard } from '@/components/chess/chessboard'
 import { StreakWarning, NextAchievementPreview } from '@/components/ui/game-rewards'
 import { PUZZLES, OPENINGS } from '@/lib/chess-data'
+import { ActivityHeatmap } from '@/components/ui/activity-heatmap'
+import { WeeklyMissions } from '@/components/ui/weekly-missions'
 import {
   Trophy,
   Flame,
@@ -33,6 +35,32 @@ import {
 } from '@/components/ui/animated-components'
 import { OdometerCounter, TypewriterText } from '@/components/ui/effects'
 
+function getTimeAgo(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return `${diffDays}d ago`
+  return `${Math.floor(diffDays / 7)}w ago`
+}
+
+const CHESS_TIPS = [
+  "Control the center with pawns and pieces in the opening.",
+  "Knights are better in closed positions, bishops in open ones.",
+  "Don't move the same piece twice in the opening.",
+  "Castle early to protect your king.",
+  "Rooks belong on open files and the 7th rank.",
+  "In endgames, your king becomes a powerful piece.",
+  "Always ask 'Why did my opponent make that move?' before responding.",
+  "Passed pawns must be pushed!",
+  "Coordinate your pieces — a team effort wins games.",
+  "Tactics flow from a strategically superior position.",
+  "Every pawn move creates permanent weaknesses.",
+  "The threat is often stronger than the execution.",
+]
+
 interface DashboardProps {
   onNavigate: (page: string) => void
 }
@@ -46,6 +74,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   const dailyPuzzleIndex = getDailyPuzzleIndex(PUZZLES.length)
   const dailyPuzzle = PUZZLES[dailyPuzzleIndex]
+
+  const today = new Date()
+  const startOfYear = new Date(today.getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((today.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24))
+  const tip = CHESS_TIPS[dayOfYear % CHESS_TIPS.length]
 
   // Auto-claim daily bonus on first dashboard load
   useEffect(() => {
@@ -218,6 +251,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         ))}
       </motion.div>
 
+      {/* Weekly Missions */}
+      {profile.weeklyMissions.length > 0 && (
+        <motion.div variants={staggerItem}>
+          <h2 className="text-sm font-semibold text-foreground shimmer-text mb-2">Weekly Missions</h2>
+          <WeeklyMissions missions={profile.weeklyMissions} />
+        </motion.div>
+      )}
+
       {/* Streak Widget */}
       <motion.div variants={staggerItem} className="breathing-glow bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl p-4">
         <div className="flex items-center justify-between">
@@ -226,7 +267,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <Flame className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={profile.streak} /></p>
+              <p className="text-2xl font-bold text-foreground flex items-center gap-1"><AnimatedCounter value={profile.streak} /> <span className="text-xl">🔥</span></p>
               <p className="text-xs text-muted-foreground">Day Streak</p>
             </div>
           </div>
@@ -235,21 +276,40 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <p className="text-[10px] text-muted-foreground">Best Streak</p>
           </div>
         </div>
-        {/* Streak dots for last 7 days */}
+        {/* 7-day visual tracker showing actual Mon-Sun */}
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-amber-500/10">
-          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => {
-            const isActive = idx < profile.streak % 7 || (profile.streak >= 7 && true)
-            return (
-              <div key={idx} className="flex flex-col items-center gap-1">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${isActive
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-secondary text-muted-foreground'
+          {(() => {
+            const today = new Date()
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            // Get current week Mon-Sun
+            const weekDates = Array.from({ length: 7 }, (_, i) => {
+              const d = new Date(today)
+              const dow = today.getDay() === 0 ? 6 : today.getDay() - 1 // 0=Mon
+              d.setDate(today.getDate() - dow + i)
+              return d
+            })
+            return weekDates.map((date, idx) => {
+              const dateKey = date.toDateString()
+              const isToday = date.toDateString() === today.toDateString()
+              const hasActivity = (profile.activityDates[dateKey] || 0) > 0
+              const isFuture = date > today
+              return (
+                <div key={idx} className="flex flex-col items-center gap-1">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                    isFuture ? 'bg-secondary/30 text-muted-foreground/30' :
+                    hasActivity ? 'bg-amber-500 text-white shadow-[0_0_8px_rgba(245,158,11,0.4)]' :
+                    isToday ? 'bg-secondary border border-amber-500/40 text-amber-500' :
+                    'bg-secondary text-muted-foreground'
                   }`}>
-                  {isActive ? '✓' : day}
+                    {hasActivity ? '✓' : days[idx].charAt(0)}
+                  </div>
+                  <span className={`text-[9px] ${isToday ? 'text-amber-400' : 'text-muted-foreground/50'}`}>
+                    {days[idx]}
+                  </span>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })
+          })()}
         </div>
       </motion.div>
 
@@ -265,7 +325,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </div>
         <motion.button
           onClick={() => handleNavigate('puzzles')}
-          className="w-full glass-card-hover group relative overflow-hidden rounded-xl p-3 flex items-center gap-3 text-left border border-white/5 hover:border-white/10"
+          className={`w-full glass-card-hover group relative overflow-hidden rounded-xl p-3 flex items-center gap-3 text-left border hover:border-white/10 ${
+            profile.dailyChallengeCompleted ? 'border-emerald-500/30' : 'border-white/5'
+          }`}
         >
           {/* Subtle accent glow */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4 group-hover:bg-primary/10 transition-colors duration-500" />
@@ -286,6 +348,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="w-3.5 h-3.5 text-amber-500" />
               <span className="text-xs font-medium text-amber-500">Today's Puzzle</span>
+              {profile.dailyChallengeCompleted && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-semibold">✓ Done today</span>
+              )}
             </div>
             <p className="text-sm font-semibold text-foreground truncate">{dailyPuzzle.title}</p>
             <div className="flex items-center gap-1 mt-1">
@@ -304,6 +369,36 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </ProgressRing>
         </motion.button>
       </motion.div>
+
+      {/* Recent Games */}
+      {profile.recentGames.length > 0 && (
+        <motion.div variants={staggerItem}>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold text-foreground shimmer-text">Recent Games</h2>
+            <button onClick={() => handleNavigate('profile')} className="text-xs text-primary font-medium">
+              View All
+            </button>
+          </div>
+          <div className="glass-card p-3 flex flex-col gap-1">
+            {profile.recentGames.slice(0, 3).map((game) => (
+              <div key={game.id} className="flex items-center gap-3 py-1.5 border-b border-border/20 last:border-0">
+                <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                  game.result === 'win' ? 'bg-emerald-500/10 text-emerald-400' :
+                  game.result === 'draw' ? 'bg-amber-500/10 text-amber-400' :
+                  'bg-red-500/10 text-red-400'
+                }`}>
+                  {game.result === 'win' ? 'W' : game.result === 'draw' ? 'D' : 'L'}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-foreground truncate">vs {game.opponent}</p>
+                  <p className="text-[10px] text-muted-foreground">{game.moves} moves</p>
+                </div>
+                <span className="text-[10px] text-muted-foreground shrink-0">{getTimeAgo(game.date)}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Continue Learning */}
       <motion.div variants={staggerItem}>
@@ -356,6 +451,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             />
           </div>
         </div>
+        {/* Activity compact heatmap */}
+        <div className="glass-card p-3 mt-2">
+          <p className="text-[10px] text-muted-foreground font-medium mb-2">Activity (last 52 weeks)</p>
+          <ActivityHeatmap activityDates={profile.activityDates} compact />
+        </div>
       </motion.div>
 
       {/* Achievements */}
@@ -381,6 +481,17 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               {achievement.earned ? achievement.icon : '🔒'}
             </div>
           ))}
+        </div>
+      </motion.div>
+
+      {/* Chess Tip of the Day */}
+      <motion.div variants={staggerItem} className="rounded-xl bg-blue-500/5 border border-blue-500/15 p-4">
+        <div className="flex items-start gap-3">
+          <span className="text-xl">💡</span>
+          <div>
+            <p className="text-xs font-semibold text-blue-400 mb-1">Chess Tip</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{tip}</p>
+          </div>
         </div>
       </motion.div>
     </motion.div>

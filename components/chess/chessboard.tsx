@@ -47,6 +47,17 @@ const squareToIndex = (square: string) => ({
 const indexToSquare = (row: number, col: number) =>
   String.fromCharCode(97 + col) + (8 - row)
 
+function getPieceName(piece: string): string {
+  const names: Record<string, string> = { K: 'King', Q: 'Queen', R: 'Rook', B: 'Bishop', N: 'Knight', P: 'Pawn' }
+  return names[piece[1]] || piece
+}
+
+const PIECE_SYMBOLS: Record<string, string> = {
+  wK: '♔', wQ: '♕', wR: '♖', wB: '♗', wN: '♘', wP: '♙',
+  bK: '♚', bQ: '♛', bR: '♜', bB: '♝', bN: '♞', bP: '♟',
+}
+const LONG_PRESS_VALUES: Record<string, number> = { K: 0, Q: 9, R: 5, B: 3, N: 3, P: 1 }
+
 // Memoized square component for performance
 const Square = memo(function Square({
   row,
@@ -65,6 +76,8 @@ const Square = memo(function Square({
   interactive,
   theme,
   pieceStyle,
+  square,
+  onKeyDown,
 }: {
   row: number
   col: number
@@ -82,6 +95,8 @@ const Square = memo(function Square({
   interactive: boolean
   theme: typeof BOARD_THEMES[BoardStyle]
   pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+  square: string
+  onKeyDown?: (e: React.KeyboardEvent, sq: string) => void
 }) {
   // Determine background color
   let bg = isLight ? theme.light : theme.dark
@@ -89,8 +104,13 @@ const Square = memo(function Square({
     bg = isLight ? theme.selectedLight : theme.selectedDark
   }
 
+  const ariaLabel = square + (piece ? `, ${piece[0] === 'w' ? 'white' : 'black'} ${getPieceName(piece)}` : '')
+
   return (
     <div
+      role="gridcell"
+      aria-label={ariaLabel}
+      tabIndex={interactive ? 0 : -1}
       className={interactive ? 'cursor-pointer' : ''}
       style={{
         position: 'absolute',
@@ -104,6 +124,7 @@ const Square = memo(function Square({
       onTouchStart={onTouchStart}
       onMouseDown={onMouseDown}
       onMouseUp={onMouseUp}
+      onKeyDown={onKeyDown ? (e) => onKeyDown(e, square) : undefined}
     >
       {/* Check indicator on king */}
       {isInCheck && (
@@ -364,9 +385,11 @@ export function Chessboard({
   const [dragPiece, setDragPiece] = useState<{ piece: string; from: string; x: number; y: number } | null>(null)
   const [animating, setAnimating] = useState<{ piece: string; from: string; to: string } | null>(null)
   const [promotionPending, setPromotionPending] = useState<{ from: string; to: string; color: 'w' | 'b' } | null>(null)
+  const [longPressTooltip, setLongPressTooltip] = useState<{ piece: string; x: number; y: number } | null>(null)
   // Arrow drawing state
   const [drawnArrows, setDrawnArrows] = useState<Array<{ from: string; to: string; color?: string }>>([])
   const rightDragRef = useRef<{ from: string | null; modifiers: { ctrl: boolean; shift: boolean } }>({ from: null, modifiers: { ctrl: false, shift: false } })
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
   const prevFenRef = useRef(fen)
   const squareSize = size / 8
@@ -432,6 +455,7 @@ export function Chessboard({
   const getArrowColor = (color?: string) => {
     if (color === 'red') return 'rgba(220,50,50,0.85)'
     if (color === 'blue') return 'rgba(50,100,220,0.85)'
+    if (color === 'orange') return 'rgba(245,158,11,0.9)'
     return 'rgba(0,200,80,0.85)'
   }
 
@@ -529,6 +553,37 @@ export function Chessboard({
     }
   }, [interactive, selectedSquare, board, onMove, getActualCoords, allowArrowDrawing, drawnArrows.length, onArrowDraw])
 
+  const handleSquareKeyDown = useCallback((e: React.KeyboardEvent, sq: string) => {
+    if (!interactive) return
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault()
+      const { row, col } = squareToIndex(sq)
+      const displayRow = isFlipped ? 7 - row : row
+      const displayCol = isFlipped ? 7 - col : col
+      handleSquareClick(displayRow, displayCol)
+      return
+    }
+    const DIRS: Record<string, [number, number]> = {
+      ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1],
+    }
+    if (e.key in DIRS) {
+      e.preventDefault()
+      const { row, col } = squareToIndex(sq)
+      const displayRow = isFlipped ? 7 - row : row
+      const displayCol = isFlipped ? 7 - col : col
+      const [dRow, dCol] = DIRS[e.key]
+      const newDisplayRow = Math.max(0, Math.min(7, displayRow + dRow))
+      const newDisplayCol = Math.max(0, Math.min(7, displayCol + dCol))
+      if (boardRef.current) {
+        const newActualRow = isFlipped ? 7 - newDisplayRow : newDisplayRow
+        const newActualCol = isFlipped ? 7 - newDisplayCol : newDisplayCol
+        const targetSq = indexToSquare(newActualRow, newActualCol)
+        const cell = boardRef.current.querySelector(`[aria-label^="${targetSq}"]`)
+        if (cell instanceof HTMLElement) cell.focus()
+      }
+    }
+  }, [interactive, isFlipped, handleSquareClick])
+
   const handleTouchStart = useCallback((e: React.TouchEvent, displayRow: number, displayCol: number) => {
     if (!interactive) return
     e.preventDefault()
@@ -540,9 +595,17 @@ export function Chessboard({
 
     if (piece) {
       const touch = e.touches[0]
+      const touchX = touch.clientX
+      const touchY = touch.clientY
+      // Start long press timer
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = setTimeout(() => {
+        setLongPressTooltip({ piece, x: touchX, y: touchY })
+        setTimeout(() => setLongPressTooltip(null), 2000)
+      }, 600)
       soundHaptics.playSound('click')
       soundHaptics.triggerHaptic('selection')
-      setDragPiece({ piece, from: square, x: touch.clientX, y: touch.clientY })
+      setDragPiece({ piece, from: square, x: touchX, y: touchY })
       setSelectedSquare(square)
     } else if (selectedSquare) {
       if (onMove) {
@@ -567,11 +630,21 @@ export function Chessboard({
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!dragPiece) return
     e.preventDefault()
+    // Cancel long press on drag
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
     const touch = e.touches[0]
     setDragPiece(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null)
   }, [dragPiece])
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    // Cancel long press timer
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
     if (!dragPiece || !boardRef.current) {
       setDragPiece(null)
       return
@@ -636,6 +709,8 @@ export function Chessboard({
       />
       <div
         ref={boardRef}
+        role="grid"
+        aria-label="Chess board"
         className="relative overflow-hidden rounded-xl bg-black"
         style={{
           width: size,
@@ -676,6 +751,8 @@ export function Chessboard({
               interactive={interactive && !promotionPending}
               theme={theme}
               pieceStyle={pieceStyle}
+              square={square}
+              onKeyDown={handleSquareKeyDown}
             />
           )
         })}
@@ -756,7 +833,7 @@ export function Chessboard({
             }}
           >
             <defs>
-              {['green', 'red', 'blue'].map(c => {
+              {['green', 'red', 'blue', 'orange'].map(c => {
                 const fill = getArrowColor(c)
                 return (
                   <marker
@@ -886,6 +963,32 @@ export function Chessboard({
           </div>
         </div>
       )}
+
+    {/* Long press piece info tooltip */}
+    {longPressTooltip && (
+      <div
+        className="fixed pointer-events-none z-[250]"
+        style={{
+          left: longPressTooltip.x,
+          top: longPressTooltip.y - 64,
+          transform: 'translateX(-50%)',
+        }}
+      >
+        <div style={{
+          background: 'rgba(15,15,25,0.96)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: 8,
+          padding: '6px 12px',
+          whiteSpace: 'nowrap',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+          color: '#fff',
+          fontSize: 14,
+          fontWeight: 500,
+        }}>
+          {PIECE_SYMBOLS[longPressTooltip.piece]} {getPieceName(longPressTooltip.piece)}{LONG_PRESS_VALUES[longPressTooltip.piece[1]] > 0 ? ` = ${LONG_PRESS_VALUES[longPressTooltip.piece[1]]} pts` : ''}
+        </div>
+      </div>
+    )}
     </div>
   )
 }

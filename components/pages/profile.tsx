@@ -31,6 +31,20 @@ import {
   Settings,
   ChevronRight,
 } from 'lucide-react'
+import { ActivityHeatmap } from '@/components/ui/activity-heatmap'
+import { RatingGraph } from '@/components/ui/rating-graph'
+
+function getTimeAgo(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return `${diffDays}d ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
+  return `${Math.floor(diffDays / 30)}mo ago`
+}
 
 interface ProfilePageProps {
   onBack: () => void
@@ -213,20 +227,71 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
 
             {/* Rating display */}
             <div className="pt-2 border-t border-border/30">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Puzzle Rating</p>
-                  <p className="text-lg font-bold text-foreground">{profile.puzzleRating}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Games Rating</p>
-                  <p className="text-lg font-bold text-foreground">{profile.rating}</p>
-                </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-muted-foreground font-medium">Puzzle Rating History</p>
+                {profile.puzzleRatingHistory.length > 2 ? (
+                  <RatingGraph data={profile.puzzleRatingHistory} width={280} height={70} />
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Puzzle Rating</p>
+                      <p className="text-lg font-bold text-foreground">{profile.puzzleRating}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Games Rating</p>
+                      <p className="text-lg font-bold text-foreground">{profile.rating}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </motion.div>
       </ScrollReveal>
+
+      {/* Activity Heatmap */}
+      <ScrollReveal delay={0.22}>
+        <motion.div variants={staggerItem}>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Activity
+          </h2>
+          <div className="glass-card p-4">
+            <ActivityHeatmap activityDates={profile.activityDates} />
+          </div>
+        </motion.div>
+      </ScrollReveal>
+
+      {/* Recent Games */}
+      {profile.recentGames.length > 0 && (
+        <ScrollReveal delay={0.24}>
+          <motion.div variants={staggerItem}>
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Recent Games
+            </h2>
+            <div className="glass-card p-4 flex flex-col gap-2">
+              {profile.recentGames.slice(0, 10).map((game) => {
+                const dateAgo = getTimeAgo(game.date)
+                return (
+                  <div key={game.id} className="flex items-center gap-3 py-1.5 border-b border-border/20 last:border-0">
+                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                      game.result === 'win' ? 'bg-emerald-500/10 text-emerald-400' :
+                      game.result === 'draw' ? 'bg-amber-500/10 text-amber-400' :
+                      'bg-red-500/10 text-red-400'
+                    }`}>
+                      {game.result === 'win' ? 'W' : game.result === 'draw' ? 'D' : 'L'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">vs {game.opponent}</p>
+                      <p className="text-[10px] text-muted-foreground">{game.moves} moves</p>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground shrink-0">{dateAgo}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </motion.div>
+        </ScrollReveal>
+      )}
 
       {/* Weakness Analysis */}
       {Object.keys(profile.failedPuzzleThemes).length > 0 && (

@@ -11,6 +11,8 @@ import { AnimatedCounter } from '@/components/ui/animated-components'
 import { TiltCard, MagneticWrap, OdometerCounter, TypewriterText, RevealGrid } from '@/components/ui/effects'
 import { StreakWarning, NextAchievementPreview } from '@/components/ui/game-rewards'
 import { PUZZLES, OPENINGS } from '@/lib/chess-data'
+import { WeeklyMissions } from '@/components/ui/weekly-missions'
+import { ActivityHeatmap } from '@/components/ui/activity-heatmap'
 import {
   Trophy,
   Flame,
@@ -36,6 +38,20 @@ interface DesktopDashboardProps {
   onNavigate: (page: string) => void
 }
 
+const CHESS_TIPS = [
+  "Control the center with pawns and pieces in the opening.",
+  "Knights are better in closed positions, bishops in open ones.",
+  "Don't move the same piece twice in the opening.",
+  "Castle early to protect your king.",
+  "Rooks belong on open files and the 7th rank.",
+  "In endgames, your king becomes a powerful piece.",
+  "Always ask 'Why did my opponent make that move?' before responding.",
+  "Passed pawns must be pushed!",
+  "Coordinate your pieces — a team effort wins games.",
+  "Tactics flow from a strategically superior position.",
+  "Every pawn move creates permanent weaknesses.",
+  "The threat is often stronger than the execution.",
+]
 
 export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
   const { profile, claimDailyBonus } = useGame()
@@ -45,6 +61,11 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
   const dailyPuzzleIndex = getDailyPuzzleIndex(PUZZLES.length)
   const dailyPuzzle = PUZZLES[dailyPuzzleIndex]
   const dailyBonusChecked = useRef(false)
+
+  const today = new Date()
+  const startOfYear = new Date(today.getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((today.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24))
+  const tip = CHESS_TIPS[dayOfYear % CHESS_TIPS.length]
 
   // Auto-claim daily bonus on first dashboard load
   useEffect(() => {
@@ -201,7 +222,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
       )}
 
       {/* Stats Grid */}
-      <RevealGrid className="grid grid-cols-4 gap-5 mb-10" staggerDelay={100}>
+      <RevealGrid className="grid grid-cols-4 gap-5 mb-6" staggerDelay={100}>
         {stats.map((stat, index) => (
           <TiltCard
             key={stat.label}
@@ -220,6 +241,14 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
           </TiltCard>
         ))}
       </RevealGrid>
+
+      {/* Activity Heatmap */}
+      <div className="mb-10">
+        <div className="glass-card p-5">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-3">Activity (last 52 weeks)</p>
+          <ActivityHeatmap activityDates={profile.activityDates} compact />
+        </div>
+      </div>
 
       {/* Streak Warning + Combo + Achievement Progress */}
       <div className="grid grid-cols-3 gap-4">
@@ -270,6 +299,14 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               ))}
             </RevealGrid>
           </div>
+
+          {/* Weekly Missions */}
+          {profile.weeklyMissions.length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Weekly Missions</h2>
+              <WeeklyMissions missions={profile.weeklyMissions} />
+            </div>
+          )}
 
           {/* Featured Opening */}
           <div>
@@ -354,6 +391,38 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             </motion.button>
           </div>
 
+          {/* Recent Games */}
+          {profile.recentGames && profile.recentGames.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-xl font-display font-semibold text-foreground">Recent Games</h2>
+                <button
+                  onClick={() => handleNavigate('profile')}
+                  className="text-sm text-primary font-medium flex items-center gap-1 hover:gap-2 transition-all"
+                >
+                  View all <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="glass-card p-5 space-y-1">
+                {profile.recentGames.slice(0, 3).map((game) => (
+                  <div key={game.id} className="flex items-center gap-3 py-1.5 border-b border-border/20 last:border-0">
+                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                      game.result === 'win' ? 'bg-emerald-500/10 text-emerald-400' :
+                      game.result === 'draw' ? 'bg-amber-500/10 text-amber-400' :
+                      'bg-red-500/10 text-red-400'
+                    }`}>
+                      {game.result === 'win' ? 'W' : game.result === 'draw' ? 'D' : 'L'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">vs {game.opponent}</p>
+                      <p className="text-xs text-muted-foreground">{game.moves} moves</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Recent Achievements */}
           <div>
             <div className="flex items-center justify-between mb-5">
@@ -387,6 +456,17 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Chess Tip of the Day */}
+          <div className="rounded-xl bg-blue-500/5 border border-blue-500/15 p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">💡</span>
+              <div>
+                <p className="text-xs font-semibold text-blue-400 mb-1">Chess Tip of the Day</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{tip}</p>
+              </div>
             </div>
           </div>
         </div>
