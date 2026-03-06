@@ -216,13 +216,13 @@ function TrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
         return
       }
       setCurrentMoveIndex(idx)
-      if (idx === positions.length - 1) {
+      if (idx === positions.length - 1 && !isCompleted) {
         setIsCompleted(true)
         addXP(trap.xpReward)
         incrementTrapsLearned()
       }
     }, 1200)
-  }, [isAutoPlaying, positions.length, addXP, incrementTrapsLearned, trap.xpReward])
+  }, [isAutoPlaying, positions.length, isCompleted, addXP, incrementTrapsLearned, trap.xpReward])
 
   // Keyboard shortcuts
   useEffect(() => {

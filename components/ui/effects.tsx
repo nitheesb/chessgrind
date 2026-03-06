@@ -93,6 +93,12 @@ export function TiltCard({
         `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.08) 0%, transparent 60%)`
     }
 
+    // Stop animating when at rest (back to target)
+    const atRest = Math.abs(c.rotateX - t.rotateX) < 0.01 && Math.abs(c.rotateY - t.rotateY) < 0.01 && Math.abs(c.scale - t.scale) < 0.001
+    if (atRest && t.rotateX === 0 && t.rotateY === 0) {
+      rafRef.current = undefined
+      return
+    }
     rafRef.current = requestAnimationFrame(animate)
   }, [intensity])
 
@@ -106,15 +112,12 @@ export function TiltCard({
   }, [intensity, scale])
 
   const handleEnter = useCallback(() => {
-    rafRef.current = requestAnimationFrame(animate)
+    if (!rafRef.current) rafRef.current = requestAnimationFrame(animate)
   }, [animate])
 
   const handleLeave = useCallback(() => {
     targetRef.current = { rotateX: 0, rotateY: 0, scale: 1 }
-    // Keep animating back to 0
-    setTimeout(() => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    }, 400)
+    // Let it animate back to 0, then stop
   }, [])
 
   useEffect(() => {

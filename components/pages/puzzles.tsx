@@ -8,6 +8,7 @@ import { PUZZLES, getDifficultyBg } from '@/lib/chess-data'
 import type { Puzzle } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
+import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { ShareButtons } from '@/components/ui/share-buttons'
 import { AnimatedCounter, staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
@@ -187,6 +188,7 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
 function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () => void; onNext: () => void }) {
   const { addXP, incrementPuzzlesSolved, trackPuzzleFailure, incrementCombo, resetCombo, recordPerfectSolve, profile } = useGame()
   const { settings } = useSettings()
+  const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
   const [status, setStatus] = useState<'playing' | 'correct' | 'wrong' | 'complete' | 'opponent-moving'>('playing')
@@ -233,6 +235,8 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   const completePuzzle = useCallback(() => {
     setStatus('complete')
     if (timerRef.current) clearInterval(timerRef.current)
+    playSound('success')
+    triggerHaptic('success')
     
     const comboMultiplier = incrementCombo()
     const isPerfect = !hadWrongMoveRef.current
@@ -247,7 +251,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     if (isPerfect) {
       recordPerfectSolve()
     }
-  }, [puzzle.xpReward, addXP, incrementPuzzlesSolved, incrementCombo, recordPerfectSolve])
+  }, [puzzle.xpReward, addXP, incrementPuzzlesSolved, incrementCombo, recordPerfectSolve, playSound, triggerHaptic])
 
   // Play opponent's move automatically
   const playOpponentMove = useCallback((currentGame: Chess, currentMoveIndex: number) => {
@@ -314,6 +318,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       }
 
       if (move.san === expectedMove) {
+        playSound('move')
         setGame(gameCopy)
         setLastMove({ from, to })
         setHintArrow(null)
@@ -336,6 +341,9 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       } else {
         setStatus('wrong')
         hadWrongMoveRef.current = true
+        setHintArrow(null)
+        playSound('fail')
+        triggerHaptic('error')
         resetCombo()
         trackPuzzleFailure(puzzle.themes)
         processingRef.current = false
@@ -346,7 +354,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       processingRef.current = false
       return false
     }
-  }, [game, moveIndex, puzzle, status, completePuzzle, playOpponentMove, resetCombo, trackPuzzleFailure])
+  }, [game, moveIndex, puzzle, status, completePuzzle, playOpponentMove, resetCombo, trackPuzzleFailure, playSound, triggerHaptic])
 
   const handleHint = useCallback(() => {
     const hint = calculateHint(game, moveIndex)

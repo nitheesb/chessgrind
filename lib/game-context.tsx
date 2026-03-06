@@ -480,9 +480,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const claimDailyBonus = useCallback((): number => {
     const today = new Date().toDateString()
     let bonusAmount = 0
+    let shouldAward = false
     setProfile(prev => {
       if (prev.dailyBonusClaimed && prev.lastActiveDate === today) return prev
       bonusAmount = getDailyBonusXP(prev.streak)
+      shouldAward = true
       setDailyBonusAnimation({ show: true, amount: bonusAmount, streak: prev.streak })
       return {
         ...prev,
@@ -490,7 +492,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         lastActiveDate: today,
       }
     })
-    if (bonusAmount > 0) {
+    // Use shouldAward flag since bonusAmount is set synchronously inside updater
+    if (shouldAward && bonusAmount > 0) {
       setTimeout(() => addXP(bonusAmount), 800)
     }
     return bonusAmount

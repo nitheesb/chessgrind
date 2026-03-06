@@ -142,6 +142,7 @@ export function LevelUpOverlay() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
               onClick={dismissLevelUp}
+              aria-label="Dismiss level up notification"
               className="px-12 py-3.5 rounded-xl bg-gradient-to-r from-primary to-emerald-400 text-primary-foreground font-semibold text-sm hover:shadow-xl hover:shadow-primary/25 transition-all relative z-10 btn-shine"
               whileHover={{ y: -2, scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
@@ -169,7 +170,7 @@ export function XPBar({ className = '' }: { className?: string }) {
           {xpIntoLevel}/{xpForLevel} XP
         </span>
       </div>
-      <div className="h-2.5 rounded-full xp-bar-track overflow-hidden">
+      <div className="h-2.5 rounded-full xp-bar-track overflow-hidden" role="progressbar" aria-valuenow={Math.min(Math.round(progress), 100)} aria-valuemin={0} aria-valuemax={100} aria-label="XP progress to next level">
         <motion.div
           className="h-full rounded-full xp-bar-fill relative"
           initial={{ width: 0 }}
