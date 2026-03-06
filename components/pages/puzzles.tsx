@@ -8,6 +8,7 @@ import { PUZZLES, getDifficultyBg } from '@/lib/chess-data'
 import type { Puzzle } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
+import { ShareButtons } from '@/components/ui/share-buttons'
 import { AnimatedCounter, staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
@@ -550,6 +551,11 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             >
               Next Puzzle <SkipForward className="w-4 h-4" />
             </motion.button>
+            <ShareButtons
+              compact
+              title={`I solved "${puzzle.title}" on ChessVault!`}
+              text={`🧩 I just solved "${puzzle.title}" (${puzzle.difficulty}) and earned ${earnedXP || puzzle.xpReward} XP on ChessVault!`}
+            />
           </motion.div>
         )}
         {(status === 'playing' || status === 'opponent-moving') && status !== 'complete' && (

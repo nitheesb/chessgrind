@@ -157,9 +157,12 @@ export function DesktopLogin() {
               <h1 className="text-5xl font-bold gradient-text-hero">ChessVault</h1>
             </div>
 
-            <p className="text-xl text-white/60 max-w-md leading-relaxed mb-8">
+            <p className="text-xl text-white/60 max-w-md leading-relaxed mb-4">
               Your personal chess mastery journey starts here. Master openings, solve puzzles, 
               and become the player you've always wanted to be.
+            </p>
+            <p className="text-sm text-primary/70 font-medium mb-8">
+              Free · No credit card · 50+ puzzles · 20 openings · AI opponents at 8 levels
             </p>
 
             <div className="space-y-4">

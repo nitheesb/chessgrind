@@ -121,8 +121,16 @@ export function LoginPage() {
           <TextReveal text="ChessVault" delay={0.1} className="shimmer-text" />
         </h1>
         <div className="text-base text-white/50">
-          <TextReveal text="Master chess through practice" delay={0.3} stagger={0.04} />
+          <TextReveal text="Learn chess. Solve puzzles. Get better." delay={0.3} stagger={0.04} />
         </div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="mt-3 text-sm text-primary/80 font-medium"
+        >
+          Free · No credit card · 50+ puzzles · 20 openings · AI opponents
+        </motion.p>
       </div>
 
       {/* Main content */}
@@ -263,14 +271,17 @@ export function LoginPage() {
             </p>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { emoji: '🧩', label: 'Tactical Puzzles' },
-                { emoji: '📖', label: 'Opening Theory' },
-                { emoji: '🤖', label: 'Play vs AI' },
-                { emoji: '🏆', label: 'Achievements' },
+                { emoji: '🧩', label: 'Tactical Puzzles', sub: '50+ challenges' },
+                { emoji: '📖', label: 'Opening Theory', sub: '20 openings' },
+                { emoji: '🤖', label: 'Play vs AI', sub: '8 difficulty levels' },
+                { emoji: '🏆', label: 'Achievements', sub: 'XP & streaks' },
               ].map((item) => (
                 <div key={item.label} className="hover-lift flex items-center gap-3 p-4 rounded-2xl bg-secondary transition-transform">
                   <span className="text-xl">{item.emoji}</span>
-                  <span className="text-sm font-medium text-foreground">{item.label}</span>
+                  <div>
+                    <span className="text-sm font-medium text-foreground block">{item.label}</span>
+                    <span className="text-[11px] text-muted-foreground">{item.sub}</span>
+                  </div>
                 </div>
               ))}
             </div>

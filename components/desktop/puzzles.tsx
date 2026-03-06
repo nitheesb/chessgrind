@@ -10,6 +10,7 @@ import type { Puzzle } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
+import { ShareButtons } from '@/components/ui/share-buttons'
 import {
   Puzzle as PuzzleIcon,
   ChevronRight,
@@ -556,6 +557,11 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                 >
                   Next Puzzle <SkipForward className="w-5 h-5" />
                 </motion.button>
+                <ShareButtons
+                  compact
+                  title={`I solved "${puzzle.title}" on ChessVault!`}
+                  text={`🧩 I just solved "${puzzle.title}" (${puzzle.difficulty}) and earned ${earnedXP || puzzle.xpReward} XP on ChessVault!`}
+                />
               </motion.div>
             )}
 
