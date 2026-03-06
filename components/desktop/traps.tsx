@@ -60,7 +60,7 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
 
       {/* Warning Card */}
       <div className="mb-8">
-        <div className="glass-card p-5 border-amber-500/30 bg-amber-500/5">
+        <div className="glass-card p-5 border-amber-500/30 bg-amber-500/5 breathing-glow">
           <div className="flex items-start gap-4">
             <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
             <div>

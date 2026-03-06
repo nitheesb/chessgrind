@@ -481,7 +481,7 @@ export function Chessboard({
       <div
         className="absolute -inset-[2px] rounded-xl opacity-40 group-hover/board:opacity-70 transition-opacity duration-500"
         style={{
-          background: 'conic-gradient(from var(--border-angle, 0deg), transparent 0%, rgba(48,209,88,0.4) 10%, transparent 20%, transparent 50%, rgba(10,132,255,0.3) 60%, transparent 70%)',
+          background: 'conic-gradient(from var(--border-angle, 0deg), transparent 0%, rgba(52,211,153,0.4) 10%, transparent 20%, transparent 50%, rgba(56,145,255,0.3) 60%, transparent 70%)',
           animation: 'border-spin 4s linear infinite',
           WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
           WebkitMaskComposite: 'xor',
@@ -606,7 +606,7 @@ export function Chessboard({
             zIndex: 100,
             pointerEvents: 'none',
             transform: 'scale(1.1)',
-            filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(48,209,88,0.15))',
+            filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(52,211,153,0.15))',
           }}
         >
           <ChessPiece piece={dragPiece.piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />

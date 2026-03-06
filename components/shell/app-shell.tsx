@@ -131,8 +131,8 @@ export function AppShell() {
       <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
         style={{
           background: 'rgba(255, 255, 255, 0.04)',
-          backdropFilter: 'saturate(180%) blur(32px)',
-          WebkitBackdropFilter: 'saturate(180%) blur(32px)',
+          backdropFilter: 'saturate(150%) blur(20px)',
+          WebkitBackdropFilter: 'saturate(150%) blur(20px)',
           borderTop: '0.5px solid rgba(255, 255, 255, 0.10)',
         }}
       >

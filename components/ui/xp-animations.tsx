@@ -65,7 +65,7 @@ export function LevelUpOverlay() {
             transition={{ duration: 1.5, ease: 'easeOut' }}
           >
             <div className="absolute inset-0" style={{
-              background: 'radial-gradient(circle at 50% 50%, rgba(48,209,88,0.15) 0%, transparent 50%)',
+              background: 'radial-gradient(circle at 50% 50%, rgba(52,211,153,0.15) 0%, transparent 50%)',
             }} />
           </motion.div>
 

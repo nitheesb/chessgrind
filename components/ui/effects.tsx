@@ -11,11 +11,16 @@ export function CursorSpotlight() {
 
   useEffect(() => {
     let x = 0, y = 0, targetX = 0, targetY = 0
-    let rafId: number
+    let rafId: number | undefined
+    let idle = false
 
     const onMove = (e: MouseEvent) => {
       targetX = e.clientX
       targetY = e.clientY
+      if (idle) {
+        idle = false
+        rafId = requestAnimationFrame(animate)
+      }
     }
 
     const animate = () => {
@@ -24,14 +29,19 @@ export function CursorSpotlight() {
       if (spotRef.current) {
         spotRef.current.style.transform = `translate(${x - 300}px, ${y - 300}px)`
       }
+      // Stop when close enough to target
+      if (Math.abs(targetX - x) < 0.5 && Math.abs(targetY - y) < 0.5) {
+        idle = true
+        rafId = undefined
+        return
+      }
       rafId = requestAnimationFrame(animate)
     }
 
     window.addEventListener('mousemove', onMove, { passive: true })
-    rafId = requestAnimationFrame(animate)
     return () => {
       window.removeEventListener('mousemove', onMove)
-      cancelAnimationFrame(rafId)
+      if (rafId) cancelAnimationFrame(rafId)
     }
   }, [])
 
@@ -418,7 +428,7 @@ export function GlowBorderCard({
       <div
         className="absolute -inset-[1px] rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{
-          background: 'conic-gradient(from var(--border-angle, 0deg), transparent 0%, rgba(48,209,88,0.4) 10%, transparent 20%, transparent 50%, rgba(10,132,255,0.3) 60%, transparent 70%)',
+          background: 'conic-gradient(from var(--border-angle, 0deg), transparent 0%, rgba(52,211,153,0.4) 10%, transparent 20%, transparent 50%, rgba(56,145,255,0.3) 60%, transparent 70%)',
           animation: active ? 'border-spin 3s linear infinite' : 'none',
           WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
           WebkitMaskComposite: 'xor',
