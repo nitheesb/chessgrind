@@ -63,7 +63,7 @@ export default async function TrapPage({ params }: { params: Promise<{ id: strin
         <header className="mb-10">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-              trap.difficulty === 'beginner' ? 'bg-emerald-500/10 text-emerald-400' :
+              trap.difficulty === 'beginner' ? 'bg-amber-500/10 text-amber-400' :
               trap.difficulty === 'intermediate' ? 'bg-amber-500/10 text-amber-400' :
               'bg-red-500/10 text-red-400'
             } capitalize`}>{trap.difficulty}</span>
@@ -96,7 +96,7 @@ export default async function TrapPage({ params }: { params: Promise<{ id: strin
           <div className="space-y-4">
             {trap.explanation.map((step, i) => (
               <div key={i} className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-sm flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 font-bold text-sm flex items-center justify-center shrink-0 mt-0.5">
                   {i + 1}
                 </div>
                 <p className="text-white/60 leading-relaxed">{step}</p>
@@ -123,10 +123,10 @@ export default async function TrapPage({ params }: { params: Promise<{ id: strin
         )}
 
         {/* CTA */}
-        <section className="mb-10 p-6 rounded-2xl bg-gradient-to-b from-emerald-500/10 to-transparent border border-emerald-500/10 text-center">
+        <section className="mb-10 p-6 rounded-2xl bg-gradient-to-b from-amber-500/10 to-transparent border border-amber-500/10 text-center">
           <h2 className="text-lg font-bold mb-2">Practice the {trap.name} interactively</h2>
           <p className="text-sm text-white/50 mb-4">Play through the trap move-by-move on an animated board</p>
-          <Link href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-emerald-500 text-white font-semibold hover:bg-emerald-400 transition-colors text-sm">
+          <Link href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-amber-500 text-white font-semibold hover:bg-amber-400 transition-colors text-sm">
             Open in ChessVault →
           </Link>
         </section>
@@ -137,8 +137,8 @@ export default async function TrapPage({ params }: { params: Promise<{ id: strin
             <h2 className="text-xl font-bold mb-4">More Chess Traps</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {related.map(t => (
-                <Link key={t.id} href={`/learn/traps/${t.id}`} className="group p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 transition-all">
-                  <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors">{t.name}</h3>
+                <Link key={t.id} href={`/learn/traps/${t.id}`} className="group p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-amber-500/30 transition-all">
+                  <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors">{t.name}</h3>
                   <p className="text-xs text-white/40 mt-1">{t.opening} · {t.difficulty}</p>
                 </Link>
               ))}
@@ -147,7 +147,7 @@ export default async function TrapPage({ params }: { params: Promise<{ id: strin
         )}
 
         <nav className="flex justify-between text-sm">
-          <Link href="/learn#traps" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+          <Link href="/learn#traps" className="text-amber-400 hover:text-amber-300 transition-colors">
             ← All Traps
           </Link>
           <Link href="/learn" className="text-white/40 hover:text-white/60 transition-colors">

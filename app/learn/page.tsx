@@ -34,11 +34,11 @@ export default function LearnPage() {
       <header className="relative overflow-hidden px-6 py-20 text-center">
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.1) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
         <div className="relative mx-auto max-w-3xl">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 mb-6 transition-colors">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300 mb-6 transition-colors">
             ← Back to ChessVault
           </Link>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-            Learn Chess Online — <span className="text-emerald-400">Free</span>
+            Learn Chess Online — <span className="text-amber-400">Free</span>
           </h1>
           <p className="text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">
             Master chess with interactive puzzles, study opening theory, learn deadly traps, and practice against AI opponents from beginner to grandmaster.
@@ -51,7 +51,7 @@ export default function LearnPage() {
           </div>
           <Link
             href="/"
-            className="mt-8 inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-500 text-white font-semibold hover:bg-emerald-400 transition-colors"
+            className="mt-8 inline-flex items-center gap-2 px-8 py-3 rounded-full bg-amber-500 text-white font-semibold hover:bg-amber-400 transition-colors"
           >
             Start Playing Free →
           </Link>
@@ -70,10 +70,10 @@ export default function LearnPage() {
               <Link
                 key={opening.id}
                 href={`/learn/openings/${opening.id}`}
-                className="group p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all"
+                className="group p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-amber-500/30 hover:bg-white/[0.05] transition-all"
               >
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors">{opening.name}</h3>
+                  <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors">{opening.name}</h3>
                   <span className="text-xs text-white/30 font-mono">{opening.eco}</span>
                 </div>
                 <p className="text-sm text-white/40 line-clamp-2 mb-3">{opening.description}</p>
@@ -94,7 +94,7 @@ export default function LearnPage() {
           </p>
 
           {[
-            { label: 'Beginner Puzzles (Easy)', puzzles: easyPuzzles, color: 'emerald' },
+            { label: 'Beginner Puzzles (Easy)', puzzles: easyPuzzles, color: 'amber' },
             { label: 'Intermediate Puzzles (Medium)', puzzles: mediumPuzzles, color: 'amber' },
             { label: 'Advanced Puzzles (Hard)', puzzles: hardPuzzles, color: 'red' },
           ].map(group => group.puzzles.length > 0 && (
@@ -105,9 +105,9 @@ export default function LearnPage() {
                   <Link
                     key={puzzle.id}
                     href={`/learn/puzzles/${puzzle.id}`}
-                    className="group p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all"
+                    className="group p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-amber-500/30 hover:bg-white/[0.05] transition-all"
                   >
-                    <h4 className="font-medium text-white group-hover:text-emerald-400 transition-colors mb-1">{puzzle.title}</h4>
+                    <h4 className="font-medium text-white group-hover:text-amber-400 transition-colors mb-1">{puzzle.title}</h4>
                     <p className="text-xs text-white/40 line-clamp-2 mb-2">{puzzle.description}</p>
                     <div className="flex gap-2 text-xs text-white/30">
                       <span>Rating: {puzzle.rating}</span>
@@ -132,9 +132,9 @@ export default function LearnPage() {
               <Link
                 key={trap.id}
                 href={`/learn/traps/${trap.id}`}
-                className="group p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all"
+                className="group p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-amber-500/30 hover:bg-white/[0.05] transition-all"
               >
-                <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors mb-1">{trap.name}</h3>
+                <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors mb-1">{trap.name}</h3>
                 <p className="text-xs text-white/30 mb-2">From the {trap.opening} · {trap.side === 'white' ? 'White' : 'Black'} to move</p>
                 <p className="text-sm text-white/40 line-clamp-2">{trap.description}</p>
               </Link>
@@ -155,7 +155,7 @@ export default function LearnPage() {
             ].map(item => (
               <details key={item.q} className="group">
                 <summary className="cursor-pointer text-lg font-semibold text-white/80 hover:text-white transition-colors list-none flex items-center gap-2">
-                  <span className="text-emerald-400 group-open:rotate-90 transition-transform">›</span>
+                  <span className="text-amber-400 group-open:rotate-90 transition-transform">›</span>
                   {item.q}
                 </summary>
                 <p className="mt-2 ml-5 text-white/50 leading-relaxed">{item.a}</p>
@@ -165,12 +165,12 @@ export default function LearnPage() {
         </section>
 
         {/* CTA */}
-        <section className="text-center py-12 rounded-3xl bg-gradient-to-b from-emerald-500/10 to-transparent border border-emerald-500/10">
+        <section className="text-center py-12 rounded-3xl bg-gradient-to-b from-amber-500/10 to-transparent border border-amber-500/10">
           <h2 className="text-2xl font-bold mb-3">Ready to improve your chess?</h2>
           <p className="text-white/50 mb-6">Start with a quick puzzle or explore an opening — no signup needed.</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-500 text-white font-semibold hover:bg-emerald-400 transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-amber-500 text-white font-semibold hover:bg-amber-400 transition-colors"
           >
             Start Playing Free →
           </Link>

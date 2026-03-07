@@ -62,7 +62,7 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
         <header className="mb-10">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-              puzzle.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400' :
+              puzzle.difficulty === 'Easy' ? 'bg-amber-500/10 text-amber-400' :
               puzzle.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-400' :
               'bg-red-500/10 text-red-400'
             }`}>{puzzle.difficulty}</span>
@@ -101,10 +101,10 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
         </section>
 
         {/* CTA */}
-        <section className="mb-10 p-6 rounded-2xl bg-gradient-to-b from-emerald-500/10 to-transparent border border-emerald-500/10 text-center">
+        <section className="mb-10 p-6 rounded-2xl bg-gradient-to-b from-amber-500/10 to-transparent border border-amber-500/10 text-center">
           <h2 className="text-lg font-bold mb-2">Solve this puzzle interactively</h2>
           <p className="text-sm text-white/50 mb-4">Drag pieces on the board, earn XP, and build your combo streak</p>
-          <Link href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-emerald-500 text-white font-semibold hover:bg-emerald-400 transition-colors text-sm">
+          <Link href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-amber-500 text-white font-semibold hover:bg-amber-400 transition-colors text-sm">
             Play Now →
           </Link>
         </section>
@@ -115,8 +115,8 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
             <h2 className="text-xl font-bold mb-4">Similar Puzzles</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {related.map(p => (
-                <Link key={p.id} href={`/learn/puzzles/${p.id}`} className="group p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 transition-all">
-                  <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors">{p.title}</h3>
+                <Link key={p.id} href={`/learn/puzzles/${p.id}`} className="group p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-amber-500/30 transition-all">
+                  <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors">{p.title}</h3>
                   <p className="text-xs text-white/40 mt-1">Rating {p.rating} · {p.difficulty}</p>
                 </Link>
               ))}
@@ -127,12 +127,12 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
         {/* Prev/Next */}
         <nav className="flex justify-between text-sm">
           {prevPuzzle ? (
-            <Link href={`/learn/puzzles/${prevPuzzle.id}`} className="text-emerald-400 hover:text-emerald-300 transition-colors">
+            <Link href={`/learn/puzzles/${prevPuzzle.id}`} className="text-amber-400 hover:text-amber-300 transition-colors">
               ← {prevPuzzle.title}
             </Link>
           ) : <span />}
           {nextPuzzle ? (
-            <Link href={`/learn/puzzles/${nextPuzzle.id}`} className="text-emerald-400 hover:text-emerald-300 transition-colors">
+            <Link href={`/learn/puzzles/${nextPuzzle.id}`} className="text-amber-400 hover:text-amber-300 transition-colors">
               {nextPuzzle.title} →
             </Link>
           ) : <span />}

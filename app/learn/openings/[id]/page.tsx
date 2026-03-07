@@ -60,7 +60,7 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
         <header className="mb-10">
           <div className="flex items-center gap-3 mb-4">
             <span className="px-2 py-1 rounded-md bg-white/[0.06] text-xs font-mono text-white/50">{opening.eco}</span>
-            <span className="px-2 py-1 rounded-md bg-emerald-500/10 text-xs font-medium text-emerald-400 capitalize">{opening.difficulty}</span>
+            <span className="px-2 py-1 rounded-md bg-amber-500/10 text-xs font-medium text-amber-400 capitalize">{opening.difficulty}</span>
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight mb-4">{opening.name}</h1>
           <p className="text-lg text-white/60 leading-relaxed">{opening.description}</p>
@@ -116,7 +116,7 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
             <ul className="space-y-3">
               {opening.keyIdeas.map((idea, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span className="mt-1 w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center shrink-0">{i + 1}</span>
+                  <span className="mt-1 w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold flex items-center justify-center shrink-0">{i + 1}</span>
                   <span className="text-white/60">{idea}</span>
                 </li>
               ))}
@@ -145,10 +145,10 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
         )}
 
         {/* CTA */}
-        <section className="mb-10 p-6 rounded-2xl bg-gradient-to-b from-emerald-500/10 to-transparent border border-emerald-500/10 text-center">
+        <section className="mb-10 p-6 rounded-2xl bg-gradient-to-b from-amber-500/10 to-transparent border border-amber-500/10 text-center">
           <h2 className="text-lg font-bold mb-2">Practice the {opening.name} interactively</h2>
           <p className="text-sm text-white/50 mb-4">See every move animated on the board with step-by-step explanations</p>
-          <Link href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-emerald-500 text-white font-semibold hover:bg-emerald-400 transition-colors text-sm">
+          <Link href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-amber-500 text-white font-semibold hover:bg-amber-400 transition-colors text-sm">
             Open in ChessVault →
           </Link>
         </section>
@@ -159,8 +159,8 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
             <h2 className="text-xl font-bold mb-4">Related Openings</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {relatedOpenings.map(o => (
-                <Link key={o.id} href={`/learn/openings/${o.id}`} className="group p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 transition-all">
-                  <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors">{o.name}</h3>
+                <Link key={o.id} href={`/learn/openings/${o.id}`} className="group p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-amber-500/30 transition-all">
+                  <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors">{o.name}</h3>
                   <p className="text-xs text-white/40 mt-1 line-clamp-1">{o.description}</p>
                 </Link>
               ))}
@@ -169,7 +169,7 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
         )}
 
         <nav className="flex justify-between text-sm">
-          <Link href="/learn#openings" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+          <Link href="/learn#openings" className="text-amber-400 hover:text-amber-300 transition-colors">
             ← All Openings
           </Link>
           <Link href="/learn" className="text-white/40 hover:text-white/60 transition-colors">
