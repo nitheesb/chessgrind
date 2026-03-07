@@ -27,13 +27,13 @@ import { CommandPalette, CommandPaletteTrigger } from '@/components/ui/command-p
 
 // Desktop pages
 import { DesktopDashboard } from '@/components/desktop/dashboard'
-import { DesktopOpenings } from '@/components/desktop/openings'
-import { DesktopTraps } from '@/components/desktop/traps'
-import { DesktopProfile } from '@/components/desktop/profile'
-import { DesktopSettings } from '@/components/desktop/settings'
 import { DesktopLogin } from '@/components/desktop/login'
 
-// Lazy load heavy pages
+// Lazy load all non-dashboard pages for faster initial render
+const DesktopOpenings = lazy(() => import('@/components/desktop/openings').then(m => ({ default: m.DesktopOpenings })))
+const DesktopTraps = lazy(() => import('@/components/desktop/traps').then(m => ({ default: m.DesktopTraps })))
+const DesktopProfile = lazy(() => import('@/components/desktop/profile').then(m => ({ default: m.DesktopProfile })))
+const DesktopSettings = lazy(() => import('@/components/desktop/settings').then(m => ({ default: m.DesktopSettings })))
 const DesktopPuzzles = lazy(() => import('@/components/desktop/puzzles').then(m => ({ default: m.DesktopPuzzles })))
 const DesktopPlayAI = lazy(() => import('@/components/desktop/play-ai').then(m => ({ default: m.DesktopPlayAI })))
 
@@ -291,12 +291,12 @@ export function DesktopShell() {
             className="min-h-screen"
           >
             {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}
-            {currentPage === 'openings' && <DesktopOpenings onNavigate={handleNavigate} />}
-            {currentPage === 'traps' && <DesktopTraps onNavigate={handleNavigate} />}
-            {currentPage === 'profile' && <DesktopProfile onNavigate={handleNavigate} />}
-            {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
-            {(currentPage === 'puzzles' || currentPage === 'play') && (
+            {currentPage !== 'dashboard' && (
               <Suspense fallback={<DesktopPageSkeleton />}>
+                {currentPage === 'openings' && <DesktopOpenings onNavigate={handleNavigate} />}
+                {currentPage === 'traps' && <DesktopTraps onNavigate={handleNavigate} />}
+                {currentPage === 'profile' && <DesktopProfile onNavigate={handleNavigate} />}
+                {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
                 {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
                 {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
               </Suspense>

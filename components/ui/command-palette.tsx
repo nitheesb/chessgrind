@@ -230,9 +230,18 @@ export function CommandPalette({ onNavigate }: CommandPaletteProps) {
 
 // Small trigger hint for the sidebar
 export function CommandPaletteTrigger({ onClick }: { onClick?: () => void }) {
+  const handleClick = () => {
+    if (onClick) {
+      onClick()
+    } else {
+      // Dispatch Cmd+K to open the command palette
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }))
+    }
+  }
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-all duration-150"
     >
       <Search className="w-5 h-5" />
