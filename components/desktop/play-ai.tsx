@@ -8,6 +8,7 @@ import { EvalBar } from '@/components/chess/eval-bar'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
+import { getBestMove, getEngineConfig } from '@/lib/chess-engine'
 import {
   Swords,
   RotateCcw,
@@ -35,9 +36,9 @@ type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'master'
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string }> = {
   beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'amber' },
-  intermediate: { name: 'Intermediate', depth: 2, description: 'A fair challenge', color: 'blue' },
-  advanced: { name: 'Advanced', depth: 3, description: 'For experienced players', color: 'purple' },
-  master: { name: 'Master', depth: 4, description: 'The ultimate test', color: 'red' },
+  intermediate: { name: 'Intermediate', depth: 3, description: 'A fair challenge', color: 'blue' },
+  advanced: { name: 'Advanced', depth: 5, description: 'For experienced players', color: 'purple' },
+  master: { name: 'Master', depth: 6, description: 'The ultimate test', color: 'red' },
 }
 
 const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string; activeStyle: string }> = {
@@ -84,104 +85,32 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     setThinking(true)
 
     setTimeout(() => {
-      const moves = currentGame.moves({ verbose: true })
-      if (moves.length === 0) return
+      const config = getEngineConfig(DIFFICULTY_CONFIG[difficulty].depth)
+      const bestMove = getBestMove(currentGame, config)
 
-      const depth = Math.min(DIFFICULTY_CONFIG[difficulty].depth, 4)
-      const randomFactor = Math.max(0, 5 - depth)
-      const pieceValues: Record<string, number> = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 }
+      if (bestMove) {
+        const newGame = new Chess(currentGame.fen())
+        const move = newGame.move(bestMove)
 
-      const centerBonus = (sq: string) => {
-        const file = sq.charCodeAt(0) - 97, rank = parseInt(sq[1]) - 1
-        return (3.5 - Math.abs(file - 3.5)) * 5 + (3.5 - Math.abs(rank - 3.5)) * 5
-      }
+        if (move) {
+          setGame(newGame)
+          setLastMove({ from: move.from, to: move.to })
+          setMoveHistory(prev => [...prev, move.san])
+          playSound(move.captured ? 'capture' : 'move')
 
-      const evaluate = (g: Chess): number => {
-        if (g.isCheckmate()) return g.turn() === currentGame.turn() ? -99999 : 99999
-        if (g.isDraw() || g.isStalemate()) return 0
-        let score = 0
-        const board = g.board()
-        for (const row of board) {
-          for (const sq of row) {
-            if (!sq) continue
-            const val = pieceValues[sq.type] + centerBonus(sq.square)
-            score += sq.color === currentGame.turn() ? val : -val
-          }
-        }
-        score += g.turn() === currentGame.turn() ? g.moves().length * 2 : -g.moves().length * 2
-        return score
-      }
-
-      const minimax = (g: Chess, d: number, alpha: number, beta: number, maximizing: boolean): number => {
-        if (d === 0 || g.isGameOver()) return evaluate(g)
-        const gameMoves = g.moves()
-        if (maximizing) {
-          let maxEval = -Infinity
-          for (const m of gameMoves) {
-            g.move(m)
-            const ev = minimax(g, d - 1, alpha, beta, false)
-            g.undo()
-            maxEval = Math.max(maxEval, ev)
-            alpha = Math.max(alpha, ev)
-            if (beta <= alpha) break
-          }
-          return maxEval
-        } else {
-          let minEval = Infinity
-          for (const m of gameMoves) {
-            g.move(m)
-            const ev = minimax(g, d - 1, alpha, beta, true)
-            g.undo()
-            minEval = Math.min(minEval, ev)
-            beta = Math.min(beta, ev)
-            if (beta <= alpha) break
-          }
-          return minEval
-        }
-      }
-
-      let bestMove = moves[0]
-
-      if (depth <= 1) {
-        bestMove = moves[Math.floor(Math.random() * moves.length)]
-      } else {
-        let bestScore = -Infinity
-        let bestMoves: typeof moves = []
-        for (const move of moves) {
-          const testGame = new Chess(currentGame.fen())
-          testGame.move(move)
-          const score = -minimax(testGame, depth - 1, -Infinity, Infinity, false) + Math.random() * randomFactor * 40
-          if (score > bestScore) {
-            bestScore = score
-            bestMoves = [move]
-          } else if (Math.abs(score - bestScore) < randomFactor * 10) {
-            bestMoves.push(move)
-          }
-        }
-        bestMove = bestMoves[Math.floor(Math.random() * bestMoves.length)]
-      }
-
-      const newGame = new Chess(currentGame.fen())
-      const move = newGame.move(bestMove)
-
-      if (move) {
-        setGame(newGame)
-        setLastMove({ from: move.from, to: move.to })
-        setMoveHistory(prev => [...prev, move.san])
-        playSound(move.captured ? 'capture' : 'move')
-
-        if (newGame.isGameOver()) {
-          if (timerRef.current) clearInterval(timerRef.current)
-          if (newGame.isCheckmate()) {
-            setGameStatus('lost')
-            playSound('fail')
-          } else {
-            setGameStatus('draw')
+          if (newGame.isGameOver()) {
+            if (timerRef.current) clearInterval(timerRef.current)
+            if (newGame.isCheckmate()) {
+              setGameStatus('lost')
+              playSound('fail')
+            } else {
+              setGameStatus('draw')
+            }
           }
         }
       }
       setThinking(false)
-    }, 500 + Math.random() * 500)
+    }, 300 + Math.random() * 400)
   }, [difficulty, playSound])
 
   const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
