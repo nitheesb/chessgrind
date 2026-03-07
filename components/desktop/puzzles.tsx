@@ -437,7 +437,8 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  const playerColor = game.turn() === 'w' ? 'white' : 'black'
+  // Player's color is determined by whose turn it is in the initial FEN
+  const playerColor = puzzle.fen.split(' ')[1] === 'w' ? 'white' : 'black'
 
   return (
     <motion.div
@@ -604,7 +605,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                 <Chessboard
                   fen={game.fen()}
                   onMove={handleMove}
-                  orientation={puzzle.playerColor || 'white'}
+                  orientation={playerColor}
                   interactive={status === 'playing'}
                   size={boardSize}
                   highlightSquares={highlightSquares.length > 0 ? highlightSquares : (lastMove ? [lastMove.from, lastMove.to] : [])}
@@ -888,7 +889,7 @@ function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => voi
         <Chessboard
           fen={game.fen()}
           onMove={handleMove}
-          orientation={puzzle.playerColor || 'white'}
+          orientation={puzzle.fen.split(' ')[1] === 'w' ? 'white' : 'black'}
           interactive={status === 'playing'}
           size={500}
           highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}

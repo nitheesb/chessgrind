@@ -243,7 +243,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   const processingRef = useRef(false)
   const hadWrongMoveRef = useRef(false)
   const [wrongMoveHint, setWrongMoveHint] = useState<string | null>(null)
-  const [boardFlipped, setBoardFlipped] = useState(false)
+  const [boardFlipped, setBoardFlipped] = useState(() => puzzle.fen.split(' ')[1] === 'b')
   const [showCoords, setShowCoords] = useState(true)
   const [earnedXP, setEarnedXP] = useState(0)
   // Feature 5: board size
@@ -1060,6 +1060,7 @@ function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => voi
           isCheck={game.isCheck()}
           boardStyle={settings.boardStyle}
           pieceStyle={settings.pieceStyle}
+          orientation={currentPuzzle.fen.split(' ')[1] === 'w' ? 'white' : 'black'}
         />
         {/* Feedback overlay */}
         <AnimatePresence>
