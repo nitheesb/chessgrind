@@ -8,7 +8,7 @@ import { getLevelInfo, getDailyPuzzleIndex } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { MiniChessboard } from '@/components/chess/chessboard'
 import { AnimatedCounter } from '@/components/ui/animated-components'
-import { TiltCard, MagneticWrap, OdometerCounter, TypewriterText, RevealGrid } from '@/components/ui/effects'
+import { OdometerCounter, TypewriterText, RevealGrid } from '@/components/ui/effects'
 import { StreakWarning, NextAchievementPreview } from '@/components/ui/game-rewards'
 import { PUZZLES, OPENINGS } from '@/lib/chess-data'
 import { WeeklyMissions } from '@/components/ui/weekly-missions'
@@ -224,10 +224,9 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
       {/* Stats Grid */}
       <RevealGrid className="grid grid-cols-4 gap-5 mb-6" staggerDelay={100}>
         {stats.map((stat, index) => (
-          <TiltCard
+          <div
             key={stat.label}
-            className={`glass-card p-6 group cursor-default relative overflow-hidden ${stat.hoverCard}`}
-            intensity={10}
+            className={`glass-card p-6 group cursor-default relative overflow-hidden ${stat.hoverCard} hover:border-white/10 transition-all duration-300 hover:shadow-lg`}
           >
             <div className="flex items-center gap-3 mb-4 relative z-10">
               <div className={`w-11 h-11 rounded-xl ${stat.bgClass} flex items-center justify-center ${stat.colorClass} transition-transform duration-300 group-hover:scale-110`}>
@@ -238,7 +237,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               <OdometerCounter value={typeof stat.value === 'number' ? stat.value : 0} />
             </p>
             <p className="text-sm text-muted-foreground relative z-10">{stat.label}</p>
-          </TiltCard>
+          </div>
         ))}
       </RevealGrid>
 
@@ -275,27 +274,23 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             </h2>
             <RevealGrid className="grid grid-cols-2 gap-5" staggerDelay={120}>
               {quickActions.map((action, i) => (
-                <MagneticWrap key={action.id} strength={0.15}>
-                  <TiltCard
-                    className="glass-card-hover p-7 text-left group relative overflow-hidden cursor-pointer h-full border border-white/5 hover:border-white/10"
-                    intensity={12}
+                  <div
+                    key={action.id}
+                    className="glass-card p-7 text-left group relative overflow-hidden cursor-pointer h-full border border-white/5 hover:border-white/10 transition-all duration-300 hover:shadow-lg hover:shadow-black/20"
                     onClick={() => handleNavigate(action.id)}
                   >
                     {/* Hover gradient overlay */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.08] transition-opacity duration-500`} />
-                    {/* Animated sweep line */}
-                    <div className="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg] group-hover:animate-[shine-sweep_1.5s_ease-in-out_infinite]" />
 
                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-5 shadow-[0_8px_16px_rgba(0,0,0,0.3)] relative z-10 ring-1 ring-white/20`}>
                       <span className="text-white drop-shadow-md">{action.icon}</span>
                     </div>
-                    <h3 className="text-lg font-display font-semibold text-foreground mb-1.5 relative z-10 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-white/70 transition-all">{action.label}</h3>
+                    <h3 className="text-lg font-display font-semibold text-foreground mb-1.5 relative z-10 transition-colors">{action.label}</h3>
                     <p className="text-sm text-muted-foreground relative z-10 leading-relaxed">{action.description}</p>
                     <div className="flex items-center gap-1 mt-6 text-primary text-sm font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-[-10px] group-hover:translate-x-0 relative z-10">
                       Start now <ChevronRight className="w-4 h-4" />
                     </div>
-                  </TiltCard>
-                </MagneticWrap>
+                  </div>
               ))}
             </RevealGrid>
           </div>
