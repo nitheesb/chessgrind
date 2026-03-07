@@ -116,7 +116,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       id: 'play',
       label: 'Play AI',
       icon: <Swords className="w-5 h-5" />,
-      gradient: 'from-emerald-500 to-green-500',
+      gradient: 'from-amber-500 to-yellow-600',
       page: 'play',
     },
     {
@@ -138,7 +138,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* Header */}
       <motion.div variants={staggerItem} className="relative flex items-center justify-between overflow-hidden rounded-2xl p-3 -mx-3">
         <div className="relative flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center">
             <span className="text-xl font-bold text-white">{profile.username.charAt(0).toUpperCase()}</span>
           </div>
           <div>
@@ -147,7 +147,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </h1>
             <button
               onClick={() => handleNavigate('puzzles')}
-              className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-semibold border border-primary/20 shadow-[0_0_10px_rgba(52,211,153,0.15)] hover:shadow-[0_0_15px_rgba(52,211,153,0.25)] hover:bg-primary/20 transition-all text-xs flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-semibold border border-primary/20 shadow-[0_0_10px_rgba(245,158,11,0.15)] hover:shadow-[0_0_15px_rgba(245,158,11,0.25)] hover:bg-primary/20 transition-all text-xs flex items-center gap-1.5"
             >
               <Play className="w-3 h-3" fill="currentColor" />
               Continue Training
@@ -172,7 +172,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <p className="text-[11px] text-muted-foreground font-medium">Total XP</p>
         </div>
         <div className="glass-card p-3 text-center">
-          <div className="flex items-center justify-center gap-1 text-green-500 mb-1">
+          <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
             <Flame className="w-4 h-4" />
           </div>
           <p className="text-lg font-bold text-foreground"><OdometerCounter value={profile.streak} /></p>
@@ -198,13 +198,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Welcome banner for new users */}
       {profile.xp === 0 && profile.puzzlesSolved === 0 && (
-        <motion.div variants={staggerItem} className="rounded-2xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 p-4">
+        <motion.div variants={staggerItem} className="rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4">
           <h2 className="text-sm font-bold text-foreground mb-1">👋 Welcome to ChessVault!</h2>
           <p className="text-xs text-muted-foreground mb-3">Start with a quick puzzle to earn your first XP and begin your journey.</p>
           <motion.button
             onClick={() => handleNavigate('puzzles')}
             whileTap={{ scale: 0.97 }}
-            className="px-4 py-2 rounded-lg bg-emerald-500 text-white text-xs font-semibold"
+            className="px-4 py-2 rounded-lg bg-amber-500 text-white text-xs font-semibold"
           >
             Solve Your First Puzzle →
           </motion.button>
@@ -318,7 +318,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-sm font-semibold text-foreground shimmer-text">Daily Challenge</h2>
           {profile.dailyChallengeCompleted && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold shadow-[0_0_10px_rgba(245,158,11,0.1)]">
               Completed ✓
             </span>
           )}
@@ -326,7 +326,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <motion.button
           onClick={() => handleNavigate('puzzles')}
           className={`w-full glass-card-hover group relative overflow-hidden rounded-xl p-3 flex items-center gap-3 text-left border hover:border-white/10 ${
-            profile.dailyChallengeCompleted ? 'border-emerald-500/30' : 'border-white/5'
+            profile.dailyChallengeCompleted ? 'border-amber-500/30' : 'border-white/5'
           }`}
         >
           {/* Subtle accent glow */}
@@ -335,8 +335,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <div className="relative overflow-hidden rounded-lg flex-shrink-0 shadow-[0_4px_15px_rgba(0,0,0,0.3)] ring-1 ring-white/10" style={{ width: 64, height: 64 }}>
             <MiniChessboard fen={dailyPuzzle.fen} size={64} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
             {profile.dailyChallengeCompleted && (
-              <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[1px] flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+              <div className="absolute inset-0 bg-amber-500/20 backdrop-blur-[1px] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
                   <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
@@ -349,7 +349,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <Calendar className="w-3.5 h-3.5 text-amber-500" />
               <span className="text-xs font-medium text-amber-500">Today's Puzzle</span>
               {profile.dailyChallengeCompleted && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-semibold">✓ Done today</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-semibold">✓ Done today</span>
               )}
             </div>
             <p className="text-sm font-semibold text-foreground truncate">{dailyPuzzle.title}</p>
@@ -362,7 +362,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             progress={profile.dailyChallengeCompleted ? 100 : 0}
             size={36}
             strokeWidth={3}
-            color="hsl(142, 71%, 45%)"
+            color="hsl(38, 92%, 50%)"
             className="flex-shrink-0"
           >
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -383,7 +383,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             {profile.recentGames.slice(0, 3).map((game) => (
               <div key={game.id} className="flex items-center gap-3 py-1.5 border-b border-border/20 last:border-0">
                 <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                  game.result === 'win' ? 'bg-emerald-500/10 text-emerald-400' :
+                  game.result === 'win' ? 'bg-amber-500/10 text-amber-400' :
                   game.result === 'draw' ? 'bg-amber-500/10 text-amber-400' :
                   'bg-red-500/10 text-red-400'
                 }`}>

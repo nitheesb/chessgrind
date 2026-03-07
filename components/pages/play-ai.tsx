@@ -131,7 +131,7 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
                 key={color}
                 onClick={() => setPlayerColor(color === 'random' ? (Math.random() > 0.5 ? 'w' : 'b') : color)}
                 className={`flex flex-col items-center gap-2.5 py-4 px-2 rounded-xl border transition-all duration-300 relative overflow-hidden group ${isSelected
-                    ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(52,211,153,0.15)] ring-1 ring-primary/50'
+                    ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/50'
                     : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
                   }`}
               >

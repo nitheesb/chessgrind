@@ -84,14 +84,14 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
   }, [playSound, onNavigate])
 
   const stats = [
-    { label: 'Puzzles Solved', value: profile.puzzlesSolved, icon: <Puzzle className="w-5 h-5" />, colorClass: 'text-emerald-400', bgClass: 'bg-emerald-500/10', hoverCard: 'stat-card-emerald' },
+    { label: 'Puzzles Solved', value: profile.puzzlesSolved, icon: <Puzzle className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
     { label: 'Current Streak', value: profile.streak, icon: <Flame className="w-5 h-5" />, colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10', hoverCard: 'stat-card-orange' },
     { label: 'Puzzle Rating', value: profile.puzzleRating || 800, icon: <TrendingUp className="w-5 h-5" />, colorClass: 'text-blue-400', bgClass: 'bg-blue-500/10', hoverCard: 'stat-card-blue' },
     { label: 'Achievements', value: profile.achievements.filter(a => a.earned).length, icon: <Trophy className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
   ]
 
   const quickActions = [
-    { id: 'puzzles', label: 'Tactical Puzzles', description: 'Sharpen your tactical vision', icon: <Puzzle className="w-7 h-7" />, gradient: 'from-emerald-500 to-teal-600' },
+    { id: 'puzzles', label: 'Tactical Puzzles', description: 'Sharpen your tactical vision', icon: <Puzzle className="w-7 h-7" />, gradient: 'from-amber-500 to-orange-600' },
     { id: 'openings', label: 'Opening Theory', description: 'Master the opening moves', icon: <BookOpen className="w-7 h-7" />, gradient: 'from-blue-500 to-indigo-600' },
     { id: 'play', label: 'Play vs AI', description: 'Test your skills against computer', icon: <Swords className="w-7 h-7" />, gradient: 'from-violet-500 to-purple-600' },
     { id: 'traps', label: 'Opening Traps', description: 'Learn devastating traps', icon: <Target className="w-7 h-7" />, gradient: 'from-rose-500 to-pink-600' },
@@ -137,7 +137,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
               >
                 <button
                   onClick={() => handleNavigate('puzzles')}
-                  className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-[0_0_20px_rgba(52,211,153,0.3)] hover:shadow-[0_0_25px_rgba(52,211,153,0.5)] hover:-translate-y-0.5 transition-all text-sm flex items-center gap-2"
+                  className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] hover:-translate-y-0.5 transition-all text-sm flex items-center gap-2"
                 >
                   <Play className="w-4 h-4" fill="currentColor" />
                   Continue Training
@@ -155,7 +155,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 <p className="text-4xl font-display font-bold text-foreground">{currentLevel.level}</p>
                 <p className="text-sm text-primary font-medium">{currentLevel.title}</p>
               </div>
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-green-600 flex items-center justify-center relative overflow-hidden shadow-lg shadow-emerald-500/20">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 flex items-center justify-center relative overflow-hidden shadow-lg shadow-amber-500/20">
                 <Crown className="w-10 h-10 text-white relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
@@ -205,7 +205,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
 
       {/* Welcome banner for new users */}
       {profile.xp === 0 && profile.puzzlesSolved === 0 && (
-        <div className="mb-8 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 p-6 flex items-center justify-between">
+        <div className="mb-8 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-6 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-foreground mb-1">👋 Welcome to ChessVault!</h2>
             <p className="text-sm text-muted-foreground">Start with a quick puzzle to earn your first XP and unlock achievements.</p>
@@ -214,7 +214,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
             onClick={() => onNavigate('puzzles')}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="px-6 py-3 rounded-xl bg-emerald-500 text-white text-sm font-semibold shrink-0 ml-4"
+            className="px-6 py-3 rounded-xl bg-amber-500 text-white text-sm font-semibold shrink-0 ml-4"
           >
             Solve First Puzzle →
           </motion.button>
@@ -361,7 +361,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
 
             >
               {profile.dailyChallengeCompleted && (
-                <div className="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-semibold flex items-center gap-1 border border-emerald-500/20 z-10 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                <div className="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-semibold flex items-center gap-1 border border-amber-500/20 z-10 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
                   <Star className="w-3 h-3" /> Completed
                 </div>
               )}
@@ -374,7 +374,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 </div>
               </div>
               <div className="flex items-center justify-between mb-5 relative z-10">
-                <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${dailyPuzzle?.difficulty === 'easy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' :
+                <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${dailyPuzzle?.difficulty === 'easy' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]' :
                   dailyPuzzle?.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]' :
                     'bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]'
                   }`}>
@@ -407,7 +407,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
                 {profile.recentGames.slice(0, 3).map((game) => (
                   <div key={game.id} className="flex items-center gap-3 py-1.5 border-b border-border/20 last:border-0">
                     <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                      game.result === 'win' ? 'bg-emerald-500/10 text-emerald-400' :
+                      game.result === 'win' ? 'bg-amber-500/10 text-amber-400' :
                       game.result === 'draw' ? 'bg-amber-500/10 text-amber-400' :
                       'bg-red-500/10 text-red-400'
                     }`}>

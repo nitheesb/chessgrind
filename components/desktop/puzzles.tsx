@@ -96,7 +96,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         <div className="glass-card p-5 text-center">
-          <PuzzleIcon className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
+          <PuzzleIcon className="w-6 h-6 text-amber-500 mx-auto mb-2" />
           <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.solved} /></p>
           <p className="text-sm text-muted-foreground">Puzzles Solved</p>
         </div>
@@ -565,7 +565,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                   status === 'playing' || status === 'opponent-moving'
                     ? 'bg-blue-500/10 text-blue-500'
                     : status === 'correct'
-                    ? 'bg-emerald-500/10 text-emerald-500'
+                    ? 'bg-amber-500/10 text-amber-500'
                     : status === 'wrong'
                     ? 'bg-red-500/10 text-red-500'
                     : 'bg-amber-500/10 text-amber-500'
@@ -815,7 +815,7 @@ function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => voi
           <ChevronLeft className="w-5 h-5" /> Exit Rush
         </button>
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 font-bold">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-400 font-bold">
             <Check className="w-4 h-4" /> {solved}
           </div>
           <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-xl ${timeLeft < 30 ? 'bg-red-500/10 text-red-400' : 'bg-secondary text-foreground'}`}>

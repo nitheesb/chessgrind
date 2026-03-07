@@ -324,7 +324,7 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
       {/* Status */}
       <div className="text-center">
         {isCompleted ? (
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 text-green-500">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-500">
             <Check className="w-5 h-5" />
             <span className="font-semibold">Opening complete! +15 XP</span>
           </div>

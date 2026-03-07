@@ -34,14 +34,14 @@ interface DesktopPlayAIProps {
 type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'master'
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string }> = {
-  beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'emerald' },
+  beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'amber' },
   intermediate: { name: 'Intermediate', depth: 2, description: 'A fair challenge', color: 'blue' },
   advanced: { name: 'Advanced', depth: 3, description: 'For experienced players', color: 'purple' },
   master: { name: 'Master', depth: 4, description: 'The ultimate test', color: 'red' },
 }
 
 const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string; activeStyle: string }> = {
-  emerald: { border: 'border-emerald-500', bg: 'bg-emerald-500/10', text: 'text-emerald-500', activeStyle: 'shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/50' },
+  amber: { border: 'border-amber-500', bg: 'bg-amber-500/10', text: 'text-amber-500', activeStyle: 'shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/50' },
   blue: { border: 'border-blue-500', bg: 'bg-blue-500/10', text: 'text-blue-500', activeStyle: 'shadow-[0_0_20px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/50' },
   purple: { border: 'border-purple-500', bg: 'bg-purple-500/10', text: 'text-purple-500', activeStyle: 'shadow-[0_0_20px_rgba(168,85,247,0.15)] ring-1 ring-purple-500/50' },
   red: { border: 'border-red-500', bg: 'bg-red-500/10', text: 'text-red-500', activeStyle: 'shadow-[0_0_20px_rgba(239,68,68,0.15)] ring-1 ring-red-500/50' },
@@ -368,7 +368,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                   setPlayerColor(color === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : color)
                 }}
                 className={`px-8 py-4 rounded-2xl border transition-all duration-300 flex items-center gap-3 relative overflow-hidden group ${playerColor === color || (color !== 'random' && playerColor === color)
-                  ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(52,211,153,0.15)] ring-1 ring-primary/50'
+                  ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/50'
                   : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
                   }`}
               >
@@ -390,7 +390,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         <div className="text-center mt-6">
           <motion.button
             onClick={startGame}
-            className="px-14 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-[0_0_30px_rgba(52,211,153,0.3)] hover:shadow-[0_0_40px_rgba(52,211,153,0.5)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group"
+            className="px-14 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
             <span className="relative z-10 flex items-center justify-center gap-2">Start Game <ChevronRight className="w-5 h-5" /></span>
@@ -439,7 +439,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
             <div className={`flex items-center gap-3 p-3 rounded-xl ${game.turn() === (playerColor === 'white' ? 'w' : 'b') ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/50'
               }`}>
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
@@ -550,7 +550,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`mb-4 p-4 rounded-xl text-center font-semibold ${gameStatus === 'won'
-                  ? 'bg-emerald-500/10 text-emerald-500'
+                  ? 'bg-amber-500/10 text-amber-500'
                   : gameStatus === 'lost'
                     ? 'bg-red-500/10 text-red-500'
                     : 'bg-amber-500/10 text-amber-500'

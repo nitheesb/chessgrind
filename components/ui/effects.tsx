@@ -428,7 +428,7 @@ export function GlowBorderCard({
       <div
         className="absolute -inset-[1px] rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{
-          background: 'conic-gradient(from var(--border-angle, 0deg), transparent 0%, rgba(52,211,153,0.4) 10%, transparent 20%, transparent 50%, rgba(56,145,255,0.3) 60%, transparent 70%)',
+          background: 'conic-gradient(from var(--border-angle, 0deg), transparent 0%, rgba(245,158,11,0.4) 10%, transparent 20%, transparent 50%, rgba(56,145,255,0.3) 60%, transparent 70%)',
           animation: active ? 'border-spin 3s linear infinite' : 'none',
           WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
           WebkitMaskComposite: 'xor',

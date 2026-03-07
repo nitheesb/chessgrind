@@ -78,7 +78,7 @@ export function getDifficultyColor(difficulty: string): string {
   switch (difficulty) {
     case 'beginner':
     case 'easy':
-      return 'text-green-400'
+      return 'text-amber-400'
     case 'intermediate':
     case 'medium':
       return 'text-yellow-400'
@@ -96,7 +96,7 @@ export function getDifficultyBg(difficulty: string): string {
   switch (difficulty) {
     case 'beginner':
     case 'easy':
-      return 'bg-green-400/10 text-green-400 border-green-400/20'
+      return 'bg-amber-400/10 text-amber-400 border-amber-400/20'
     case 'intermediate':
     case 'medium':
       return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'

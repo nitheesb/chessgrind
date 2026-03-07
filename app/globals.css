@@ -119,7 +119,7 @@
 
   /* ── Subtle Accents — premium tinted borders ── */
   .glow-primary {
-    border: 0.5px solid rgba(52, 211, 153, 0.22);
+    border: 0.5px solid rgba(245, 158, 11, 0.22);
   }
 
   .glow-gold {
@@ -350,11 +350,11 @@
 
   0%,
   100% {
-    border-color: rgba(52, 211, 153, 0.08);
+    border-color: rgba(245, 158, 11, 0.08);
   }
 
   50% {
-    border-color: rgba(52, 211, 153, 0.20);
+    border-color: rgba(245, 158, 11, 0.20);
   }
 }
 
@@ -500,7 +500,7 @@
 
 .mesh-gradient::before {
   background:
-    radial-gradient(ellipse 55% 45% at 15% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 15% 15%, rgba(245, 158, 11, 0.08) 0%, transparent 60%),
     radial-gradient(ellipse 45% 40% at 85% 75%, rgba(99, 102, 241, 0.06) 0%, transparent 60%);
   animation: mesh-drift-1 25s ease-in-out infinite;
 }
@@ -558,7 +558,7 @@
   width: 900px;
   height: 900px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(52, 211, 153, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%);
   top: -300px;
   right: -250px;
   animation: float 25s ease-in-out infinite;
@@ -591,13 +591,13 @@
   position: absolute;
   inset: -50%;
   background: conic-gradient(from 0deg at 50% 50%,
-      rgba(52, 211, 153, 0.06) 0deg,
+      rgba(245, 158, 11, 0.06) 0deg,
       rgba(56, 145, 255, 0.04) 60deg,
       rgba(245, 166, 35, 0.04) 120deg,
       rgba(168, 85, 247, 0.04) 180deg,
-      rgba(52, 211, 153, 0.06) 240deg,
+      rgba(245, 158, 11, 0.06) 240deg,
       rgba(56, 145, 255, 0.04) 300deg,
-      rgba(52, 211, 153, 0.06) 360deg);
+      rgba(245, 158, 11, 0.06) 360deg);
   animation: aurora-rotate 20s linear infinite;
   filter: blur(80px);
   z-index: 0;
@@ -856,7 +856,7 @@
   position: absolute;
   width: 2px;
   height: 2px;
-  background: rgba(52, 211, 153, 0.3);
+  background: rgba(245, 158, 11, 0.3);
   border-radius: 50%;
   animation: particle-drift linear infinite;
 }
@@ -969,14 +969,14 @@
 }
 
 /* ── Stat Cards — colored border on hover ── */
-.stat-card-emerald {
+.stat-card-amber {
   transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 
-.stat-card-emerald:hover {
+.stat-card-amber:hover {
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(52, 211, 153, 0.25);
-  box-shadow: 0 0 20px rgba(52, 211, 153, 0.06);
+  border-color: rgba(245, 158, 11, 0.25);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.06);
 }
 
 .stat-card-orange {
@@ -997,16 +997,6 @@
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(96, 165, 250, 0.25);
   box-shadow: 0 0 20px rgba(96, 165, 250, 0.06);
-}
-
-.stat-card-amber {
-  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.stat-card-amber:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(251, 191, 36, 0.25);
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.06);
 }
 
 /* ── Hero Gradient Text — dramatic Apple style ── */
@@ -1072,13 +1062,13 @@
 
   0%,
   100% {
-    box-shadow: 0 0 0 0.5px rgba(52, 211, 153, 0.08);
-    border-color: rgba(52, 211, 153, 0.08);
+    box-shadow: 0 0 0 0.5px rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.08);
   }
 
   50% {
-    box-shadow: 0 0 0 0.5px rgba(52, 211, 153, 0.16);
-    border-color: rgba(52, 211, 153, 0.16);
+    box-shadow: 0 0 0 0.5px rgba(245, 158, 11, 0.16);
+    border-color: rgba(245, 158, 11, 0.16);
   }
 }
 
@@ -1256,7 +1246,7 @@
    ═══════════════════════════ */
 
 .chess-square-highlight {
-  background: radial-gradient(circle, rgba(52, 211, 153, 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, transparent 70%);
 }
 
 .chess-board-wrapper {
@@ -1328,12 +1318,12 @@
    ═══════════════════════════ */
 
 ::selection {
-  background: rgba(52, 211, 153, 0.25);
+  background: rgba(245, 158, 11, 0.25);
   color: hsl(0 0% 98%);
 }
 
 :focus-visible {
-  outline: 2px solid rgba(52, 211, 153, 0.5);
+  outline: 2px solid rgba(245, 158, 11, 0.5);
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -1356,7 +1346,7 @@ input[type="email"] {
 input[type="text"]:focus,
 input[type="password"]:focus,
 input[type="email"]:focus {
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12), 0 0 20px rgba(52, 211, 153, 0.06);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12), 0 0 20px rgba(245, 158, 11, 0.06);
 }
 
 /* ═══════════════════════════

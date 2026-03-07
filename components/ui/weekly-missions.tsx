@@ -20,7 +20,7 @@ export function WeeklyMissions({ missions }: WeeklyMissionsProps) {
               <div>
                 <p className="text-xs font-semibold text-foreground flex items-center gap-1">
                   {mission.title}
-                  {mission.completed && <span className="text-emerald-400 text-[10px]">✓</span>}
+                  {mission.completed && <span className="text-amber-400 text-[10px]">✓</span>}
                 </p>
                 <p className="text-[10px] text-muted-foreground">{mission.description}</p>
               </div>
@@ -32,7 +32,7 @@ export function WeeklyMissions({ missions }: WeeklyMissionsProps) {
           <div className="flex items-center gap-2">
             <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-500 ${mission.completed ? 'bg-emerald-500' : 'bg-primary'}`}
+                className={`h-full rounded-full transition-all duration-500 ${mission.completed ? 'bg-amber-500' : 'bg-primary'}`}
                 style={{ width: `${Math.min(100, (mission.progress / mission.target) * 100)}%` }}
               />
             </div>

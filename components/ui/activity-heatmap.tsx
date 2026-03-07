@@ -15,10 +15,10 @@ const DAY_LABELS = ['M', '', 'W', '', 'F', '', '']
 
 function getColor(count: number): string {
   if (count === 0) return 'bg-secondary'
-  if (count === 1) return 'bg-emerald-500/25'
-  if (count <= 3) return 'bg-emerald-500/50'
-  if (count <= 5) return 'bg-emerald-500/75'
-  return 'bg-emerald-500'
+  if (count === 1) return 'bg-amber-500/25'
+  if (count <= 3) return 'bg-amber-500/50'
+  if (count <= 5) return 'bg-amber-500/75'
+  return 'bg-amber-500'
 }
 
 export function ActivityHeatmap({ activityDates, compact = false }: ActivityHeatmapProps) {

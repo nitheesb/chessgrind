@@ -383,7 +383,7 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 text-green-500"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-500"
                   >
                     <Check className="w-5 h-5" />
                     <span className="font-semibold">Opening complete! +15 XP</span>

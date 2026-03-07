@@ -75,7 +75,7 @@ export function ShareButtons({ title, text, compact }: ShareButtonsProps) {
                 <span className="text-sm font-bold text-orange-400">r/</span>
               </a>
               <button onClick={handleCopy} className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Copy link">
-                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                {copied ? <Check className="w-4 h-4 text-amber-400" /> : <Copy className="w-4 h-4" />}
               </button>
             </motion.div>
           )}
@@ -108,7 +108,7 @@ export function ShareButtons({ title, text, compact }: ShareButtonsProps) {
         className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
         title="Copy link"
       >
-        {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+        {copied ? <Check className="w-4 h-4 text-amber-400" /> : <Copy className="w-4 h-4" />}
       </button>
     </div>
   )

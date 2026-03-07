@@ -65,7 +65,7 @@ export function ProgressRing({
   progress,
   size = 80,
   strokeWidth = 6,
-  color = 'hsl(142, 71%, 45%)',
+  color = 'hsl(38, 92%, 50%)',
   bgColor = 'hsl(222, 16%, 12%)',
   children,
   className = '',

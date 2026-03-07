@@ -206,7 +206,7 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
           <div className="glass-card p-4 flex flex-col gap-4">
             <div className="flex items-center justify-around">
               <div className="flex flex-col items-center gap-2">
-                <ProgressRing progress={puzzleAccuracy} size={72} strokeWidth={5} color="hsl(142, 71%, 45%)">
+                <ProgressRing progress={puzzleAccuracy} size={72} strokeWidth={5} color="hsl(38, 92%, 50%)">
                   <span className="text-xs font-bold text-foreground">{puzzleAccuracy}%</span>
                 </ProgressRing>
                 <span className="text-[10px] text-muted-foreground">Puzzle Accuracy</span>
@@ -274,7 +274,7 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
                 return (
                   <div key={game.id} className="flex items-center gap-3 py-1.5 border-b border-border/20 last:border-0">
                     <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                      game.result === 'win' ? 'bg-emerald-500/10 text-emerald-400' :
+                      game.result === 'win' ? 'bg-amber-500/10 text-amber-400' :
                       game.result === 'draw' ? 'bg-amber-500/10 text-amber-400' :
                       'bg-red-500/10 text-red-400'
                     }`}>

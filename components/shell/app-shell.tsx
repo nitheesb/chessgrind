@@ -149,7 +149,7 @@ export function AppShell() {
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[2px] rounded-full bg-primary shadow-[0_2px_10px_rgba(52,211,153,0.8)]"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[2px] rounded-full bg-primary shadow-[0_2px_10px_rgba(245,158,11,0.8)]"
                     transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
                   />
                 )}
@@ -168,7 +168,7 @@ export function AppShell() {
             {currentPage === 'profile' && (
               <motion.div
                 layoutId="nav-indicator"
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[2px] rounded-full bg-primary shadow-[0_2px_10px_rgba(52,211,153,0.8)]"
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[2px] rounded-full bg-primary shadow-[0_2px_10px_rgba(245,158,11,0.8)]"
                 transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
               />
             )}

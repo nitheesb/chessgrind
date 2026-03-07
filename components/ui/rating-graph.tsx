@@ -46,7 +46,7 @@ export function RatingGraph({ data, width = 300, height = 80, color = '#10b981' 
   const lastAvg = data.slice(-Math.min(5, data.length)).reduce((a, d) => a + d.rating, 0) / Math.min(5, data.length)
   const diff = lastAvg - firstAvg
   const trendArrow = diff > 5 ? '↑' : diff < -5 ? '↓' : '→'
-  const trendColor = diff > 5 ? 'text-emerald-400' : diff < -5 ? 'text-red-400' : 'text-muted-foreground'
+  const trendColor = diff > 5 ? 'text-amber-400' : diff < -5 ? 'text-red-400' : 'text-muted-foreground'
 
   const currentRating = data[data.length - 1].rating
   const gradId = useMemo(() => `rg-${Math.random().toString(36).slice(2, 7)}`, [])

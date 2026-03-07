@@ -1069,7 +1069,7 @@ function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => voi
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex items-center justify-center rounded-xl"
-              style={{ backgroundColor: feedbackType === 'correct' ? 'rgba(52,211,153,0.2)' : 'rgba(239,68,68,0.2)' }}
+              style={{ backgroundColor: feedbackType === 'correct' ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)' }}
             >
               <div className={`px-6 py-3 rounded-xl font-bold text-lg ${feedbackType === 'correct' ? 'bg-primary text-white' : 'bg-destructive text-white'}`}>
                 {feedbackType === 'correct' ? '✓ Correct!' : '✗ Miss'}

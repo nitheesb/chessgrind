@@ -111,7 +111,7 @@ export function LoginPage() {
           transition={{ duration: 0.4 }}
           className="inline-flex items-center justify-center gap-3 mb-4 relative"
         >
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center  relative z-10">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center  relative z-10">
             <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
               <path d="M19 22H5v-2h14v2M12 2c-1.1 0-2 .9-2 2v4h4V4c0-1.1-.9-2-2-2m4 6H8v2H7v8h2v-6h6v6h2v-8h-1V8z"/>
             </svg>
@@ -236,7 +236,7 @@ export function LoginPage() {
                   onClick={handleSubmit}
                   disabled={!username.trim() || isSubmitting || (isBackendEnabled && !password)}
                   whileTap={{ scale: 0.97 }}
-                  className="relative w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold text-base flex items-center justify-center gap-2.5 disabled:opacity-40 shadow-lg shadow-emerald-500/20 active:shadow-sm transition-shadow overflow-hidden btn-shine"
+                  className="relative w-full h-14 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-bold text-base flex items-center justify-center gap-2.5 disabled:opacity-40 shadow-lg shadow-amber-500/20 active:shadow-sm transition-shadow overflow-hidden btn-shine"
                 >
                   <span className="absolute inset-0 pointer-events-none" style={{
                     background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%)',

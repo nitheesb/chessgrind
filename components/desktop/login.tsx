@@ -115,7 +115,7 @@ export function DesktopLogin() {
             bottom: '10%', right: '10%',
           }} />
           <div className="absolute w-[300px] h-[300px] rounded-full" style={{
-            background: 'radial-gradient(circle, rgba(52, 211, 153, 0.06) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%)',
             top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           }} />
         </div>
@@ -199,7 +199,7 @@ export function DesktopLogin() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center">
               <Crown className="w-7 h-7 text-white" />
             </div>
             <span className="text-2xl font-bold text-foreground">ChessVault</span>
@@ -290,7 +290,7 @@ export function DesktopLogin() {
               <motion.button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-shine relative overflow-hidden group"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-shine relative overflow-hidden group"
                 whileHover={{ y: -1, boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}
                 whileTap={{ scale: 0.98 }}
               >

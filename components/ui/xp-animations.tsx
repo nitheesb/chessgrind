@@ -65,7 +65,7 @@ export function LevelUpOverlay() {
             transition={{ duration: 1.5, ease: 'easeOut' }}
           >
             <div className="absolute inset-0" style={{
-              background: 'radial-gradient(circle at 50% 50%, rgba(52,211,153,0.15) 0%, transparent 50%)',
+              background: 'radial-gradient(circle at 50% 50%, rgba(245,158,11,0.15) 0%, transparent 50%)',
             }} />
           </motion.div>
 
@@ -143,7 +143,7 @@ export function LevelUpOverlay() {
               transition={{ delay: 0.8 }}
               onClick={dismissLevelUp}
               aria-label="Dismiss level up notification"
-              className="px-12 py-3.5 rounded-xl bg-gradient-to-r from-primary to-emerald-400 text-primary-foreground font-semibold text-sm hover:shadow-xl hover:shadow-primary/25 transition-all relative z-10 btn-shine"
+              className="px-12 py-3.5 rounded-xl bg-gradient-to-r from-primary to-amber-400 text-primary-foreground font-semibold text-sm hover:shadow-xl hover:shadow-primary/25 transition-all relative z-10 btn-shine"
               whileHover={{ y: -2, scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
             >

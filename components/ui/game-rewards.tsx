@@ -242,7 +242,7 @@ export function NextAchievementPreview() {
               initial={{ width: 0 }}
               animate={{ width: `${next.pct}%` }}
               transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
-              className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-400"
+              className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400"
             />
           </div>
         </div>

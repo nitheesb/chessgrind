@@ -43,10 +43,10 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
   const { currentLevel, nextLevel, progress, xpIntoLevel, xpForLevel } = getLevelInfo(profile.xp)
 
   const stats = [
-    { label: 'Puzzles Solved', value: profile.puzzlesSolved, icon: <Puzzle className="w-5 h-5" />, colorClass: 'text-emerald-400', bgClass: 'bg-emerald-500/10', hoverCard: 'stat-card-emerald' },
+    { label: 'Puzzles Solved', value: profile.puzzlesSolved, icon: <Puzzle className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
     { label: 'Current Streak', value: profile.streak, icon: <Flame className="w-5 h-5" />, colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10', hoverCard: 'stat-card-orange' },
     { label: 'Puzzle Rating', value: profile.puzzleRating || 800, icon: <TrendingUp className="w-5 h-5" />, colorClass: 'text-blue-400', bgClass: 'bg-blue-500/10', hoverCard: 'stat-card-blue' },
-    { label: 'Total XP', value: profile.xp, icon: <Zap className="w-5 h-5" />, colorClass: 'text-primary', bgClass: 'bg-primary/10', hoverCard: 'stat-card-emerald' },
+    { label: 'Total XP', value: profile.xp, icon: <Zap className="w-5 h-5" />, colorClass: 'text-primary', bgClass: 'bg-primary/10', hoverCard: 'stat-card-amber' },
     { label: 'Games Played', value: profile.gamesPlayed || 0, icon: <Trophy className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
     { label: 'Openings Learned', value: profile.openingsLearned || 0, icon: <BookOpen className="w-5 h-5" />, colorClass: 'text-violet-400', bgClass: 'bg-violet-500/10', hoverCard: 'stat-card-blue' },
   ]
@@ -179,7 +179,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
               {profile.recentGames.slice(0, 8).map((game) => (
                 <div key={game.id} className="flex items-center gap-3 py-2 border-b border-border/20 last:border-0">
                   <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                    game.result === 'win' ? 'bg-emerald-500/10 text-emerald-400' :
+                    game.result === 'win' ? 'bg-amber-500/10 text-amber-400' :
                     game.result === 'draw' ? 'bg-amber-500/10 text-amber-400' :
                     'bg-red-500/10 text-red-400'
                   }`}>

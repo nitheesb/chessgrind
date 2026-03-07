@@ -20,7 +20,7 @@ function Particle({ delay, x, size }: { delay: number; x: number; size: number }
         height: size,
         left: `${x}%`,
         bottom: '-5%',
-        background: `radial-gradient(circle, rgba(52,211,153,${0.3 + Math.random() * 0.3}) 0%, transparent 70%)`,
+        background: `radial-gradient(circle, rgba(245,158,11,${0.3 + Math.random() * 0.3}) 0%, transparent 70%)`,
       }}
       initial={{ y: 0, opacity: 0, scale: 0 }}
       animate={{
@@ -76,7 +76,7 @@ export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenPro
             <motion.div
               className="absolute w-[700px] h-[700px] rounded-full morph-blob"
               style={{
-                background: 'radial-gradient(circle, rgba(52, 211, 153, 0.12) 0%, transparent 60%)',
+                background: 'radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 60%)',
                 top: '5%',
                 left: '15%',
               }}
@@ -122,7 +122,7 @@ export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenPro
                 top: `${8 + ((i * 17) % 70)}%`,
                 left: `${5 + ((i * 19) % 80)}%`,
                 color: 'rgba(255,255,255,0.025)',
-                textShadow: '0 0 40px rgba(52,211,153,0.03)',
+                textShadow: '0 0 40px rgba(245,158,11,0.03)',
               }}
               initial={{ opacity: 0, scale: 0.5, rotate: -20 + i * 8 }}
               animate={{
@@ -152,7 +152,7 @@ export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenPro
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
               style={{ perspective: '600px' }}
             >
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-green-600 flex items-center justify-center relative overflow-hidden shadow-2xl shadow-emerald-500/30">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 flex items-center justify-center relative overflow-hidden shadow-2xl shadow-amber-500/30">
                 <svg viewBox="0 0 24 24" className="w-11 h-11 relative z-10">
                   <motion.path
                     d={KNIGHT_PATH}
@@ -186,7 +186,7 @@ export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenPro
               </div>
               {/* Glow ring */}
               <motion.div
-                className="absolute inset-[-8px] rounded-[28px] border border-emerald-400/20"
+                className="absolute inset-[-8px] rounded-[28px] border border-amber-400/20"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: [0.8, 1.1, 1], opacity: [0, 0.5, 0] }}
                 transition={{ duration: 1.5, delay: 0.5, repeat: Infinity, repeatDelay: 1 }}
@@ -246,7 +246,7 @@ export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenPro
               <motion.div
                 className="h-full rounded-full"
                 style={{
-                  background: 'linear-gradient(90deg, hsl(142 71% 45%), hsl(165 80% 40%), hsl(142 71% 45%))',
+                  background: 'linear-gradient(90deg, hsl(38 92% 50%), hsl(30 80% 45%), hsl(38 92% 50%))',
                   backgroundSize: '200% 100%',
                 }}
                 initial={{ width: '0%' }}
