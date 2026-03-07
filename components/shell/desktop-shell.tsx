@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
+import { useState, useCallback, useEffect, useRef, useTransition, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { getLevelInfo } from '@/lib/chess-store'
@@ -22,7 +22,6 @@ import {
   Flame,
   Zap,
 } from 'lucide-react'
-import { CursorSpotlight } from '@/components/ui/effects'
 import { CommandPalette, CommandPaletteTrigger } from '@/components/ui/command-palette'
 
 // Desktop pages
@@ -87,7 +86,9 @@ export function DesktopShell() {
   const { playSound } = useSoundAndHaptics()
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
   const [showSplash, setShowSplash] = useState(true)
+  const [, startTransition] = useTransition()
   const { currentLevel, progress } = getLevelInfo(profile.xp)
+  const preloadedRef = useRef<Set<string>>(new Set(['dashboard']))
 
   useEffect(() => {
     checkAndUpdateStreak()
@@ -99,8 +100,25 @@ export function DesktopShell() {
 
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
-    setCurrentPage(page as Page)
+    startTransition(() => {
+      setCurrentPage(page as Page)
+    })
   }, [playSound])
+
+  // Preload page modules on nav hover for instant switching
+  const handleNavHover = useCallback((pageId: string) => {
+    if (preloadedRef.current.has(pageId)) return
+    preloadedRef.current.add(pageId)
+    const importMap: Record<string, () => Promise<unknown>> = {
+      openings: () => import('@/components/desktop/openings'),
+      traps: () => import('@/components/desktop/traps'),
+      profile: () => import('@/components/desktop/profile'),
+      settings: () => import('@/components/desktop/settings'),
+      puzzles: () => import('@/components/desktop/puzzles'),
+      play: () => import('@/components/desktop/play-ai'),
+    }
+    importMap[pageId]?.()
+  }, [])
 
   const handleLogout = useCallback(() => {
     playSound('click')
@@ -134,10 +152,6 @@ export function DesktopShell() {
 
   return (
     <div className="min-h-screen flex bg-background relative">
-      {/* Mesh gradient background — gives glass something to blur */}
-      <div className="mesh-gradient" />
-      <div className="noise-overlay" />
-      <CursorSpotlight />
 
       {/* Global overlays */}
       <XPPopup />
@@ -215,7 +229,8 @@ export function DesktopShell() {
               <button
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-[9px] rounded-xl text-left transition-all duration-300 relative overflow-hidden group ${isActive
+                onMouseEnter={() => handleNavHover(item.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-[9px] rounded-xl text-left transition-colors duration-150 relative overflow-hidden group ${isActive
                   ? 'bg-primary/10 text-primary font-semibold shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/20'
                   : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
                   }`}
@@ -248,7 +263,8 @@ export function DesktopShell() {
               <button
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-[9px] rounded-xl text-left transition-all duration-300 relative overflow-hidden group ${isActive
+                onMouseEnter={() => handleNavHover(item.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-[9px] rounded-xl text-left transition-colors duration-150 relative overflow-hidden group ${isActive
                   ? 'bg-primary/10 text-primary font-semibold shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/20'
                   : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
                   }`}
@@ -281,13 +297,13 @@ export function DesktopShell() {
         className="flex-1 relative z-10"
         style={{ marginLeft: 220 }}
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           <motion.div
             key={currentPage}
-            initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12, ease: 'easeOut' }}
             className="min-h-screen"
           >
             {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}

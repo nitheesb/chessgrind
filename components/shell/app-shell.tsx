@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
+import { useState, useCallback, useEffect, useRef, useTransition, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
@@ -66,6 +66,7 @@ export function AppShell() {
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
   const [showSplash, setShowSplash] = useState(true)
+  const [, startTransition] = useTransition()
 
   useEffect(() => {
     checkAndUpdateStreak()
@@ -78,19 +79,25 @@ export function AppShell() {
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
     triggerHaptic('selection')
-    setCurrentPage(page as Page)
+    startTransition(() => {
+      setCurrentPage(page as Page)
+    })
   }, [playSound, triggerHaptic])
 
   const handleBack = useCallback(() => {
     playSound('click')
     triggerHaptic('light')
-    setCurrentPage('dashboard')
+    startTransition(() => {
+      setCurrentPage('dashboard')
+    })
   }, [playSound, triggerHaptic])
 
   const handleNavClick = useCallback((pageId: Page) => {
     playSound('click')
     triggerHaptic('selection')
-    setCurrentPage(pageId)
+    startTransition(() => {
+      setCurrentPage(pageId)
+    })
   }, [playSound, triggerHaptic])
 
   if (showSplash) {
@@ -103,9 +110,6 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Mesh gradient background */}
-      <div className="mesh-gradient" />
-      <div className="noise-overlay" />
 
       {/* Global overlays */}
       <XPPopup />
@@ -121,13 +125,13 @@ export function AppShell() {
 
       {/* Main content area */}
       <main className="flex-1 overflow-y-auto px-4 pt-3 pb-20 relative z-10">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           <motion.div
             key={currentPage}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12, ease: 'easeOut' }}
           >
             {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
             {currentPage !== 'dashboard' && (
