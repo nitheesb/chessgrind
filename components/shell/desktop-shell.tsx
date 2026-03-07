@@ -152,6 +152,17 @@ export function DesktopShell() {
 
   return (
     <div className="min-h-screen flex bg-background relative">
+      {/* Lightweight ambient background — static radial gradients, no blur/animation */}
+      <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
+        <div className="absolute w-[600px] h-[600px] rounded-full opacity-100" style={{
+          background: 'radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%)',
+          top: '-10%', right: '-5%',
+        }} />
+        <div className="absolute w-[500px] h-[500px] rounded-full opacity-100" style={{
+          background: 'radial-gradient(circle, rgba(99,102,241,0.025) 0%, transparent 70%)',
+          bottom: '-5%', left: '-3%',
+        }} />
+      </div>
 
       {/* Global overlays */}
       <XPPopup />

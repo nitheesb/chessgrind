@@ -95,7 +95,7 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
       {/* Mesh gradient background */}
-      <div className="mesh-gradient" />
+      <div className="ambient-bg" />
       
       {/* Subtle grid pattern */}
       <div className="absolute inset-0 z-[1] pointer-events-none" style={{

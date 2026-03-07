@@ -633,31 +633,89 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-6 flex gap-4"
+                transition={{ delay: 0.2 }}
+                className="mt-6"
               >
-                <motion.button
-                  onClick={() => {
-                    playSound('click')
-                    onBack()
-                  }}
-                  className="flex-1 py-4 rounded-xl bg-secondary text-foreground font-semibold flex items-center justify-center gap-2"
-                >
-                  Back to Puzzles
-                </motion.button>
-                <motion.button
-                  onClick={() => {
-                    playSound('click')
-                    onNext()
-                  }}
-                  className="flex-1 py-4 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold flex items-center justify-center gap-2"
-                >
-                  Next Puzzle <SkipForward className="w-5 h-5" />
-                </motion.button>
-                <ShareButtons
-                  compact
-                  title={`I solved "${puzzle.title}" on ChessVault!`}
-                  text={`🧩 I just solved "${puzzle.title}" (${puzzle.difficulty}) and earned ${earnedXP || puzzle.xpReward} XP on ChessVault!`}
-                />
+                {/* Success celebration card */}
+                <div className="mb-6 p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-primary/5 to-transparent border border-primary/20 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
+                  <div className="flex items-center gap-4 relative z-10">
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.3 }}
+                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-amber-500/30"
+                    >
+                      <Trophy className="w-8 h-8 text-white" />
+                    </motion.div>
+                    <div className="flex-1">
+                      <motion.p
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-xl font-bold text-foreground"
+                      >
+                        Puzzle Complete! 🎉
+                      </motion.p>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.5, type: 'spring' }}
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/15 text-primary font-bold text-sm border border-primary/20"
+                        >
+                          <Zap className="w-4 h-4" /> +{earnedXP || puzzle.xpReward} XP
+                        </motion.span>
+                        {earnedXP > puzzle.xpReward && (
+                          <motion.span
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.6, type: 'spring' }}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-500/15 text-orange-400 font-bold text-sm border border-orange-500/20"
+                          >
+                            🔥 Combo Bonus!
+                          </motion.span>
+                        )}
+                        {!hadWrongMoveRef.current && (
+                          <motion.span
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.7, type: 'spring' }}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-violet-500/15 text-violet-400 font-bold text-sm border border-violet-500/20"
+                          >
+                            ✨ Perfect!
+                          </motion.span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <motion.button
+                    onClick={() => {
+                      playSound('click')
+                      onBack()
+                    }}
+                    className="flex-1 py-4 rounded-xl bg-secondary text-foreground font-semibold flex items-center justify-center gap-2"
+                  >
+                    Back to Puzzles
+                  </motion.button>
+                  <motion.button
+                    onClick={() => {
+                      playSound('click')
+                      onNext()
+                    }}
+                    className="flex-1 py-4 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                  >
+                    Next Puzzle <SkipForward className="w-5 h-5" />
+                  </motion.button>
+                  <ShareButtons
+                    compact
+                    title={`I solved "${puzzle.title}" on ChessVault!`}
+                    text={`🧩 I just solved "${puzzle.title}" (${puzzle.difficulty}) and earned ${earnedXP || puzzle.xpReward} XP on ChessVault!`}
+                  />
+                </div>
               </motion.div>
             )}
 

@@ -90,7 +90,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
                   </span>
                   <span className="flex items-center gap-1.5 text-sm">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Member since {new Date(profile.joinDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                    <span className="text-muted-foreground">Member since {profile.joinDate ? new Date(profile.joinDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                   </span>
                 </div>
               </div>

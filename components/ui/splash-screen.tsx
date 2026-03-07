@@ -66,8 +66,8 @@ export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenPro
       {show && (
         <motion.div
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, filter: 'blur(8px)' }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden"
           style={{ background: 'linear-gradient(180deg, hsl(230 20% 4%) 0%, hsl(230 25% 2%) 100%)' }}
         >

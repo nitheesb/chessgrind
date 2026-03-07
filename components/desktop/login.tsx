@@ -107,15 +107,15 @@ export function DesktopLogin() {
             }}
           />
           <div className="absolute w-[500px] h-[500px] rounded-full" style={{
-            background: 'radial-gradient(circle, rgba(0, 210, 190, 0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(245, 158, 11, 0.10) 0%, transparent 70%)',
             top: '10%', left: '10%',
           }} />
           <div className="absolute w-[400px] h-[400px] rounded-full" style={{
-            background: 'radial-gradient(circle, rgba(120, 60, 220, 0.08) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%)',
             bottom: '10%', right: '10%',
           }} />
           <div className="absolute w-[300px] h-[300px] rounded-full" style={{
-            background: 'radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(245, 158, 11, 0.05) 0%, transparent 70%)',
             top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           }} />
         </div>
@@ -195,7 +195,7 @@ export function DesktopLogin() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="mesh-gradient" />
+        <div className="ambient-bg" />
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
@@ -291,7 +291,7 @@ export function DesktopLogin() {
                 type="submit"
                 disabled={isLoading}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-shine relative overflow-hidden group"
-                whileHover={{ y: -1, boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}
+                whileHover={{ y: -1, boxShadow: '0 8px 30px rgba(245,158,11,0.3)' }}
                 whileTap={{ scale: 0.98 }}
               >
                 {isLoading ? (

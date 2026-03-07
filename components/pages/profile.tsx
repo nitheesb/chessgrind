@@ -122,7 +122,7 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
               <h2 className="text-xl font-display font-bold text-foreground shimmer-text">{profile.username}</h2>
               <p className="text-sm text-primary font-medium">{currentLevel.title}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Joined {new Date(profile.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                Joined {profile.joinDate ? new Date(profile.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </p>
             </div>
             <div className="w-full">

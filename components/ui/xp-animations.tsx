@@ -20,9 +20,9 @@ export function XPPopup() {
         >
           <div className="flex items-center gap-3 px-7 py-4 rounded-2xl border border-primary/30 relative overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)',
+              background: 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.05) 100%)',
               backdropFilter: 'saturate(180%) blur(24px)',
-              boxShadow: '0 0 60px rgba(34,197,94,0.2), 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)',
+              boxShadow: '0 0 60px rgba(245,158,11,0.2), 0 12px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)',
             }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-shimmer" />
@@ -94,7 +94,7 @@ export function LevelUpOverlay() {
             className="flex flex-col items-center gap-6 p-14 glass-card text-center relative overflow-hidden"
             onClick={(e) => e.stopPropagation()}
             style={{
-              boxShadow: '0 0 100px rgba(34,197,94,0.2), 0 25px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
+              boxShadow: '0 0 100px rgba(245,158,11,0.2), 0 25px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
               perspective: '600px',
             }}
           >
@@ -106,7 +106,7 @@ export function LevelUpOverlay() {
               animate={{ rotate: [0, 360] }}
               transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
               className="w-32 h-32 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center relative z-10"
-              style={{ boxShadow: '0 0 50px rgba(34,197,94,0.25)' }}
+              style={{ boxShadow: '0 0 50px rgba(245,158,11,0.25)' }}
             >
               <motion.span
                 className="text-6xl font-display font-bold text-primary"

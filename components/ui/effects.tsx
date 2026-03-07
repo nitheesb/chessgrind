@@ -53,7 +53,7 @@ export function CursorSpotlight() {
         width: 600,
         height: 600,
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(120,220,180,0.07) 0%, rgba(80,180,255,0.03) 40%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(245,158,11,0.06) 0%, rgba(99,102,241,0.03) 40%, transparent 70%)',
         willChange: 'transform',
       }}
     />
