@@ -77,7 +77,7 @@ function mapApiUserToProfile(apiUser: UserProfileResponse): UserProfile {
     streak: apiUser.streak,
     bestStreak: apiUser.bestStreak,
     gamesPlayed: apiUser.gamesPlayed,
-    puzzlesSolved: apiUser.puzzlesSolved,
+    puzzlesSolved: apiUser.puzzlesSolved || 0,
     openingsLearned: apiUser.openingsLearned,
     trapsLearned: apiUser.trapsLearned,
     achievements: apiUser.achievements,
@@ -110,12 +110,26 @@ function loadProfileFromStorage(): UserProfile | null {
       const parsed = JSON.parse(saved) as UserProfile
       // Reset transient state
       parsed.combo = 0
-      parsed.dailyBonusClaimed = false
+      // Only reset dailyBonusClaimed if it's a new day (preserve today's claim)
+      const today = new Date().toDateString()
+      if (parsed.lastActiveDate !== today) {
+        parsed.dailyBonusClaimed = false
+      }
       // Ensure new fields exist
       if (!parsed.activityDates) parsed.activityDates = {}
       if (!parsed.recentGames) parsed.recentGames = []
       if (!parsed.puzzleRatingHistory) parsed.puzzleRatingHistory = []
       if (!parsed.weeklyMissions) parsed.weeklyMissions = []
+      if (parsed.puzzlesSolved == null) parsed.puzzlesSolved = 0
+      if (parsed.puzzlesAttempted == null) parsed.puzzlesAttempted = 0
+      if (parsed.puzzlesCorrect == null) parsed.puzzlesCorrect = 0
+      // Ensure achievements are full objects (not string IDs)
+      if (parsed.achievements && parsed.achievements.length > 0 && typeof parsed.achievements[0] === 'string') {
+        const earnedIds = new Set(parsed.achievements as unknown as string[])
+        parsed.achievements = ALL_ACHIEVEMENTS.map(a => ({ ...a, earned: earnedIds.has(a.id) }))
+      } else if (!parsed.achievements || parsed.achievements.length === 0) {
+        parsed.achievements = ALL_ACHIEVEMENTS
+      }
       return parsed
     }
   } catch { /* corrupt data — ignore */ }
