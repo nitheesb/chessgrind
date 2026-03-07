@@ -1,17 +1,19 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { LoginPage } from '@/components/pages/login'
 import { Dashboard } from '@/components/pages/dashboard'
 import { OpeningsPage } from '@/components/pages/openings'
-import { PuzzlesPage } from '@/components/pages/puzzles'
-import { PlayAIPage } from '@/components/pages/play-ai'
 import { TrapsPage } from '@/components/pages/traps'
 import { ProfilePage } from '@/components/pages/profile'
 import { SettingsPage } from '@/components/pages/settings'
+
+// Lazy load heavy pages for faster initial render
+const PuzzlesPage = lazy(() => import('@/components/pages/puzzles').then(m => ({ default: m.PuzzlesPage })))
+const PlayAIPage = lazy(() => import('@/components/pages/play-ai').then(m => ({ default: m.PlayAIPage })))
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
 import { ComboOverlay, DailyBonusPopup, PerfectSolveFlash } from '@/components/ui/game-rewards'
@@ -26,6 +28,17 @@ import {
 } from 'lucide-react'
 
 type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings'
+
+function PageSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 animate-pulse">
+      <div className="h-10 w-32 rounded-xl bg-secondary" />
+      <div className="aspect-square w-full max-w-[340px] mx-auto rounded-2xl bg-secondary" />
+      <div className="h-12 rounded-xl bg-secondary" />
+      <div className="h-12 rounded-xl bg-secondary" />
+    </div>
+  )
+}
 
 interface NavItem {
   id: Page
@@ -117,12 +130,16 @@ export function AppShell() {
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           >
             {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
-            {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}
             {currentPage === 'openings' && <OpeningsPage onBack={handleBack} />}
-            {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
             {currentPage === 'traps' && <TrapsPage onBack={handleBack} />}
             {currentPage === 'profile' && <ProfilePage onBack={handleBack} onNavigate={handleNavigate} />}
             {currentPage === 'settings' && <SettingsPage onBack={handleBack} />}
+            {(currentPage === 'puzzles' || currentPage === 'play') && (
+              <Suspense fallback={<PageSkeleton />}>
+                {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}
+                {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
+              </Suspense>
+            )}
           </motion.div>
         </AnimatePresence>
       </main>

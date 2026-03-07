@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoQueen: true,
   showHints: true,
   theme: 'dark',
-  pieceStyle: 'standard',
+  pieceStyle: 'neo',
   boardStyle: 'green',
   reducedMotion: false,
 }

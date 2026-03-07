@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { getLevelInfo } from '@/lib/chess-store'
@@ -27,15 +27,32 @@ import { CommandPalette, CommandPaletteTrigger } from '@/components/ui/command-p
 
 // Desktop pages
 import { DesktopDashboard } from '@/components/desktop/dashboard'
-import { DesktopPuzzles } from '@/components/desktop/puzzles'
 import { DesktopOpenings } from '@/components/desktop/openings'
-import { DesktopPlayAI } from '@/components/desktop/play-ai'
 import { DesktopTraps } from '@/components/desktop/traps'
 import { DesktopProfile } from '@/components/desktop/profile'
 import { DesktopSettings } from '@/components/desktop/settings'
 import { DesktopLogin } from '@/components/desktop/login'
 
+// Lazy load heavy pages
+const DesktopPuzzles = lazy(() => import('@/components/desktop/puzzles').then(m => ({ default: m.DesktopPuzzles })))
+const DesktopPlayAI = lazy(() => import('@/components/desktop/play-ai').then(m => ({ default: m.DesktopPlayAI })))
+
 type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings'
+
+function DesktopPageSkeleton() {
+  return (
+    <div className="p-8 max-w-7xl mx-auto animate-pulse">
+      <div className="h-48 rounded-2xl bg-secondary mb-8" />
+      <div className="grid grid-cols-4 gap-5 mb-8">
+        {[1,2,3,4].map(i => <div key={i} className="h-28 rounded-xl bg-secondary" />)}
+      </div>
+      <div className="grid grid-cols-2 gap-5">
+        <div className="h-64 rounded-xl bg-secondary" />
+        <div className="h-64 rounded-xl bg-secondary" />
+      </div>
+    </div>
+  )
+}
 
 interface NavItem {
   id: Page
@@ -274,12 +291,16 @@ export function DesktopShell() {
             className="min-h-screen"
           >
             {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}
-            {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
             {currentPage === 'openings' && <DesktopOpenings onNavigate={handleNavigate} />}
-            {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
             {currentPage === 'traps' && <DesktopTraps onNavigate={handleNavigate} />}
             {currentPage === 'profile' && <DesktopProfile onNavigate={handleNavigate} />}
             {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
+            {(currentPage === 'puzzles' || currentPage === 'play') && (
+              <Suspense fallback={<DesktopPageSkeleton />}>
+                {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
+                {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
+              </Suspense>
+            )}
           </motion.div>
         </AnimatePresence>
       </main>
