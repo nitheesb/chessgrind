@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react'
+import { Chess } from 'chess.js'
 import { ChessPiece, parseFEN } from './chess-pieces'
 import { getGlobalSoundHaptics } from '@/lib/use-sound-haptics'
 
@@ -67,6 +68,7 @@ const Square = memo(function Square({
   isSelected,
   isLastMove,
   isHighlighted,
+  isLegalMove,
   isInCheck,
   squareSize,
   onClick,
@@ -86,6 +88,7 @@ const Square = memo(function Square({
   isSelected: boolean
   isLastMove: boolean
   isHighlighted: boolean
+  isLegalMove: boolean
   isInCheck: boolean
   squareSize: number
   onClick: () => void
@@ -104,7 +107,8 @@ const Square = memo(function Square({
     bg = isLight ? theme.selectedLight : theme.selectedDark
   }
 
-  const ariaLabel = square + (piece ? `, ${piece[0] === 'w' ? 'white' : 'black'} ${getPieceName(piece)}` : '')
+  const showLegalIndicator = isLegalMove || isHighlighted
+  const ariaLabel = square + (piece ? `, ${piece[0] === 'w' ? 'white' : 'black'} ${getPieceName(piece)}` : '') + (showLegalIndicator ? ', legal move' : '')
 
   return (
     <div
@@ -119,6 +123,7 @@ const Square = memo(function Square({
         width: squareSize,
         height: squareSize,
         backgroundColor: bg,
+        transition: 'background-color 0.15s ease',
       }}
       onClick={onClick}
       onTouchStart={onTouchStart}
@@ -126,6 +131,17 @@ const Square = memo(function Square({
       onMouseUp={onMouseUp}
       onKeyDown={onKeyDown ? (e) => onKeyDown(e, square) : undefined}
     >
+      {/* Selected piece glow */}
+      {isSelected && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          boxShadow: 'inset 0 0 12px rgba(245,158,11,0.5)',
+          zIndex: 1,
+          pointerEvents: 'none',
+        }} />
+      )}
+
       {/* Check indicator on king */}
       {isInCheck && (
         <div style={{
@@ -136,8 +152,8 @@ const Square = memo(function Square({
         }} />
       )}
 
-      {/* Move indicator - dot for empty, ring for capture */}
-      {isHighlighted && (
+      {/* Legal move indicator - dot for empty, corner triangles for capture */}
+      {showLegalIndicator && (
         <div
           style={{
             position: 'absolute',
@@ -145,24 +161,27 @@ const Square = memo(function Square({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            zIndex: 2,
+            pointerEvents: 'none',
           }}
         >
           {piece ? (
-            // Capture ring
-            <div style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              border: `${squareSize * 0.08}px solid rgba(0,0,0,0.14)`,
-              boxSizing: 'border-box',
-            }} />
+            /* Capture indicator: triangular corners */
+            <>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0, borderTop: `${squareSize * 0.2}px solid rgba(0,0,0,0.25)`, borderRight: `${squareSize * 0.2}px solid transparent` }} />
+              <div style={{ position: 'absolute', top: 0, right: 0, width: 0, height: 0, borderTop: `${squareSize * 0.2}px solid rgba(0,0,0,0.25)`, borderLeft: `${squareSize * 0.2}px solid transparent` }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, width: 0, height: 0, borderBottom: `${squareSize * 0.2}px solid rgba(0,0,0,0.25)`, borderRight: `${squareSize * 0.2}px solid transparent` }} />
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 0, height: 0, borderBottom: `${squareSize * 0.2}px solid rgba(0,0,0,0.25)`, borderLeft: `${squareSize * 0.2}px solid transparent` }} />
+            </>
           ) : (
-            // Move dot
+            /* Move dot with subtle shadow */
             <div style={{
-              width: squareSize * 0.33,
-              height: squareSize * 0.33,
+              width: squareSize * 0.3,
+              height: squareSize * 0.3,
               borderRadius: '50%',
-              backgroundColor: 'rgba(0,0,0,0.14)',
+              backgroundColor: 'rgba(0,0,0,0.2)',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+              transition: 'transform 0.15s ease',
             }} />
           )}
         </div>
@@ -178,6 +197,9 @@ const Square = memo(function Square({
           justifyContent: 'center',
           pointerEvents: 'none',
           filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))',
+          transform: isSelected ? 'scale(1.08)' : 'scale(1)',
+          transition: 'transform 0.15s ease',
+          zIndex: 3,
         }}>
           <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
         </div>
@@ -692,6 +714,18 @@ export function Chessboard({
     return new Set([lastMove.from, lastMove.to])
   }, [lastMove])
 
+  // Compute legal moves for the selected square
+  const legalMoveSet = useMemo(() => {
+    if (!selectedSquare || !interactive) return new Set<string>()
+    try {
+      const chess = new Chess(fen)
+      const moves = chess.moves({ square: selectedSquare as any, verbose: true })
+      return new Set(moves.map(m => m.to))
+    } catch {
+      return new Set<string>()
+    }
+  }, [selectedSquare, fen, interactive])
+
   return (
     <div className="relative inline-block select-none touch-none group/board">
       {/* Animated gradient border */}
@@ -742,6 +776,7 @@ export function Chessboard({
               isSelected={selectedSquare === square}
               isLastMove={lastMoveSet.has(square) && !animating}
               isHighlighted={highlightSet.has(square)}
+              isLegalMove={legalMoveSet.has(square)}
               isInCheck={checkSquare === square}
               squareSize={squareSize}
               onClick={() => handleSquareClick(displayRow, displayCol)}
