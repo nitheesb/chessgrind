@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef, useTransition, lazy, Suspense } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useCallback, useEffect, useTransition, lazy, Suspense } from 'react'
 import { useGame } from '@/lib/game-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { LoginPage } from '@/components/pages/login'
@@ -125,35 +124,25 @@ export function AppShell() {
 
       {/* Main content area */}
       <main className="flex-1 overflow-y-auto px-4 pt-3 pb-20 relative z-10">
-        <AnimatePresence mode="popLayout">
-          <motion.div
-            key={currentPage}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.12, ease: 'easeOut' }}
-          >
-            {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
-            {currentPage !== 'dashboard' && (
-              <Suspense fallback={<PageSkeleton />}>
-                {currentPage === 'openings' && <OpeningsPage onBack={handleBack} />}
-                {currentPage === 'traps' && <TrapsPage onBack={handleBack} />}
-                {currentPage === 'profile' && <ProfilePage onBack={handleBack} onNavigate={handleNavigate} />}
-                {currentPage === 'settings' && <SettingsPage onBack={handleBack} />}
-                {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}
-                {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
-              </Suspense>
-            )}
-          </motion.div>
-        </AnimatePresence>
+        <div key={currentPage}>
+          {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
+          {currentPage !== 'dashboard' && (
+            <Suspense fallback={<PageSkeleton />}>
+              {currentPage === 'openings' && <OpeningsPage onBack={handleBack} />}
+              {currentPage === 'traps' && <TrapsPage onBack={handleBack} />}
+              {currentPage === 'profile' && <ProfilePage onBack={handleBack} onNavigate={handleNavigate} />}
+              {currentPage === 'settings' && <SettingsPage onBack={handleBack} />}
+              {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}
+              {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
+            </Suspense>
+          )}
+        </div>
       </main>
 
       {/* Bottom Navigation Bar — Apple Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
         style={{
-          background: 'rgba(255, 255, 255, 0.04)',
-          backdropFilter: 'saturate(150%) blur(20px)',
-          WebkitBackdropFilter: 'saturate(150%) blur(20px)',
+          background: 'rgba(12, 14, 20, 0.92)',
           borderTop: '0.5px solid rgba(255, 255, 255, 0.10)',
         }}
       >
@@ -168,10 +157,8 @@ export function AppShell() {
                   }`}
               >
                 {isActive && (
-                  <motion.div
-                    layoutId="nav-indicator"
+                  <div
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[2px] rounded-full bg-primary shadow-[0_2px_10px_rgba(245,158,11,0.8)]"
-                    transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
                   />
                 )}
                 <span className="transition-transform duration-200" style={{ transform: isActive ? 'scale(1.08)' : 'scale(1)' }}>
@@ -187,10 +174,8 @@ export function AppShell() {
               }`}
           >
             {currentPage === 'profile' && (
-              <motion.div
-                layoutId="nav-indicator"
+              <div
                 className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[2px] rounded-full bg-primary shadow-[0_2px_10px_rgba(245,158,11,0.8)]"
-                transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
               />
             )}
             <span className="transition-transform duration-200" style={{ transform: currentPage === 'profile' ? 'scale(1.08)' : 'scale(1)' }}>

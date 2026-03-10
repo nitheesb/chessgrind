@@ -38,25 +38,25 @@ function Particle({ delay, x, size }: { delay: number; x: number; size: number }
   )
 }
 
-export function SplashScreen({ onComplete, minDuration = 2200 }: SplashScreenProps) {
+export function SplashScreen({ onComplete, minDuration = 1200 }: SplashScreenProps) {
   const [show, setShow] = useState(true)
   const [phase, setPhase] = useState(0)
   const [particles] = useState(() =>
-    Array.from({ length: 10 }, (_, i) => ({
+    Array.from({ length: 5 }, (_, i) => ({
       id: i,
-      delay: 0.3 + Math.random() * 1.2,
+      delay: 0.2 + Math.random() * 0.6,
       x: Math.random() * 100,
       size: 3 + Math.random() * 5,
     }))
   )
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 200)
-    const t2 = setTimeout(() => setPhase(2), 700)
-    const t3 = setTimeout(() => setPhase(3), 1200)
+    const t1 = setTimeout(() => setPhase(1), 100)
+    const t2 = setTimeout(() => setPhase(2), 400)
+    const t3 = setTimeout(() => setPhase(3), 700)
     const t4 = setTimeout(() => {
       setShow(false)
-      setTimeout(onComplete, 500)
+      setTimeout(onComplete, 300)
     }, minDuration)
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4) }
   }, [minDuration, onComplete])

@@ -92,13 +92,19 @@
   /* ── Glass Cards — Premium Frosted Glass ── */
   .glass-card {
     @apply rounded-2xl;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow:
       inset 0 1px 1px 0 rgba(255, 255, 255, 0.05),
       0 4px 24px -4px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Only apply blur on devices that can handle it */
+  @media (min-width: 768px) {
+    .glass-card {
+      backdrop-filter: blur(16px) saturate(150%);
+      -webkit-backdrop-filter: blur(16px) saturate(150%);
+    }
   }
 
   .glass-card-hover {
@@ -1360,5 +1366,38 @@ input[type="email"]:focus {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ═══════════════════════════
+   MOBILE PERFORMANCE
+   ═══════════════════════════ */
+
+@media (max-width: 767px) {
+
+  /* Disable expensive infinite CSS animations on mobile */
+  .breathing-glow,
+  .shimmer-text,
+  .pulse-ring,
+  .mesh-gradient::before,
+  .mesh-gradient::after,
+  .ambient-bg::before,
+  .ambient-bg::after,
+  .aurora-bg::before {
+    animation: none !important;
+  }
+
+  /* Disable mesh/ambient background pseudo-elements entirely */
+  .mesh-gradient::before,
+  .mesh-gradient::after,
+  .ambient-bg::before,
+  .ambient-bg::after,
+  .aurora-bg::before {
+    display: none !important;
+  }
+
+  /* Keep shimmer-text styled but static */
+  .shimmer-text {
+    background-size: 100% 100% !important;
   }
 }

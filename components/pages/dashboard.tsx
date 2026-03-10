@@ -8,7 +8,7 @@ import { getLevelInfo, getDailyPuzzleIndex } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { XPBar } from '@/components/ui/xp-animations'
 import { MiniChessboard } from '@/components/chess/chessboard'
-import { PUZZLES } from '@/lib/chess-data'
+import { PUZZLES } from '@/lib/chess-data/puzzles'
 import { WeeklyMissions } from '@/components/ui/weekly-missions'
 import {
   Flame,
