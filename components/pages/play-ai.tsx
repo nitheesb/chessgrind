@@ -9,6 +9,8 @@ import { AI_LEVELS } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { getBestMove, getEngineConfig } from '@/lib/chess-engine'
+import { detectOpening } from '@/lib/opening-detection'
+import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
 import { staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
@@ -29,6 +31,10 @@ import {
   VolumeX,
   Minus,
   Plus,
+  Eye,
+  EyeOff,
+  Copy,
+  BookOpen,
 } from 'lucide-react'
 
 interface PlayAIProps {
@@ -291,7 +297,17 @@ function GameSession({
   const [premove, setPremove] = useState<{ from: string; to: string; promotion?: string } | null>(null)
   const [notationView, setNotationView] = useState<'list' | 'condensed'>('list')
   const [copiedPGN, setCopiedPGN] = useState(false)
+  const [copiedFEN, setCopiedFEN] = useState(false)
   const notationRef = useRef<HTMLDivElement>(null)
+
+  // Opening detection
+  const currentOpening = useMemo(() => detectOpening(moveHistory), [moveHistory])
+
+  // Move quality annotations (computed after game ends)
+  const moveQualities = useMemo(() => {
+    if (!gameOver || moveHistory.length === 0) return []
+    return analyzeMoveQualities(moveHistory)
+  }, [gameOver, moveHistory])
 
   // Board size state (Feature 5)
   const [boardSize, setBoardSize] = useState(() => {
@@ -625,9 +641,18 @@ function GameSession({
             boardStyle={settings.boardStyle}
             pieceStyle={settings.pieceStyle}
             arrows={premove ? [{ from: premove.from, to: premove.to, color: 'orange' }] : []}
+            blindfoldMode={settings.blindfoldMode}
           />
         </div>
       </div>
+
+      {/* Opening name display */}
+      {currentOpening && moveHistory.length <= 20 && (
+        <div className="flex items-center justify-center gap-2 px-2">
+          <BookOpen className="w-3.5 h-3.5 text-primary" />
+          <span className="text-xs text-primary font-medium">{currentOpening.eco}: {currentOpening.name}</span>
+        </div>
+      )}
 
       {/* Board size controls (Feature 5) + sound toggle */}
       <div className="flex items-center justify-center gap-2">
@@ -637,6 +662,25 @@ function GameSession({
         <span className="text-xs text-muted-foreground font-mono w-12 text-center">{boardSize}px</span>
         <button onClick={() => updateBoardSize(20)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center" title="Larger board">
           <Plus className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
+        <div className="w-px h-5 bg-border mx-1" />
+        <button
+          onClick={() => updateSetting('blindfoldMode', !settings.blindfoldMode)}
+          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${settings.blindfoldMode ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground'}`}
+          title={settings.blindfoldMode ? 'Show pieces' : 'Blindfold mode'}
+        >
+          {settings.blindfoldMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+        </button>
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(game.fen())
+            setCopiedFEN(true)
+            setTimeout(() => setCopiedFEN(false), 1500)
+          }}
+          className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground"
+          title="Copy FEN"
+        >
+          {copiedFEN ? <span className="text-xs text-primary">✓</span> : <Copy className="w-3.5 h-3.5" />}
         </button>
       </div>
 
@@ -888,12 +932,18 @@ function GameSession({
               <div className="space-y-0.5">
                 {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => {
                   const isLastPair = i === Math.ceil(moveHistory.length / 2) - 1
+                  const wq = moveQualities[i * 2] || ''
+                  const bq = moveQualities[i * 2 + 1] || ''
                   return (
                     <div key={i} className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono ${isLastPair ? 'bg-primary/10' : ''}`}>
                       <span className="text-muted-foreground w-5 text-right shrink-0">{i + 1}.</span>
-                      <span className={`w-14 ${isLastPair && moveHistory.length % 2 !== 0 ? 'text-primary font-bold' : 'text-foreground'}`}>{moveHistory[i * 2]}</span>
+                      <span className={`w-16 ${isLastPair && moveHistory.length % 2 !== 0 ? 'text-primary font-bold' : 'text-foreground'}`}>
+                        {moveHistory[i * 2]}{wq && <span className={`ml-0.5 ${getQualityColor(wq)}`}>{wq}</span>}
+                      </span>
                       {moveHistory[i * 2 + 1] && (
-                        <span className={`w-14 ${isLastPair ? 'text-primary font-bold' : 'text-foreground/70'}`}>{moveHistory[i * 2 + 1]}</span>
+                        <span className={`w-16 ${isLastPair ? 'text-primary font-bold' : 'text-foreground/70'}`}>
+                          {moveHistory[i * 2 + 1]}{bq && <span className={`ml-0.5 ${getQualityColor(bq)}`}>{bq}</span>}
+                        </span>
                       )}
                     </div>
                   )

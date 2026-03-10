@@ -35,8 +35,10 @@ const DesktopProfile = lazy(() => import('@/components/desktop/profile').then(m 
 const DesktopSettings = lazy(() => import('@/components/desktop/settings').then(m => ({ default: m.DesktopSettings })))
 const DesktopPuzzles = lazy(() => import('@/components/desktop/puzzles').then(m => ({ default: m.DesktopPuzzles })))
 const DesktopPlayAI = lazy(() => import('@/components/desktop/play-ai').then(m => ({ default: m.DesktopPlayAI })))
+const CoordinateTrainerPage = lazy(() => import('@/components/chess/coordinate-trainer').then(m => ({ default: m.CoordinateTrainer })))
+const EndgamePracticePage = lazy(() => import('@/components/pages/endgame-practice').then(m => ({ default: m.EndgamePractice })))
 
-type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings'
+type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'coords' | 'endgame'
 
 function DesktopPageSkeleton() {
   return (
@@ -326,6 +328,8 @@ export function DesktopShell() {
                 {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
                 {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
                 {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
+                {currentPage === 'coords' && <div className="p-8 max-w-4xl mx-auto"><CoordinateTrainerPage /></div>}
+                {currentPage === 'endgame' && <div className="p-8 max-w-4xl mx-auto"><EndgamePracticePage /></div>}
               </Suspense>
             )}
           </motion.div>

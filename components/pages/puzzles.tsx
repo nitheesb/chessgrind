@@ -11,6 +11,7 @@ import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { ShareButtons } from '@/components/ui/share-buttons'
+import { TacticalRadar } from '@/components/ui/tactical-radar'
 import { AnimatedCounter, staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
@@ -149,6 +150,21 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
           <p className="text-[10px] text-muted-foreground">Accuracy</p>
         </div>
       </motion.div>
+
+      {/* Tactical Weakness Radar */}
+      {Object.keys(profile.failedPuzzleThemes || {}).length >= 3 && (
+        <motion.div variants={staggerItem} className="glass-card p-4 flex flex-col items-center">
+          <h3 className="text-xs font-semibold text-foreground mb-1">Tactical Strengths</h3>
+          <TacticalRadar
+            data={Object.fromEntries(
+              Object.entries(profile.failedPuzzleThemes || {}).map(([theme, fails]) => [
+                theme, Math.max(10, 100 - (fails as number) * 15)
+              ])
+            )}
+            size={180}
+          />
+        </motion.div>
+      )}
 
       {/* Filter */}
       <motion.div variants={staggerItem} className="flex gap-2 overflow-x-auto pb-1">

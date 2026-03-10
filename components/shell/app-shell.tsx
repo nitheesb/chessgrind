@@ -13,6 +13,8 @@ const ProfilePage = lazy(() => import('@/components/pages/profile').then(m => ({
 const SettingsPage = lazy(() => import('@/components/pages/settings').then(m => ({ default: m.SettingsPage })))
 const PuzzlesPage = lazy(() => import('@/components/pages/puzzles').then(m => ({ default: m.PuzzlesPage })))
 const PlayAIPage = lazy(() => import('@/components/pages/play-ai').then(m => ({ default: m.PlayAIPage })))
+const CoordinateTrainerPage = lazy(() => import('@/components/chess/coordinate-trainer').then(m => ({ default: m.CoordinateTrainer })))
+const EndgamePracticePage = lazy(() => import('@/components/pages/endgame-practice').then(m => ({ default: m.EndgamePractice })))
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
 import { ComboOverlay, DailyBonusPopup, PerfectSolveFlash } from '@/components/ui/game-rewards'
@@ -26,7 +28,7 @@ import {
   User,
 } from 'lucide-react'
 
-type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings'
+type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'coords' | 'endgame'
 
 function PageSkeleton() {
   return (
@@ -134,6 +136,8 @@ export function AppShell() {
               {currentPage === 'settings' && <SettingsPage onBack={handleBack} />}
               {currentPage === 'puzzles' && <PuzzlesPage onBack={handleBack} />}
               {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
+              {currentPage === 'coords' && <CoordinateTrainerPage onClose={handleBack} />}
+              {currentPage === 'endgame' && <EndgamePracticePage onBack={handleBack} />}
             </Suspense>
           )}
         </div>

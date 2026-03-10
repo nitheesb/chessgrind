@@ -12,6 +12,8 @@ export interface AppSettings {
   pieceStyle: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
   boardStyle: 'green' | 'brown' | 'blue' | 'purple' | 'pink' | 'tournament' | 'ocean'
   reducedMotion: boolean
+  blindfoldMode: boolean
+  zenMode: boolean
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -24,6 +26,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   pieceStyle: 'neo',
   boardStyle: 'green',
   reducedMotion: false,
+  blindfoldMode: false,
+  zenMode: false,
 }
 
 interface SettingsContextType {
@@ -87,6 +91,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       root.classList.remove('reduce-motion')
     }
   }, [settings.reducedMotion, loaded])
+
+  // Apply zen-mode class to html element
+  useEffect(() => {
+    if (!loaded) return
+    const root = document.documentElement
+    if (settings.zenMode) {
+      root.classList.add('zen-mode')
+    } else {
+      root.classList.remove('zen-mode')
+    }
+  }, [settings.zenMode, loaded])
 
   const updateSetting = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }))

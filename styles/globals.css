@@ -147,3 +147,20 @@
 @keyframes confetti-fly-1 { from { transform: translate(0,0) rotate(0deg); opacity: 1; } to { transform: translate(80px, -200px) rotate(-720deg); opacity: 0; } }
 @keyframes confetti-fly-2 { from { transform: translate(0,0) rotate(0deg); opacity: 1; } to { transform: translate(-40px, -300px) rotate(360deg); opacity: 0; } }
 @keyframes confetti-fly-3 { from { transform: translate(0,0) rotate(0deg); opacity: 1; } to { transform: translate(40px, -300px) rotate(-360deg); opacity: 0; } }
+
+/* Zen Mode - minimal distraction-free UI */
+.zen-mode nav,
+.zen-mode [data-nav],
+.zen-mode [data-stats-header],
+.zen-mode aside,
+.zen-mode .glass-card:not([data-board-container]) {
+  opacity: 0.15;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.zen-mode nav:hover,
+.zen-mode [data-nav]:hover,
+.zen-mode aside:hover {
+  opacity: 1;
+  pointer-events: auto;
+}

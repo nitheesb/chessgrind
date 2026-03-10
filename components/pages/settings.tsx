@@ -19,6 +19,8 @@ import {
   Moon,
   Monitor,
   Zap,
+  Eye,
+  Minimize2,
 } from 'lucide-react'
 
 const container = {
@@ -312,6 +314,28 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           <Toggle
             enabled={settings.reducedMotion}
             onChange={(v) => updateSetting('reducedMotion', v)}
+          />
+        </SettingRow>
+
+        <SettingRow
+          icon={<Eye className="w-5 h-5" />}
+          label="Blindfold Mode"
+          description="Hide pieces for advanced training"
+        >
+          <Toggle
+            enabled={settings.blindfoldMode}
+            onChange={(v) => updateSetting('blindfoldMode', v)}
+          />
+        </SettingRow>
+
+        <SettingRow
+          icon={<Minimize2 className="w-5 h-5" />}
+          label="Zen Mode"
+          description="Distraction-free, minimal UI"
+        >
+          <Toggle
+            enabled={settings.zenMode}
+            onChange={(v) => updateSetting('zenMode', v)}
           />
         </SettingRow>
       </motion.div>

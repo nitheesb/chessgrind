@@ -15,6 +15,7 @@ import {
   Monitor,
   ChevronLeft,
   RotateCcw,
+  Minimize2,
 } from 'lucide-react'
 
 
@@ -76,6 +77,18 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
           label: 'Reduce Motion',
           description: 'Minimize animations and transitions',
           icon: <Monitor className="w-5 h-5" />,
+        },
+        {
+          key: 'blindfoldMode' as const,
+          label: 'Blindfold Mode',
+          description: 'Hide pieces for advanced training',
+          icon: <Eye className="w-5 h-5" />,
+        },
+        {
+          key: 'zenMode' as const,
+          label: 'Zen Mode',
+          description: 'Distraction-free, minimal UI',
+          icon: <Minimize2 className="w-5 h-5" />,
         },
       ],
     },

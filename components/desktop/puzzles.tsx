@@ -13,6 +13,7 @@ import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { ShareButtons } from '@/components/ui/share-buttons'
+import { TacticalRadar } from '@/components/ui/tactical-radar'
 import {
   Puzzle as PuzzleIcon,
   ChevronRight,
@@ -100,7 +101,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-4 gap-4 mb-4">
         <div className="glass-card p-5 text-center">
           <PuzzleIcon className="w-6 h-6 text-amber-500 mx-auto mb-2" />
           <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.solved} /></p>
@@ -122,6 +123,22 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
           <p className="text-sm text-muted-foreground">Total Puzzles</p>
         </div>
       </div>
+
+      {/* Tactical Weakness Radar */}
+      {Object.keys(profile.failedPuzzleThemes || {}).length >= 3 && (
+        <div className="glass-card p-5 mb-4 flex flex-col items-center">
+          <h3 className="text-sm font-semibold text-foreground mb-2">Tactical Strengths</h3>
+          <p className="text-xs text-muted-foreground mb-3">Based on your puzzle performance</p>
+          <TacticalRadar
+            data={Object.fromEntries(
+              Object.entries(profile.failedPuzzleThemes || {}).map(([theme, fails]) => [
+                theme, Math.max(10, 100 - (fails as number) * 15)
+              ])
+            )}
+            size={220}
+          />
+        </div>
+      )}
 
       {/* Puzzle Rush */}
       <div className="glass-card p-5 mb-6">

@@ -38,6 +38,7 @@ interface ChessboardProps {
   arrows?: Array<{ from: string; to: string; color?: string }>
   onArrowDraw?: (arrows: Array<{ from: string; to: string; color?: string }>) => void
   allowArrowDrawing?: boolean
+  blindfoldMode?: boolean
 }
 
 const squareToIndex = (square: string) => ({
@@ -100,6 +101,7 @@ const Square = memo(function Square({
   pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
   square: string
   onKeyDown?: (e: React.KeyboardEvent, sq: string) => void
+  blindfoldMode?: boolean
 }) {
   // Determine background color
   let bg = isLight ? theme.light : theme.dark
@@ -198,8 +200,9 @@ const Square = memo(function Square({
           pointerEvents: 'none',
           filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))',
           transform: isSelected ? 'scale(1.08)' : 'scale(1)',
-          transition: 'transform 0.15s ease',
+          transition: 'transform 0.15s ease, opacity 0.2s ease',
           zIndex: 3,
+          opacity: blindfoldMode ? 0 : 1,
         }}>
           <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
         </div>
@@ -398,6 +401,7 @@ export function Chessboard({
   arrows: externalArrows = [],
   onArrowDraw,
   allowArrowDrawing = false,
+  blindfoldMode = false,
 }: ChessboardProps) {
   // Support both flipped and orientation props
   const isFlipped = orientation ? orientation === 'black' : flipped
@@ -788,6 +792,7 @@ export function Chessboard({
               pieceStyle={pieceStyle}
               square={square}
               onKeyDown={handleSquareKeyDown}
+              blindfoldMode={blindfoldMode}
             />
           )
         })}

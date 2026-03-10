@@ -30,6 +30,8 @@ import {
   Award,
   Play,
   Sparkles,
+  Crosshair,
+  Gamepad2,
 } from 'lucide-react'
 
 
@@ -95,6 +97,8 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
     { id: 'openings', label: 'Opening Theory', description: 'Master the opening moves', icon: <BookOpen className="w-7 h-7" />, gradient: 'from-blue-500 to-indigo-600' },
     { id: 'play', label: 'Play vs AI', description: 'Test your skills against computer', icon: <Swords className="w-7 h-7" />, gradient: 'from-violet-500 to-purple-600' },
     { id: 'traps', label: 'Opening Traps', description: 'Learn devastating traps', icon: <Target className="w-7 h-7" />, gradient: 'from-rose-500 to-pink-600' },
+    { id: 'coords', label: 'Coord Trainer', description: 'Master board coordinates', icon: <Crosshair className="w-7 h-7" />, gradient: 'from-emerald-500 to-teal-600' },
+    { id: 'endgame', label: 'Endgame Practice', description: 'Perfect your endgame technique', icon: <Gamepad2 className="w-7 h-7" />, gradient: 'from-cyan-500 to-sky-600' },
   ]
 
   return (

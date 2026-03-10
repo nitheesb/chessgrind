@@ -23,6 +23,7 @@ import {
   Settings,
   Play,
   Crown,
+  Crosshair,
 } from 'lucide-react'
 import {
   ProgressRing,
@@ -86,6 +87,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     { id: 'openings', label: 'Learn', desc: 'Opening theory', icon: <BookOpen className="w-5 h-5" />, gradient: 'from-blue-500 to-indigo-600', page: 'openings' },
     { id: 'play', label: 'Play AI', desc: 'Test skills', icon: <Swords className="w-5 h-5" />, gradient: 'from-violet-500 to-purple-600', page: 'play' },
     { id: 'traps', label: 'Traps', desc: 'Learn tricks', icon: <Target className="w-5 h-5" />, gradient: 'from-rose-500 to-pink-600', page: 'traps' },
+    { id: 'coords', label: 'Coords', desc: 'Board vision', icon: <Crosshair className="w-5 h-5" />, gradient: 'from-cyan-500 to-teal-600', page: 'coords' },
+    { id: 'endgame', label: 'Endgames', desc: 'Practice endings', icon: <Crown className="w-5 h-5" />, gradient: 'from-yellow-500 to-amber-600', page: 'endgame' },
   ]
 
   return (

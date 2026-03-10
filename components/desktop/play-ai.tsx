@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard, CapturedPieces } from '@/components/chess/chessboard'
@@ -9,6 +9,8 @@ import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { getBestMove, getEngineConfig } from '@/lib/chess-engine'
+import { detectOpening } from '@/lib/opening-detection'
+import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
 import {
   Swords,
   RotateCcw,
@@ -24,6 +26,10 @@ import {
   VolumeX,
   Minus,
   Plus,
+  Eye,
+  EyeOff,
+  Copy,
+  BookOpen,
 } from 'lucide-react'
 
 
@@ -69,8 +75,18 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const [premove, setPremove] = useState<{ from: string; to: string; promotion?: string } | null>(null)
   const [notationView, setNotationView] = useState<'list' | 'condensed'>('list')
   const [copiedPGN, setCopiedPGN] = useState(false)
+  const [copiedFEN, setCopiedFEN] = useState(false)
   const notationRef = useRef<HTMLDivElement>(null)
   const isPlayerTurn = game.turn() === (playerColor === 'white' ? 'w' : 'b')
+
+  // Opening detection
+  const currentOpening = useMemo(() => detectOpening(moveHistory), [moveHistory])
+
+  // Move quality annotations
+  const moveQualities = useMemo(() => {
+    if (gameStatus === 'playing' || moveHistory.length === 0) return []
+    return analyzeMoveQualities(moveHistory)
+  }, [gameStatus, moveHistory])
 
   useEffect(() => {
     if (gameStarted && gameStatus === 'playing') {
@@ -415,11 +431,17 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 <div className="space-y-0.5 font-mono text-sm">
                   {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => {
                     const isLastPair = i === Math.ceil(moveHistory.length / 2) - 1
+                    const wq = moveQualities[i * 2] || ''
+                    const bq = moveQualities[i * 2 + 1] || ''
                     return (
                       <div key={i} className={`flex gap-2 px-2 py-0.5 rounded ${isLastPair ? 'bg-primary/10' : i % 2 === 0 ? 'bg-secondary/30' : ''}`}>
                         <span className="text-muted-foreground w-6 text-right">{i + 1}.</span>
-                        <span className={`w-16 ${isLastPair && moveHistory.length % 2 !== 0 ? 'text-primary font-bold' : 'text-foreground'}`}>{moveHistory[i * 2]}</span>
-                        <span className={`w-16 ${isLastPair && moveHistory.length % 2 === 0 ? 'text-primary font-bold' : 'text-foreground/70'}`}>{moveHistory[i * 2 + 1] || ''}</span>
+                        <span className={`w-20 ${isLastPair && moveHistory.length % 2 !== 0 ? 'text-primary font-bold' : 'text-foreground'}`}>
+                          {moveHistory[i * 2]}{wq && <span className={`ml-0.5 ${getQualityColor(wq)}`}>{wq}</span>}
+                        </span>
+                        <span className={`w-20 ${isLastPair && moveHistory.length % 2 === 0 ? 'text-primary font-bold' : 'text-foreground/70'}`}>
+                          {moveHistory[i * 2 + 1] || ''}{bq && <span className={`ml-0.5 ${getQualityColor(bq)}`}>{bq}</span>}
+                        </span>
                       </div>
                     )
                   })}
@@ -511,9 +533,18 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                   boardStyle={settings.boardStyle}
                   pieceStyle={settings.pieceStyle}
                   allowArrowDrawing
+                  blindfoldMode={settings.blindfoldMode}
                 />
               </div>
             </div>
+
+            {/* Opening name display */}
+            {currentOpening && moveHistory.length <= 20 && (
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs text-primary font-medium">{currentOpening.eco}: {currentOpening.name}</span>
+              </div>
+            )}
 
             {/* Board controls */}
             <div className="flex items-center justify-center gap-2 mt-3">
@@ -530,6 +561,25 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               <span className="text-[11px] text-muted-foreground font-mono w-16 text-center">{boardSize}px</span>
               <button onClick={() => updateBoardSize(20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
                 <Plus className="w-3 h-3 text-muted-foreground" />
+              </button>
+              <div className="w-px h-5 bg-border mx-1" />
+              <button
+                onClick={() => updateSetting('blindfoldMode', !settings.blindfoldMode)}
+                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${settings.blindfoldMode ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground hover:bg-secondary/80'}`}
+                title={settings.blindfoldMode ? 'Show pieces' : 'Blindfold mode'}
+              >
+                {settings.blindfoldMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(game.fen())
+                  setCopiedFEN(true)
+                  setTimeout(() => setCopiedFEN(false), 1500)
+                }}
+                className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:bg-secondary/80 transition-colors"
+                title="Copy FEN"
+              >
+                {copiedFEN ? <span className="text-[10px] text-primary">✓</span> : <Copy className="w-3 h-3" />}
               </button>
               {premove && (
                 <span className="text-[11px] text-orange-400 font-medium ml-2">Premove set</span>
