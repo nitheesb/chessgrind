@@ -11,7 +11,7 @@ interface RatingGraphProps {
   color?: string
 }
 
-export function RatingGraph({ data, width = 300, height = 80, color = '#10b981' }: RatingGraphProps) {
+export function RatingGraph({ data, width = 300, height = 80, color = '#f59e0b' }: RatingGraphProps) {
   if (data.length < 2) return null
 
   const ratings = data.map(d => d.rating)

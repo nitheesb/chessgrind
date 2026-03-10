@@ -275,7 +275,7 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
                   <div key={game.id} className="flex items-center gap-3 py-1.5 border-b border-border/20 last:border-0">
                     <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
                       game.result === 'win' ? 'bg-amber-500/10 text-amber-400' :
-                      game.result === 'draw' ? 'bg-amber-500/10 text-amber-400' :
+                      game.result === 'draw' ? 'bg-blue-500/10 text-blue-400' :
                       'bg-red-500/10 text-red-400'
                     }`}>
                       {game.result === 'win' ? 'W' : game.result === 'draw' ? 'D' : 'L'}

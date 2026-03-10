@@ -46,11 +46,17 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
   const [activePuzzle, setActivePuzzle] = useState<Puzzle | null>(null)
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all')
   const [rushMinutes, setRushMinutes] = useState<3 | 5 | null>(null)
+  const [visibleCount, setVisibleCount] = useState(24)
 
   const filteredPuzzles = useMemo(() => {
     if (filterDifficulty === 'all') return PUZZLES
     return PUZZLES.filter(p => p.difficulty === filterDifficulty)
   }, [filterDifficulty])
+
+  const visiblePuzzles = useMemo(() => filteredPuzzles.slice(0, visibleCount), [filteredPuzzles, visibleCount])
+
+  // Reset pagination when filter changes
+  useEffect(() => { setVisibleCount(24) }, [filterDifficulty])
 
   const stats = {
     solved: profile.puzzlesSolved,
@@ -173,7 +179,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
 
       {/* Puzzle Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredPuzzles.map((puzzle, idx) => (
+        {visiblePuzzles.map((puzzle, idx) => (
           <button
             key={puzzle.id}
             onClick={() => {
@@ -184,7 +190,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
           >
             <div className="flex items-start justify-between mb-3">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
-                #{idx + 1}
+                #{PUZZLES.indexOf(puzzle) + 1}
               </div>
               <div className="flex items-center gap-1.5">
                 <Zap className="w-4 h-4 text-primary" />
@@ -205,6 +211,16 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
           </button>
         ))}
       </div>
+      {visibleCount < filteredPuzzles.length && (
+        <div className="flex justify-center pt-4">
+          <button
+            onClick={() => setVisibleCount(c => c + 24)}
+            className="px-6 py-2.5 rounded-xl glass-card-hover text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            Load more puzzles ({filteredPuzzles.length - visibleCount} remaining)
+          </button>
+        </div>
+      )}
     </div>
   )
 }

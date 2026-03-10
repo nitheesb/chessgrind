@@ -43,6 +43,7 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all')
   const [filterTheme, setFilterTheme] = useState<string>('all')
   const [rushMinutes, setRushMinutes] = useState<3 | 5 | null>(null)
+  const [visibleCount, setVisibleCount] = useState(20)
 
   const filteredPuzzles = useMemo(() => {
     let result = PUZZLES
@@ -50,6 +51,11 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
     if (filterTheme !== 'all') result = result.filter(p => p.themes.some(t => t.toLowerCase().includes(filterTheme.toLowerCase())))
     return result
   }, [filterDifficulty, filterTheme])
+
+  const visiblePuzzles = useMemo(() => filteredPuzzles.slice(0, visibleCount), [filteredPuzzles, visibleCount])
+
+  // Reset pagination when filters change
+  useEffect(() => { setVisibleCount(20) }, [filterDifficulty, filterTheme])
 
   const uniqueThemes = useMemo(() => {
     const themes = new Set<string>()
@@ -190,14 +196,14 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
 
       {/* Puzzle List */}
       <motion.div variants={staggerItem} className="flex flex-col gap-3">
-        {filteredPuzzles.map((puzzle, idx) => (
+        {visiblePuzzles.map((puzzle, idx) => (
           <motion.button
             key={puzzle.id}
             onClick={() => setActivePuzzle(puzzle)}
             className="w-full glass-card-hover glow-card p-4 flex items-center gap-3 text-left"
           >
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
-              #{idx + 1}
+              #{PUZZLES.indexOf(puzzle) + 1}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
@@ -218,6 +224,14 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
             </div>
           </motion.button>
         ))}
+        {visibleCount < filteredPuzzles.length && (
+          <button
+            onClick={() => setVisibleCount(c => c + 20)}
+            className="w-full py-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            Show more ({filteredPuzzles.length - visibleCount} remaining)
+          </button>
+        )}
       </motion.div>
     </motion.div>
   )
