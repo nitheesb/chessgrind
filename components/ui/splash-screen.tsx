@@ -195,7 +195,7 @@ export function SplashScreen({ onComplete, minDuration = 1200 }: SplashScreenPro
 
             {/* Title with letter stagger */}
             <div className="flex items-center gap-1 mb-2 overflow-hidden">
-              {'ChessVault'.split('').map((char, i) => (
+              {'ChessGrind'.split('').map((char, i) => (
                 <motion.span
                   key={i}
                   className="text-4xl md:text-5xl font-display font-bold tracking-tight"

@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
-export const alt = 'ChessVault — Master Chess Through Play'
+export const alt = 'ChessGrind — Master Chess Through Play'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -49,7 +49,7 @@ export default function TwitterImage() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
           <div style={{ fontSize: '72px', fontWeight: 800, color: '#ffffff', letterSpacing: '-2px' }}>
-            ChessVault
+            ChessGrind
           </div>
           <div style={{ fontSize: '28px', color: 'rgba(255,255,255,0.6)', fontWeight: 400, letterSpacing: '2px' }}>
             MASTER CHESS THROUGH PLAY
@@ -74,7 +74,7 @@ export default function TwitterImage() {
           ))}
         </div>
         <div style={{ position: 'absolute', bottom: '32px', fontSize: '16px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>
-          chess-vault.vercel.app · Free · No Sign-up Required
+          chessgrind.vercel.app · Free · No Sign-up Required
         </div>
       </div>
     ),

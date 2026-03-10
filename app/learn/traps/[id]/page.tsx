@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { TRAPS } from '@/lib/chess-data/traps'
 
-const BASE_URL = 'https://chess-vault.vercel.app'
+const BASE_URL = 'https://chessgrind.vercel.app'
 
 export function generateStaticParams() {
   return TRAPS.map(t => ({ id: t.id }))
@@ -51,7 +51,7 @@ export default async function TrapPage({ params }: { params: Promise<{ id: strin
 
       <div className="mx-auto max-w-3xl px-6 py-12">
         <nav className="flex items-center gap-2 text-sm text-white/40 mb-8">
-          <Link href="/" className="hover:text-white/60 transition-colors">ChessVault</Link>
+          <Link href="/" className="hover:text-white/60 transition-colors">ChessGrind</Link>
           <span>/</span>
           <Link href="/learn" className="hover:text-white/60 transition-colors">Learn</Link>
           <span>/</span>
@@ -127,7 +127,7 @@ export default async function TrapPage({ params }: { params: Promise<{ id: strin
           <h2 className="text-lg font-bold mb-2">Practice the {trap.name} interactively</h2>
           <p className="text-sm text-white/50 mb-4">Play through the trap move-by-move on an animated board</p>
           <Link href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-amber-500 text-white font-semibold hover:bg-amber-400 transition-colors text-sm">
-            Open in ChessVault →
+            Open in ChessGrind →
           </Link>
         </section>
 

@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { OPENINGS } from '@/lib/chess-data/openings'
 
-const BASE_URL = 'https://chess-vault.vercel.app'
+const BASE_URL = 'https://chessgrind.vercel.app'
 
 export function generateStaticParams() {
   return OPENINGS.map(o => ({ id: o.id }))
@@ -38,7 +38,7 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
     headline: `${opening.name} (${opening.eco}) — Chess Opening Guide`,
     description: opening.description,
     url: `${BASE_URL}/learn/openings/${id}`,
-    publisher: { '@type': 'Organization', name: 'ChessVault' },
+    publisher: { '@type': 'Organization', name: 'ChessGrind' },
     mainEntityOfPage: `${BASE_URL}/learn/openings/${id}`,
   }
 
@@ -48,7 +48,7 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
 
       <div className="mx-auto max-w-3xl px-6 py-12">
         <nav className="flex items-center gap-2 text-sm text-white/40 mb-8">
-          <Link href="/" className="hover:text-white/60 transition-colors">ChessVault</Link>
+          <Link href="/" className="hover:text-white/60 transition-colors">ChessGrind</Link>
           <span>/</span>
           <Link href="/learn" className="hover:text-white/60 transition-colors">Learn</Link>
           <span>/</span>
@@ -149,7 +149,7 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
           <h2 className="text-lg font-bold mb-2">Practice the {opening.name} interactively</h2>
           <p className="text-sm text-white/50 mb-4">See every move animated on the board with step-by-step explanations</p>
           <Link href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-amber-500 text-white font-semibold hover:bg-amber-400 transition-colors text-sm">
-            Open in ChessVault →
+            Open in ChessGrind →
           </Link>
         </section>
 

@@ -154,7 +154,7 @@ export function DesktopLogin() {
               <div className="w-16 h-16 rounded-2xl glass-card flex items-center justify-center border border-white/[0.1]">
                 <Crown className="w-10 h-10 text-primary" />
               </div>
-              <h1 className="text-5xl font-bold gradient-text-hero">ChessVault</h1>
+              <h1 className="text-5xl font-bold gradient-text-hero">ChessGrind</h1>
             </div>
 
             <p className="text-xl text-white/60 max-w-md leading-relaxed mb-4">
@@ -202,7 +202,7 @@ export function DesktopLogin() {
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center">
               <Crown className="w-7 h-7 text-white" />
             </div>
-            <span className="text-2xl font-bold text-foreground">ChessVault</span>
+            <span className="text-2xl font-bold text-foreground">ChessGrind</span>
           </div>
 
           <motion.div

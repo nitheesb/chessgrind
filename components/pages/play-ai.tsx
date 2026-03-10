@@ -296,7 +296,7 @@ function GameSession({
   // Board size state (Feature 5)
   const [boardSize, setBoardSize] = useState(() => {
     if (typeof window === 'undefined') return 360
-    const stored = localStorage.getItem('chessvault_board_size')
+    const stored = localStorage.getItem('chessgrind_board_size')
     if (stored) return Math.min(Math.max(parseInt(stored), 280), 600)
     return Math.min(480, window.innerWidth - 48)
   })
@@ -304,7 +304,7 @@ function GameSession({
     setBoardSize(prev => {
       const maxSize = typeof window !== 'undefined' ? Math.min(600, window.innerWidth - 48) : 600
       const next = Math.min(Math.max(prev + delta, 280), maxSize)
-      localStorage.setItem('chessvault_board_size', String(next))
+      localStorage.setItem('chessgrind_board_size', String(next))
       return next
     })
   }
@@ -516,7 +516,7 @@ function GameSession({
     else if (playerWon) pgnResult = playerColor === 'w' ? '1-0' : '0-1'
     else if (gameOver) pgnResult = playerColor === 'w' ? '0-1' : '1-0'
     const headers = [
-      '[Event "ChessVault Game"]',
+      '[Event "ChessGrind Game"]',
       `[Date "${date}"]`,
       `[White "${playerColor === 'w' ? 'You' : aiConfig.name}"]`,
       `[Black "${playerColor === 'b' ? 'You' : aiConfig.name}"]`,
@@ -839,7 +839,7 @@ function GameSession({
                   const url = URL.createObjectURL(blob)
                   const a = document.createElement('a')
                   a.href = url
-                  a.download = `chessvault-game-${Date.now()}.pgn`
+                  a.download = `chessgrind-game-${Date.now()}.pgn`
                   a.click()
                   URL.revokeObjectURL(url)
                 }}

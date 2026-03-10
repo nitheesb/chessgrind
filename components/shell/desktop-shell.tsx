@@ -195,7 +195,7 @@ export function DesktopShell() {
               <Crown className="w-4.5 h-4.5 text-white relative z-10" />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
             </div>
-            <span className="font-display font-bold text-[15px] tracking-tight shimmer-text">ChessVault</span>
+            <span className="font-display font-bold text-[15px] tracking-tight shimmer-text">ChessGrind</span>
           </div>
         </div>
 

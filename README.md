@@ -1,4 +1,4 @@
-# ChessVault - Gamified Chess Learning App
+# ChessGrind - Gamified Chess Learning App
 
 A modern, gamified chess learning application built with Next.js 16, designed for mobile-first experience (optimized for iPhone 16 Pro Max).
 
@@ -34,7 +34,7 @@ A modern, gamified chess learning application built with Next.js 16, designed fo
 1. Clone the repository:
 ```bash
 git clone <your-repo-url>
-cd chessvault
+cd chessgrind
 ```
 
 2. Install dependencies:

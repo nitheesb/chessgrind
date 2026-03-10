@@ -379,7 +379,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
               <Sparkles className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">ChessVault</p>
+              <p className="text-sm font-semibold text-foreground">ChessGrind</p>
               <p className="text-xs text-muted-foreground">Version 1.0.0</p>
             </div>
           </div>

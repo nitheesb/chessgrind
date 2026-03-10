@@ -207,7 +207,7 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
       {profile.xp === 0 && profile.puzzlesSolved === 0 && (
         <div className="mb-8 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-6 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-foreground mb-1">👋 Welcome to ChessVault!</h2>
+            <h2 className="text-lg font-bold text-foreground mb-1">👋 Welcome to ChessGrind!</h2>
             <p className="text-sm text-muted-foreground">Start with a quick puzzle to earn your first XP and unlock achievements.</p>
           </div>
           <motion.button

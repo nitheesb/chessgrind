@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PUZZLES } from '@/lib/chess-data/puzzles'
 
-const BASE_URL = 'https://chess-vault.vercel.app'
+const BASE_URL = 'https://chessgrind.vercel.app'
 
 export function generateStaticParams() {
   return PUZZLES.map(p => ({ id: p.id }))
@@ -41,7 +41,7 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
     headline: `${puzzle.title} — Chess Puzzle (Rating ${puzzle.rating})`,
     description: puzzle.description,
     url: `${BASE_URL}/learn/puzzles/${id}`,
-    publisher: { '@type': 'Organization', name: 'ChessVault' },
+    publisher: { '@type': 'Organization', name: 'ChessGrind' },
   }
 
   return (
@@ -50,7 +50,7 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
 
       <div className="mx-auto max-w-3xl px-6 py-12">
         <nav className="flex items-center gap-2 text-sm text-white/40 mb-8">
-          <Link href="/" className="hover:text-white/60 transition-colors">ChessVault</Link>
+          <Link href="/" className="hover:text-white/60 transition-colors">ChessGrind</Link>
           <span>/</span>
           <Link href="/learn" className="hover:text-white/60 transition-colors">Learn</Link>
           <span>/</span>

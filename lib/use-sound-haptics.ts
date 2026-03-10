@@ -209,7 +209,7 @@ export function useSoundAndHaptics() {
   // Load settings from localStorage on mount
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const settings = localStorage.getItem('chessvault_settings')
+    const settings = localStorage.getItem('chessgrind_settings')
     if (settings) {
       try {
         const parsed = JSON.parse(settings)
@@ -274,7 +274,7 @@ export function getGlobalSoundHaptics() {
     let hapticEnabled = true
     
     if (typeof window !== 'undefined') {
-      const settings = localStorage.getItem('chessvault_settings')
+      const settings = localStorage.getItem('chessgrind_settings')
       if (settings) {
         try {
           const parsed = JSON.parse(settings)

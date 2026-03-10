@@ -1,5 +1,5 @@
 /**
- * ChessVault Chess Engine
+ * ChessGrind Chess Engine
  * Negamax with alpha-beta pruning, quiescence search,
  * piece-square tables, move ordering, and opening book.
  */

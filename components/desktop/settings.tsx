@@ -108,7 +108,7 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
           Back to Profile
         </button>
         <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground">Customize your ChessVault experience</p>
+        <p className="text-muted-foreground">Customize your ChessGrind experience</p>
       </div>
 
       {/* Settings Sections */}

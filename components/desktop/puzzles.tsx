@@ -729,8 +729,8 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
                   </motion.button>
                   <ShareButtons
                     compact
-                    title={`I solved "${puzzle.title}" on ChessVault!`}
-                    text={`🧩 I just solved "${puzzle.title}" (${puzzle.difficulty}) and earned ${earnedXP || puzzle.xpReward} XP on ChessVault!`}
+                    title={`I solved "${puzzle.title}" on ChessGrind!`}
+                    text={`🧩 I just solved "${puzzle.title}" (${puzzle.difficulty}) and earned ${earnedXP || puzzle.xpReward} XP on ChessGrind!`}
                   />
                 </div>
               </motion.div>

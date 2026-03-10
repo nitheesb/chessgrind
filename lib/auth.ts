@@ -5,7 +5,7 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 )
 
-const COOKIE_NAME = 'chessvault_session'
+const COOKIE_NAME = 'chessgrind_session'
 
 export interface JWTPayload {
   userId: string

@@ -13,7 +13,7 @@ interface ShareButtonsProps {
 export function ShareButtons({ title, text, compact }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
   const [open, setOpen] = useState(false)
-  const url = 'https://chess-vault.vercel.app'
+  const url = 'https://chessgrind.vercel.app'
   const fullText = `${text}\n\n${url}`
 
   const handleNativeShare = useCallback(async () => {

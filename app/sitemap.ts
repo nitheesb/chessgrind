@@ -3,7 +3,7 @@ import { OPENINGS } from '@/lib/chess-data/openings'
 import { PUZZLES } from '@/lib/chess-data/puzzles'
 import { TRAPS } from '@/lib/chess-data/traps'
 
-const BASE_URL = 'https://chess-vault.vercel.app'
+const BASE_URL = 'https://chessgrind.vercel.app'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()

@@ -100,7 +100,7 @@ function mapApiUserToProfile(apiUser: UserProfileResponse): UserProfile {
   }
 }
 
-const STORAGE_KEY = 'chessvault_profile'
+const STORAGE_KEY = 'chessgrind_profile'
 
 function loadProfileFromStorage(): UserProfile | null {
   if (typeof window === 'undefined') return null
@@ -182,7 +182,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // Load onboarding state
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const seen = localStorage.getItem('chessvault_onboarding_seen')
+      const seen = localStorage.getItem('chessgrind_onboarding_seen')
       setHasSeenOnboardingState(seen === 'true')
     }
   }, [])
@@ -190,7 +190,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const setHasSeenOnboarding = useCallback((seen: boolean) => {
     setHasSeenOnboardingState(seen)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('chessvault_onboarding_seen', String(seen))
+      localStorage.setItem('chessgrind_onboarding_seen', String(seen))
     }
   }, [])
 

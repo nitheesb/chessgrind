@@ -4,10 +4,10 @@ import { OPENINGS } from '@/lib/chess-data/openings'
 import { PUZZLES } from '@/lib/chess-data/puzzles'
 import { TRAPS } from '@/lib/chess-data/traps'
 
-const BASE_URL = 'https://chess-vault.vercel.app'
+const BASE_URL = 'https://chessgrind.vercel.app'
 
 export const metadata: Metadata = {
-  title: 'Learn Chess Online Free — Puzzles, Openings, Traps & AI | ChessVault',
+  title: 'Learn Chess Online Free — Puzzles, Openings, Traps & AI | ChessGrind',
   description:
     'Master chess with interactive puzzles, opening guides, trap lessons, and AI opponents. Free chess training for beginners to advanced players.',
   alternates: { canonical: `${BASE_URL}/learn` },
@@ -35,7 +35,7 @@ export default function LearnPage() {
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.1) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
         <div className="relative mx-auto max-w-3xl">
           <Link href="/" className="inline-flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300 mb-6 transition-colors">
-            ← Back to ChessVault
+            ← Back to ChessGrind
           </Link>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
             Learn Chess Online — <span className="text-amber-400">Free</span>
@@ -147,11 +147,11 @@ export default function LearnPage() {
           <h2 className="text-3xl font-bold mb-8">Frequently Asked Questions</h2>
           <div className="space-y-6 max-w-3xl">
             {[
-              { q: 'Is ChessVault completely free?', a: 'Yes. All puzzles, openings, traps, and AI play are 100% free with no paywalls or subscriptions.' },
+              { q: 'Is ChessGrind completely free?', a: 'Yes. All puzzles, openings, traps, and AI play are 100% free with no paywalls or subscriptions.' },
               { q: 'Do I need to create an account?', a: 'No. You can start playing immediately in demo mode. Your progress saves locally. Create an account to sync across devices.' },
-              { q: 'What skill level is this for?', a: 'ChessVault serves all levels — from complete beginners learning basic tactics to advanced players studying complex openings and deep traps.' },
+              { q: 'What skill level is this for?', a: 'ChessGrind serves all levels — from complete beginners learning basic tactics to advanced players studying complex openings and deep traps.' },
               { q: 'How does the XP system work?', a: 'Earn XP by solving puzzles, learning openings, and completing challenges. Build combos for multiplied XP, maintain daily streaks, and unlock achievements as you improve.' },
-              { q: 'Can I play against a computer?', a: 'Yes. ChessVault features 8 AI difficulty levels from Beginner Bot (casual play) to Stockfish Beast (grandmaster-level challenge).' },
+              { q: 'Can I play against a computer?', a: 'Yes. ChessGrind features 8 AI difficulty levels from Beginner Bot (casual play) to Stockfish Beast (grandmaster-level challenge).' },
             ].map(item => (
               <details key={item.q} className="group">
                 <summary className="cursor-pointer text-lg font-semibold text-white/80 hover:text-white transition-colors list-none flex items-center gap-2">
@@ -178,7 +178,7 @@ export default function LearnPage() {
       </main>
 
       <footer className="border-t border-white/5 py-8 px-6 text-center text-sm text-white/30">
-        <p>© {new Date().getFullYear()} ChessVault. Free chess learning platform.</p>
+        <p>© {new Date().getFullYear()} ChessGrind. Free chess learning platform.</p>
         <div className="mt-2 flex flex-wrap gap-4 justify-center">
           <Link href="/learn#openings" className="hover:text-white/50 transition-colors">Openings</Link>
           <Link href="/learn#puzzles" className="hover:text-white/50 transition-colors">Puzzles</Link>

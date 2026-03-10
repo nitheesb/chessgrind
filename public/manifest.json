@@ -1,6 +1,6 @@
 {
-  "name": "ChessVault — Master Chess Through Play",
-  "short_name": "ChessVault",
+  "name": "ChessGrind — Master Chess Through Play",
+  "short_name": "ChessGrind",
   "description": "Free interactive chess learning platform. Solve puzzles, study openings, master traps, and play against AI.",
   "start_url": "/",
   "id": "/",

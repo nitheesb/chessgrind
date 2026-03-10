@@ -34,7 +34,7 @@ interface SettingsContextType {
 
 const SettingsContext = createContext<SettingsContextType | null>(null)
 
-const STORAGE_KEY = 'chessvault_settings'
+const STORAGE_KEY = 'chessgrind_settings'
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)

@@ -118,7 +118,7 @@ export function LoginPage() {
           </div>
         </motion.div>
         <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
-          <TextReveal text="ChessVault" delay={0.1} className="shimmer-text" />
+          <TextReveal text="ChessGrind" delay={0.1} className="shimmer-text" />
         </h1>
         <div className="text-base text-white/50">
           <TextReveal text="Learn chess. Solve puzzles. Get better." delay={0.3} stagger={0.04} />

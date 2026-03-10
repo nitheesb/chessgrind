@@ -221,7 +221,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     const whitePlayer = playerColor === 'white' ? 'You' : `${DIFFICULTY_CONFIG[difficulty].name} AI`
     const blackPlayer = playerColor === 'black' ? 'You' : `${DIFFICULTY_CONFIG[difficulty].name} AI`
     const headers = [
-      '[Event "ChessVault Game"]',
+      '[Event "ChessGrind Game"]',
       `[Date "${date}"]`,
       `[White "${whitePlayer}"]`,
       `[Black "${blackPlayer}"]`,
@@ -572,7 +572,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                       const url = URL.createObjectURL(blob)
                       const a = document.createElement('a')
                       a.href = url
-                      a.download = `chessvault-game-${Date.now()}.pgn`
+                      a.download = `chessgrind-game-${Date.now()}.pgn`
                       a.click()
                       URL.revokeObjectURL(url)
                     }}

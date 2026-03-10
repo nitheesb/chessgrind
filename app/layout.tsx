@@ -7,9 +7,9 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' })
 
-const BASE_URL = 'https://chess-vault.vercel.app'
-const SITE_NAME = 'ChessVault'
-const TITLE = 'ChessVault — Master Chess Through Play'
+const BASE_URL = 'https://chessgrind.vercel.app'
+const SITE_NAME = 'ChessGrind'
+const TITLE = 'ChessGrind — Master Chess Through Play'
 const DESCRIPTION =
   'Free interactive chess learning platform. Solve 50+ tactical puzzles, study 30+ openings with animated boards, master deadly traps, and play against AI from beginner to grandmaster level. Track your XP, unlock achievements, and improve your rating.'
 
@@ -168,34 +168,34 @@ function JsonLd() {
         mainEntity: [
           {
             '@type': 'Question',
-            name: 'Is ChessVault free to use?',
+            name: 'Is ChessGrind free to use?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'Yes, ChessVault is completely free. All puzzles, openings, traps, and AI play are available at no cost.',
+              text: 'Yes, ChessGrind is completely free. All puzzles, openings, traps, and AI play are available at no cost.',
             },
           },
           {
             '@type': 'Question',
-            name: 'How do chess puzzles work on ChessVault?',
+            name: 'How do chess puzzles work on ChessGrind?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'ChessVault offers 50+ tactical puzzles across categories like forks, pins, skewers, and checkmates. Each puzzle rewards XP, with bonus multipliers for combos and perfect solves.',
+              text: 'ChessGrind offers 50+ tactical puzzles across categories like forks, pins, skewers, and checkmates. Each puzzle rewards XP, with bonus multipliers for combos and perfect solves.',
             },
           },
           {
             '@type': 'Question',
-            name: 'Can I learn chess openings on ChessVault?',
+            name: 'Can I learn chess openings on ChessGrind?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'Yes, ChessVault features 30+ openings with interactive animated boards showing each move, including the Sicilian Defense, Queen\'s Gambit, Italian Game, and more.',
+              text: 'Yes, ChessGrind features 30+ openings with interactive animated boards showing each move, including the Sicilian Defense, Queen\'s Gambit, Italian Game, and more.',
             },
           },
           {
             '@type': 'Question',
-            name: 'What skill level is ChessVault for?',
+            name: 'What skill level is ChessGrind for?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'ChessVault is designed for all skill levels — from complete beginners to advanced players. The AI adjusts from beginner to grandmaster difficulty, and content is organized by complexity.',
+              text: 'ChessGrind is designed for all skill levels — from complete beginners to advanced players. The AI adjusts from beginner to grandmaster difficulty, and content is organized by complexity.',
             },
           },
         ],

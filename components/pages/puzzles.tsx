@@ -263,7 +263,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   // Feature 5: board size
   const [boardSize, setBoardSize] = useState(() => {
     if (typeof window === 'undefined') return 360
-    const stored = localStorage.getItem('chessvault_board_size')
+    const stored = localStorage.getItem('chessgrind_board_size')
     if (stored) return Math.min(Math.max(parseInt(stored), 280), 600)
     return Math.min(480, window.innerWidth - 48)
   })
@@ -271,7 +271,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     setBoardSize(prev => {
       const maxSize = typeof window !== 'undefined' ? Math.min(600, window.innerWidth - 48) : 600
       const next = Math.min(Math.max(prev + delta, 280), maxSize)
-      localStorage.setItem('chessvault_board_size', String(next))
+      localStorage.setItem('chessgrind_board_size', String(next))
       return next
     })
   }
@@ -755,8 +755,8 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
             </motion.button>
             <ShareButtons
               compact
-              title={`I solved "${puzzle.title}" on ChessVault!`}
-              text={`🧩 I just solved "${puzzle.title}" (${puzzle.difficulty}) and earned ${earnedXP || puzzle.xpReward} XP on ChessVault!`}
+              title={`I solved "${puzzle.title}" on ChessGrind!`}
+              text={`🧩 I just solved "${puzzle.title}" (${puzzle.difficulty}) and earned ${earnedXP || puzzle.xpReward} XP on ChessGrind!`}
             />
           </motion.div>
         )}
