@@ -16,6 +16,7 @@ import {
   Star,
   BookOpen,
   Settings,
+  Target,
 } from 'lucide-react'
 import { AnimatedCounter } from '@/components/ui/animated-components'
 import { TiltCard, OdometerCounter, RevealGrid } from '@/components/ui/effects'
@@ -45,10 +46,12 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
   const stats = [
     { label: 'Puzzles Solved', value: profile.puzzlesSolved, icon: <Puzzle className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
     { label: 'Current Streak', value: profile.streak, icon: <Flame className="w-5 h-5" />, colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10', hoverCard: 'stat-card-orange' },
+    { label: 'Best Streak', value: profile.bestStreak || 0, icon: <Flame className="w-5 h-5" />, colorClass: 'text-red-400', bgClass: 'bg-red-500/10', hoverCard: 'stat-card-orange' },
     { label: 'Puzzle Rating', value: profile.puzzleRating || 800, icon: <TrendingUp className="w-5 h-5" />, colorClass: 'text-blue-400', bgClass: 'bg-blue-500/10', hoverCard: 'stat-card-blue' },
     { label: 'Total XP', value: profile.xp, icon: <Zap className="w-5 h-5" />, colorClass: 'text-primary', bgClass: 'bg-primary/10', hoverCard: 'stat-card-amber' },
     { label: 'Games Played', value: profile.gamesPlayed || 0, icon: <Trophy className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
     { label: 'Openings Learned', value: profile.openingsLearned || 0, icon: <BookOpen className="w-5 h-5" />, colorClass: 'text-violet-400', bgClass: 'bg-violet-500/10', hoverCard: 'stat-card-blue' },
+    { label: 'Traps Mastered', value: profile.trapsLearned || 0, icon: <Target className="w-5 h-5" />, colorClass: 'text-rose-400', bgClass: 'bg-rose-500/10', hoverCard: 'stat-card-orange' },
   ]
 
   const earnedAchievements = profile.achievements.filter(a => a.earned)
@@ -135,7 +138,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
       {/* Stats Grid */}
       <div className="mb-8">
         <h2 className="text-lg font-display font-semibold text-foreground mb-4">Statistics</h2>
-        <RevealGrid className="grid grid-cols-3 lg:grid-cols-6 gap-4" staggerDelay={80}>
+        <RevealGrid className="grid grid-cols-4 gap-4" staggerDelay={80}>
           {stats.map((stat, index) => (
             <TiltCard
               key={stat.label}

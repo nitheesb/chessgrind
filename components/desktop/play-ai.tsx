@@ -40,6 +40,18 @@ interface DesktopPlayAIProps {
 
 type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'master'
 
+type TimeControl = { label: string; minutes: number; increment: number }
+
+const TIME_CONTROLS: TimeControl[] = [
+  { label: 'Unlimited', minutes: 0, increment: 0 },
+  { label: '1 min', minutes: 1, increment: 0 },
+  { label: '3 min', minutes: 3, increment: 0 },
+  { label: '5 min', minutes: 5, increment: 0 },
+  { label: '10 min', minutes: 10, increment: 0 },
+  { label: '5|3', minutes: 5, increment: 3 },
+  { label: '10|5', minutes: 10, increment: 5 },
+]
+
 const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string }> = {
   beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'amber' },
   intermediate: { name: 'Intermediate', depth: 3, description: 'A fair challenge', color: 'blue' },
@@ -61,12 +73,15 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const [gameStarted, setGameStarted] = useState(false)
   const [difficulty, setDifficulty] = useState<Difficulty>('intermediate')
   const [playerColor, setPlayerColor] = useState<'white' | 'black'>('white')
+  const [timeControl, setTimeControl] = useState<TimeControl>(TIME_CONTROLS[0])
   const [game, setGame] = useState(() => new Chess())
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost' | 'draw'>('playing')
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
   const [moveHistory, setMoveHistory] = useState<string[]>([])
   const [thinking, setThinking] = useState(false)
   const [timer, setTimer] = useState(0)
+  const [whiteTime, setWhiteTime] = useState(0)
+  const [blackTime, setBlackTime] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [boardSize, setBoardSize] = useState(520)
   const updateBoardSize = (delta: number) => {
@@ -76,6 +91,8 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const [notationView, setNotationView] = useState<'list' | 'condensed'>('list')
   const [copiedPGN, setCopiedPGN] = useState(false)
   const [copiedFEN, setCopiedFEN] = useState(false)
+  const [keyboardInput, setKeyboardInput] = useState('')
+  const [keyboardError, setKeyboardError] = useState(false)
   const notationRef = useRef<HTMLDivElement>(null)
   const isPlayerTurn = game.turn() === (playerColor === 'white' ? 'w' : 'b')
 
@@ -88,12 +105,41 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     return analyzeMoveQualities(moveHistory)
   }, [gameStatus, moveHistory])
 
+  // Timer logic — countdown for timed games, count-up for unlimited
   useEffect(() => {
-    if (gameStarted && gameStatus === 'playing') {
+    if (!gameStarted || gameStatus !== 'playing') return
+    if (timeControl.minutes === 0) {
       timerRef.current = setInterval(() => setTimer(prev => prev + 1), 1000)
+    } else {
+      timerRef.current = setInterval(() => {
+        const isWhiteTurn = game.turn() === 'w'
+        if (isWhiteTurn) {
+          setWhiteTime(prev => {
+            if (prev <= 1) { handleGameEnd('lost'); return 0 }
+            return prev - 1
+          })
+        } else {
+          setBlackTime(prev => {
+            if (prev <= 1) { handleGameEnd('won'); return 0 }
+            return prev - 1
+          })
+        }
+      }, 1000)
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [gameStarted, gameStatus])
+  }, [gameStarted, gameStatus, timeControl.minutes, game.turn()])
+
+  const handleGameEnd = useCallback((result: 'won' | 'lost' | 'draw') => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    setGameStatus(result)
+    if (result === 'won') {
+      playSound('success')
+      triggerHaptic('success')
+      addXP(50 * (Object.keys(DIFFICULTY_CONFIG).indexOf(difficulty) + 1))
+    } else if (result === 'lost') {
+      playSound('fail')
+    }
+  }, [playSound, triggerHaptic, addXP, difficulty])
 
   const makeAIMove = useCallback((currentGame: Chess) => {
     if (currentGame.isGameOver()) return
@@ -113,21 +159,18 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           setLastMove({ from: move.from, to: move.to })
           setMoveHistory(prev => [...prev, move.san])
           playSound(move.captured ? 'capture' : 'move')
+          if (timeControl.increment > 0) {
+            setBlackTime(prev => prev + timeControl.increment)
+          }
 
           if (newGame.isGameOver()) {
-            if (timerRef.current) clearInterval(timerRef.current)
-            if (newGame.isCheckmate()) {
-              setGameStatus('lost')
-              playSound('fail')
-            } else {
-              setGameStatus('draw')
-            }
+            handleGameEnd(newGame.isCheckmate() ? 'lost' : 'draw')
           }
         }
       }
       setThinking(false)
     }, 300 + Math.random() * 400)
-  }, [difficulty, playSound])
+  }, [difficulty, playSound, timeControl.increment, handleGameEnd])
 
   const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     if (gameStatus !== 'playing' || thinking) return false
@@ -147,17 +190,12 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         setMoveHistory(prev => [...prev, move.san])
         playSound(move.captured ? 'capture' : 'move')
         triggerHaptic('medium')
+        if (timeControl.increment > 0) {
+          setWhiteTime(prev => prev + timeControl.increment)
+        }
 
         if (newGame.isGameOver()) {
-          if (timerRef.current) clearInterval(timerRef.current)
-          if (newGame.isCheckmate()) {
-            setGameStatus('won')
-            playSound('success')
-            triggerHaptic('success')
-            addXP(50 * (Object.keys(DIFFICULTY_CONFIG).indexOf(difficulty) + 1))
-          } else {
-            setGameStatus('draw')
-          }
+          handleGameEnd(newGame.isCheckmate() ? 'won' : 'draw')
         } else {
           setTimeout(() => makeAIMove(newGame), 300)
         }
@@ -165,7 +203,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
       }
     } catch { }
     return false
-  }, [game, gameStatus, thinking, isPlayerTurn, difficulty, playSound, triggerHaptic, addXP, makeAIMove])
+  }, [game, gameStatus, thinking, isPlayerTurn, playSound, triggerHaptic, makeAIMove, timeControl.increment, handleGameEnd])
 
   // Execute premove when it becomes the player's turn
   useEffect(() => {
@@ -181,13 +219,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         setMoveHistory(prev => [...prev, move.san])
         playSound(move.captured ? 'capture' : 'move')
         if (newGame.isGameOver()) {
-          if (timerRef.current) clearInterval(timerRef.current)
-          if (newGame.isCheckmate()) {
-            setGameStatus('won')
-            addXP(50 * (Object.keys(DIFFICULTY_CONFIG).indexOf(difficulty) + 1))
-          } else {
-            setGameStatus('draw')
-          }
+          handleGameEnd(newGame.isCheckmate() ? 'won' : 'draw')
         } else {
           setTimeout(() => makeAIMove(newGame), 300)
         }
@@ -204,11 +236,14 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     setLastMove(null)
     setMoveHistory([])
     setTimer(0)
+    setWhiteTime(timeControl.minutes * 60)
+    setBlackTime(timeControl.minutes * 60)
+    setKeyboardInput('')
 
     if (playerColor === 'black') {
       setTimeout(() => makeAIMove(new Chess()), 500)
     }
-  }, [playerColor, playSound, makeAIMove])
+  }, [playerColor, playSound, makeAIMove, timeControl.minutes])
 
   const resetGame = useCallback(() => {
     playSound('click')
@@ -218,8 +253,11 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     setLastMove(null)
     setMoveHistory([])
     setTimer(0)
+    setWhiteTime(0)
+    setBlackTime(0)
     setThinking(false)
     setPremove(null)
+    setKeyboardInput('')
     if (timerRef.current) clearInterval(timerRef.current)
   }, [playSound])
 
@@ -228,6 +266,46 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
+
+  const handleKeyboardMove = useCallback((input: string) => {
+    if (!isPlayerTurn || gameStatus !== 'playing') return
+    const trimmed = input.trim()
+    try {
+      const newGame = new Chess(game.fen())
+      // Try SAN notation first (e.g., Nf3, e4)
+      let move = null
+      try { move = newGame.move(trimmed) } catch {}
+      // Try coordinate notation (e.g., e2e4)
+      if (!move && trimmed.length >= 4) {
+        const from = trimmed.slice(0, 2)
+        const to = trimmed.slice(2, 4)
+        const promo = trimmed[4] || undefined
+        try { move = newGame.move({ from, to, promotion: promo || 'q' }) } catch {}
+      }
+      if (move) {
+        setGame(newGame)
+        setLastMove({ from: move.from, to: move.to })
+        setMoveHistory(prev => [...prev, move.san])
+        playSound(move.captured ? 'capture' : 'move')
+        setKeyboardInput('')
+        setKeyboardError(false)
+        if (timeControl.increment > 0) {
+          setWhiteTime(prev => prev + timeControl.increment)
+        }
+        if (newGame.isGameOver()) {
+          handleGameEnd(newGame.isCheckmate() ? 'won' : 'draw')
+        } else {
+          setTimeout(() => makeAIMove(newGame), 300)
+        }
+      } else {
+        setKeyboardError(true)
+        setTimeout(() => setKeyboardError(false), 800)
+      }
+    } catch {
+      setKeyboardError(true)
+      setTimeout(() => setKeyboardError(false), 800)
+    }
+  }, [game, isPlayerTurn, gameStatus, playSound, makeAIMove, timeControl.increment, handleGameEnd])
 
   const generatePGN = useCallback(() => {
     const date = new Date().toISOString().split('T')[0].replace(/-/g, '.')
@@ -331,6 +409,26 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           </div>
         </div>
 
+        {/* Time Control */}
+        <div className="mb-10">
+          <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Time Control</h2>
+          <div className="flex flex-wrap justify-center gap-3">
+            {TIME_CONTROLS.map((tc) => (
+              <motion.button
+                key={tc.label}
+                onClick={() => { playSound('click'); setTimeControl(tc) }}
+                className={`px-5 py-3 rounded-xl border transition-all duration-300 relative overflow-hidden group ${timeControl.label === tc.label
+                  ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/50 text-primary font-semibold'
+                  : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20 text-muted-foreground'
+                  }`}
+              >
+                <Clock className="w-4 h-4 inline mr-1.5" />
+                {tc.label}
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
         {/* Start Button */}
         <div className="text-center mt-6">
           <motion.button
@@ -396,14 +494,60 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
           {/* Timer */}
           <div className="glass-card p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Time</span>
+            {timeControl.minutes === 0 ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Time</span>
+                </div>
+                <span className="text-2xl font-mono font-bold text-foreground">{formatTime(timer)}</span>
               </div>
-              <span className="text-2xl font-mono font-bold text-foreground">{formatTime(timer)}</span>
-            </div>
+            ) : (
+              <div className="space-y-2">
+                <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${game.turn() === 'w' ? 'bg-white/10' : ''}`}>
+                  <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-white border border-white/40" />
+                    {playerColor === 'white' ? 'You' : 'AI'}
+                  </span>
+                  <span className={`font-mono font-bold ${whiteTime < 30 ? 'text-red-400' : 'text-foreground'}`}>{formatTime(whiteTime)}</span>
+                </div>
+                <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${game.turn() === 'b' ? 'bg-white/10' : ''}`}>
+                  <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-zinc-800 border border-white/20" />
+                    {playerColor === 'black' ? 'You' : 'AI'}
+                  </span>
+                  <span className={`font-mono font-bold ${blackTime < 30 ? 'text-red-400' : 'text-foreground'}`}>{formatTime(blackTime)}</span>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Keyboard Move Input */}
+          {gameStatus === 'playing' && (
+            <div className="glass-card p-4">
+              <label className="text-xs text-muted-foreground mb-1.5 block">Keyboard Move</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={keyboardInput}
+                  onChange={(e) => setKeyboardInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && keyboardInput.trim()) {
+                      handleKeyboardMove(keyboardInput)
+                    }
+                  }}
+                  placeholder="e.g. Nf3 or e2e4"
+                  className={`flex-1 bg-secondary/50 border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors ${keyboardError ? 'border-red-500 shake' : 'border-white/10'}`}
+                />
+                <button
+                  onClick={() => keyboardInput.trim() && handleKeyboardMove(keyboardInput)}
+                  className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+                >
+                  ↵
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Move History */}
           <div className="glass-card p-5">

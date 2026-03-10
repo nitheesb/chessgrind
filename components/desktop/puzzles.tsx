@@ -46,18 +46,27 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
   const { playSound } = useSoundAndHaptics()
   const [activePuzzle, setActivePuzzle] = useState<Puzzle | null>(null)
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all')
+  const [filterTheme, setFilterTheme] = useState<string>('all')
   const [rushMinutes, setRushMinutes] = useState<3 | 5 | null>(null)
   const [visibleCount, setVisibleCount] = useState(24)
 
   const filteredPuzzles = useMemo(() => {
-    if (filterDifficulty === 'all') return PUZZLES
-    return PUZZLES.filter(p => p.difficulty === filterDifficulty)
-  }, [filterDifficulty])
+    let result = PUZZLES
+    if (filterDifficulty !== 'all') result = result.filter(p => p.difficulty === filterDifficulty)
+    if (filterTheme !== 'all') result = result.filter(p => p.themes.some(t => t.toLowerCase().includes(filterTheme.toLowerCase())))
+    return result
+  }, [filterDifficulty, filterTheme])
 
   const visiblePuzzles = useMemo(() => filteredPuzzles.slice(0, visibleCount), [filteredPuzzles, visibleCount])
 
-  // Reset pagination when filter changes
-  useEffect(() => { setVisibleCount(24) }, [filterDifficulty])
+  // Reset pagination when filters change
+  useEffect(() => { setVisibleCount(24) }, [filterDifficulty, filterTheme])
+
+  const uniqueThemes = useMemo(() => {
+    const themes = new Set<string>()
+    PUZZLES.forEach(p => p.themes.forEach(t => themes.add(t)))
+    return Array.from(themes).sort()
+  }, [])
 
   const stats = {
     solved: profile.puzzlesSolved,
@@ -192,6 +201,33 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Theme Filter */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <button
+          onClick={() => { playSound('click'); setFilterTheme('all') }}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+            filterTheme === 'all'
+              ? 'bg-accent/10 text-accent border-accent/30'
+              : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary'
+          }`}
+        >
+          All Themes
+        </button>
+        {uniqueThemes.map((theme) => (
+          <button
+            key={theme}
+            onClick={() => { playSound('click'); setFilterTheme(filterTheme === theme ? 'all' : theme) }}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border capitalize ${
+              filterTheme === theme
+                ? 'bg-accent/10 text-accent border-accent/30'
+                : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary'
+            }`}
+          >
+            {theme}
+          </button>
+        ))}
       </div>
 
       {/* Puzzle Grid */}
