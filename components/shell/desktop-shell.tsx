@@ -328,8 +328,8 @@ export function DesktopShell() {
                 {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
                 {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
                 {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
-                {currentPage === 'coords' && <div className="p-8 max-w-4xl mx-auto"><CoordinateTrainerPage /></div>}
-                {currentPage === 'endgame' && <div className="p-8 max-w-4xl mx-auto"><EndgamePracticePage /></div>}
+                {currentPage === 'coords' && <div className="p-8 max-w-4xl mx-auto"><CoordinateTrainerPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'endgame' && <div className="p-8 max-w-4xl mx-auto"><EndgamePracticePage onBack={() => handleNavigate('dashboard')} /></div>}
               </Suspense>
             )}
           </motion.div>

@@ -338,7 +338,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
   if (!gameStarted) {
     return (
-      <div
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="p-8 max-w-4xl mx-auto"
@@ -439,19 +439,19 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
             <span className="relative z-10 flex items-center justify-center gap-2">Start Game <ChevronRight className="w-5 h-5" /></span>
           </motion.button>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
   return (
-    <div
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="p-8 max-w-7xl mx-auto"
     >
       <div className="grid grid-cols-3 gap-8">
         {/* Left Panel */}
-        <div
+        <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="space-y-6"
@@ -630,10 +630,10 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               Resign
             </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Center - Board */}
-        <div
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="col-span-2"
@@ -641,7 +641,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           <div className="glass-card p-6">
             {/* Game Status */}
             {gameStatus !== 'playing' && (
-              <div
+              <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`mb-4 p-4 rounded-xl text-center font-semibold ${gameStatus === 'won'
@@ -658,7 +658,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 )}
                 {gameStatus === 'lost' && 'Game Over - AI Wins'}
                 {gameStatus === 'draw' && 'Game Drawn'}
-              </div>
+              </motion.div>
             )}
 
             {/* Board with EvalBar */}
@@ -732,7 +732,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
             {/* Reward info */}
             {gameStatus === 'won' && (
-              <div
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-6 text-center"
@@ -741,11 +741,11 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                   <Zap className="w-5 h-5" />
                   +{50 * (Object.keys(DIFFICULTY_CONFIG).indexOf(difficulty) + 1)} XP earned!
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {gameStatus !== 'playing' && (
-              <div
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-6 flex flex-col items-center gap-3"
@@ -786,11 +786,11 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                     {copiedPGN ? '✓ Copied!' : '⎘ Copy PGN'}
                   </button>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   )
 }

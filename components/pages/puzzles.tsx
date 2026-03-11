@@ -40,6 +40,7 @@ interface PuzzlesPageProps {
 }
 
 export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
+  const { profile } = useGame()
   const [activePuzzle, setActivePuzzle] = useState<Puzzle | null>(null)
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all')
   const [filterTheme, setFilterTheme] = useState<string>('all')

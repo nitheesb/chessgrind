@@ -81,6 +81,7 @@ const Square = memo(function Square({
   pieceStyle,
   square,
   onKeyDown,
+  blindfoldMode,
 }: {
   row: number
   col: number
