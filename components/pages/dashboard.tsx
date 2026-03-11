@@ -24,6 +24,14 @@ import {
   Play,
   Crown,
   Crosshair,
+  Timer,
+  Eye,
+  HelpCircle,
+  PenTool,
+  Layers,
+  AlertTriangle,
+  Calculator,
+  FileText,
 } from 'lucide-react'
 import {
   ProgressRing,
@@ -89,6 +97,16 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     { id: 'traps', label: 'Traps', desc: 'Learn tricks', icon: <Target className="w-5 h-5" />, gradient: 'from-rose-500 to-pink-600', page: 'traps' },
     { id: 'coords', label: 'Coords', desc: 'Board vision', icon: <Crosshair className="w-5 h-5" />, gradient: 'from-cyan-500 to-teal-600', page: 'coords' },
     { id: 'endgame', label: 'Endgames', desc: 'Practice endings', icon: <Crown className="w-5 h-5" />, gradient: 'from-yellow-500 to-amber-600', page: 'endgame' },
+    { id: 'puzzle-rush', label: 'Puzzle Rush', desc: 'Speed solving', icon: <Timer className="w-5 h-5" />, gradient: 'from-red-500 to-rose-600', page: 'puzzle-rush' },
+    { id: 'board-vision', label: 'Vision', desc: 'Square training', icon: <Eye className="w-5 h-5" />, gradient: 'from-emerald-500 to-green-600', page: 'board-vision' },
+    { id: 'checkmate-patterns', label: 'Mates', desc: 'Mate patterns', icon: <Crown className="w-5 h-5" />, gradient: 'from-fuchsia-500 to-pink-600', page: 'checkmate-patterns' },
+    { id: 'blunder-spotter', label: 'Blunders', desc: 'Find refutations', icon: <AlertTriangle className="w-5 h-5" />, gradient: 'from-orange-500 to-red-600', page: 'blunder-spotter' },
+    { id: 'pgn-viewer', label: 'PGN', desc: 'Replay games', icon: <FileText className="w-5 h-5" />, gradient: 'from-slate-500 to-gray-600', page: 'pgn-viewer' },
+    { id: 'pawn-structures', label: 'Pawns', desc: 'Structure guide', icon: <Layers className="w-5 h-5" />, gradient: 'from-lime-500 to-green-600', page: 'pawn-structures' },
+    { id: 'notation-trainer', label: 'Notation', desc: 'Read & write', icon: <PenTool className="w-5 h-5" />, gradient: 'from-sky-500 to-blue-600', page: 'notation-trainer' },
+    { id: 'piece-quiz', label: 'Values', desc: 'Piece quiz', icon: <HelpCircle className="w-5 h-5" />, gradient: 'from-teal-500 to-cyan-600', page: 'piece-quiz' },
+    { id: 'move-calculator', label: 'Calculate', desc: 'Count moves', icon: <Calculator className="w-5 h-5" />, gradient: 'from-indigo-500 to-violet-600', page: 'move-calculator' },
+    { id: 'daily-calendar', label: 'Calendar', desc: 'Activity log', icon: <Calendar className="w-5 h-5" />, gradient: 'from-amber-500 to-yellow-600', page: 'daily-calendar' },
   ]
 
   return (

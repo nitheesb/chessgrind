@@ -32,6 +32,14 @@ import {
   Sparkles,
   Crosshair,
   Gamepad2,
+  Timer,
+  Eye,
+  HelpCircle,
+  PenTool,
+  Layers,
+  AlertTriangle,
+  Calculator,
+  FileText,
 } from 'lucide-react'
 
 
@@ -99,6 +107,16 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
     { id: 'traps', label: 'Opening Traps', description: 'Learn devastating traps', icon: <Target className="w-7 h-7" />, gradient: 'from-rose-500 to-pink-600' },
     { id: 'coords', label: 'Coord Trainer', description: 'Master board coordinates', icon: <Crosshair className="w-7 h-7" />, gradient: 'from-emerald-500 to-teal-600' },
     { id: 'endgame', label: 'Endgame Practice', description: 'Perfect your endgame technique', icon: <Gamepad2 className="w-7 h-7" />, gradient: 'from-cyan-500 to-sky-600' },
+    { id: 'puzzle-rush', label: 'Puzzle Rush', description: 'Solve puzzles against the clock', icon: <Timer className="w-7 h-7" />, gradient: 'from-red-500 to-rose-600' },
+    { id: 'board-vision', label: 'Board Vision', description: 'Train square recognition speed', icon: <Eye className="w-7 h-7" />, gradient: 'from-emerald-500 to-green-600' },
+    { id: 'checkmate-patterns', label: 'Checkmate Patterns', description: 'Learn famous mating patterns', icon: <Crown className="w-7 h-7" />, gradient: 'from-fuchsia-500 to-pink-600' },
+    { id: 'blunder-spotter', label: 'Blunder Spotter', description: 'Find the winning refutation', icon: <AlertTriangle className="w-7 h-7" />, gradient: 'from-orange-500 to-red-600' },
+    { id: 'pgn-viewer', label: 'PGN Viewer', description: 'Import and replay chess games', icon: <FileText className="w-7 h-7" />, gradient: 'from-slate-500 to-gray-600' },
+    { id: 'pawn-structures', label: 'Pawn Structures', description: 'Master strategic pawn play', icon: <Layers className="w-7 h-7" />, gradient: 'from-lime-500 to-green-600' },
+    { id: 'notation-trainer', label: 'Notation Trainer', description: 'Practice algebraic notation', icon: <PenTool className="w-7 h-7" />, gradient: 'from-sky-500 to-blue-600' },
+    { id: 'piece-quiz', label: 'Piece Value Quiz', description: 'Test your piece value knowledge', icon: <HelpCircle className="w-7 h-7" />, gradient: 'from-teal-500 to-cyan-600' },
+    { id: 'move-calculator', label: 'Move Calculator', description: 'Count legal moves for training', icon: <Calculator className="w-7 h-7" />, gradient: 'from-indigo-500 to-violet-600' },
+    { id: 'daily-calendar', label: 'Activity Calendar', description: 'Track your daily chess activity', icon: <Calendar className="w-7 h-7" />, gradient: 'from-amber-500 to-yellow-600' },
   ]
 
   return (

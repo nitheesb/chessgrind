@@ -15,6 +15,16 @@ const PuzzlesPage = lazy(() => import('@/components/pages/puzzles').then(m => ({
 const PlayAIPage = lazy(() => import('@/components/pages/play-ai').then(m => ({ default: m.PlayAIPage })))
 const CoordinateTrainerPage = lazy(() => import('@/components/chess/coordinate-trainer').then(m => ({ default: m.CoordinateTrainer })))
 const EndgamePracticePage = lazy(() => import('@/components/pages/endgame-practice').then(m => ({ default: m.EndgamePractice })))
+const PuzzleRushPage = lazy(() => import('@/components/chess/puzzle-rush').then(m => ({ default: m.PuzzleRush })))
+const BoardVisionPage = lazy(() => import('@/components/chess/board-vision').then(m => ({ default: m.BoardVisionTrainer })))
+const CheckmatePatternsPage = lazy(() => import('@/components/chess/checkmate-patterns').then(m => ({ default: m.CheckmatePatterns })))
+const PieceValueQuizPage = lazy(() => import('@/components/chess/piece-value-quiz').then(m => ({ default: m.PieceValueQuiz })))
+const NotationTrainerPage = lazy(() => import('@/components/chess/notation-trainer').then(m => ({ default: m.NotationTrainer })))
+const PawnStructuresPage = lazy(() => import('@/components/chess/pawn-structures').then(m => ({ default: m.PawnStructureGuide })))
+const BlunderSpotterPage = lazy(() => import('@/components/chess/blunder-spotter').then(m => ({ default: m.BlunderSpotter })))
+const MoveCalculatorPage = lazy(() => import('@/components/chess/move-calculator').then(m => ({ default: m.MoveCalculator })))
+const PGNViewerPage = lazy(() => import('@/components/chess/pgn-viewer').then(m => ({ default: m.PGNViewer })))
+const DailyCalendarPage = lazy(() => import('@/components/chess/daily-calendar').then(m => ({ default: m.DailyCalendar })))
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
 import { ComboOverlay, DailyBonusPopup, PerfectSolveFlash } from '@/components/ui/game-rewards'
@@ -28,7 +38,7 @@ import {
   User,
 } from 'lucide-react'
 
-type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'coords' | 'endgame'
+type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'coords' | 'endgame' | 'puzzle-rush' | 'board-vision' | 'checkmate-patterns' | 'piece-quiz' | 'notation-trainer' | 'pawn-structures' | 'blunder-spotter' | 'move-calculator' | 'pgn-viewer' | 'daily-calendar'
 
 function PageSkeleton() {
   return (
@@ -138,6 +148,16 @@ export function AppShell() {
               {currentPage === 'play' && <PlayAIPage onBack={handleBack} />}
               {currentPage === 'coords' && <CoordinateTrainerPage onClose={handleBack} />}
               {currentPage === 'endgame' && <EndgamePracticePage onBack={handleBack} />}
+              {currentPage === 'puzzle-rush' && <PuzzleRushPage onClose={handleBack} />}
+              {currentPage === 'board-vision' && <BoardVisionPage onClose={handleBack} />}
+              {currentPage === 'checkmate-patterns' && <CheckmatePatternsPage onClose={handleBack} />}
+              {currentPage === 'piece-quiz' && <PieceValueQuizPage onClose={handleBack} />}
+              {currentPage === 'notation-trainer' && <NotationTrainerPage onClose={handleBack} />}
+              {currentPage === 'pawn-structures' && <PawnStructuresPage onClose={handleBack} />}
+              {currentPage === 'blunder-spotter' && <BlunderSpotterPage onClose={handleBack} />}
+              {currentPage === 'move-calculator' && <MoveCalculatorPage onClose={handleBack} />}
+              {currentPage === 'pgn-viewer' && <PGNViewerPage onClose={handleBack} />}
+              {currentPage === 'daily-calendar' && <DailyCalendarPage onClose={handleBack} />}
             </Suspense>
           )}
         </div>

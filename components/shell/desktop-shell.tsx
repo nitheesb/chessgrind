@@ -37,8 +37,18 @@ const DesktopPuzzles = lazy(() => import('@/components/desktop/puzzles').then(m 
 const DesktopPlayAI = lazy(() => import('@/components/desktop/play-ai').then(m => ({ default: m.DesktopPlayAI })))
 const CoordinateTrainerPage = lazy(() => import('@/components/chess/coordinate-trainer').then(m => ({ default: m.CoordinateTrainer })))
 const EndgamePracticePage = lazy(() => import('@/components/pages/endgame-practice').then(m => ({ default: m.EndgamePractice })))
+const PuzzleRushPage = lazy(() => import('@/components/chess/puzzle-rush').then(m => ({ default: m.PuzzleRush })))
+const BoardVisionPage = lazy(() => import('@/components/chess/board-vision').then(m => ({ default: m.BoardVisionTrainer })))
+const CheckmatePatternsPage = lazy(() => import('@/components/chess/checkmate-patterns').then(m => ({ default: m.CheckmatePatterns })))
+const PieceValueQuizPage = lazy(() => import('@/components/chess/piece-value-quiz').then(m => ({ default: m.PieceValueQuiz })))
+const NotationTrainerPage = lazy(() => import('@/components/chess/notation-trainer').then(m => ({ default: m.NotationTrainer })))
+const PawnStructuresPage = lazy(() => import('@/components/chess/pawn-structures').then(m => ({ default: m.PawnStructureGuide })))
+const BlunderSpotterPage = lazy(() => import('@/components/chess/blunder-spotter').then(m => ({ default: m.BlunderSpotter })))
+const MoveCalculatorPage = lazy(() => import('@/components/chess/move-calculator').then(m => ({ default: m.MoveCalculator })))
+const PGNViewerPage = lazy(() => import('@/components/chess/pgn-viewer').then(m => ({ default: m.PGNViewer })))
+const DailyCalendarPage = lazy(() => import('@/components/chess/daily-calendar').then(m => ({ default: m.DailyCalendar })))
 
-type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'coords' | 'endgame'
+type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'coords' | 'endgame' | 'puzzle-rush' | 'board-vision' | 'checkmate-patterns' | 'piece-quiz' | 'notation-trainer' | 'pawn-structures' | 'blunder-spotter' | 'move-calculator' | 'pgn-viewer' | 'daily-calendar'
 
 function DesktopPageSkeleton() {
   return (
@@ -330,6 +340,16 @@ export function DesktopShell() {
                 {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
                 {currentPage === 'coords' && <div className="p-8 max-w-4xl mx-auto"><CoordinateTrainerPage onClose={() => handleNavigate('dashboard')} /></div>}
                 {currentPage === 'endgame' && <div className="p-8 max-w-4xl mx-auto"><EndgamePracticePage onBack={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'puzzle-rush' && <div className="p-8 max-w-4xl mx-auto"><PuzzleRushPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'board-vision' && <div className="p-8 max-w-4xl mx-auto"><BoardVisionPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'checkmate-patterns' && <div className="p-8 max-w-5xl mx-auto"><CheckmatePatternsPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'piece-quiz' && <div className="p-8 max-w-4xl mx-auto"><PieceValueQuizPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'notation-trainer' && <div className="p-8 max-w-4xl mx-auto"><NotationTrainerPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'pawn-structures' && <div className="p-8 max-w-5xl mx-auto"><PawnStructuresPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'blunder-spotter' && <div className="p-8 max-w-4xl mx-auto"><BlunderSpotterPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'move-calculator' && <div className="p-8 max-w-4xl mx-auto"><MoveCalculatorPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'pgn-viewer' && <div className="p-8 max-w-5xl mx-auto"><PGNViewerPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'daily-calendar' && <div className="p-8 max-w-4xl mx-auto"><DailyCalendarPage onClose={() => handleNavigate('dashboard')} /></div>}
               </Suspense>
             )}
           </motion.div>
