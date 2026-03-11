@@ -71,14 +71,14 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
 
   // Auto-claim daily bonus on first dashboard load
   useEffect(() => {
-    if (!dailyBonusChecked.current && profile.username !== 'ChessLearner') {
-      dailyBonusChecked.current = true
-      const today = new Date().toDateString()
-      if (!profile.dailyBonusClaimed || profile.lastActiveDate !== today) {
-        setTimeout(() => claimDailyBonus(), 1500)
-      }
-    }
-  }, [profile.username, profile.dailyBonusClaimed, profile.lastActiveDate, claimDailyBonus])
+    if (dailyBonusChecked.current) return
+    if (profile.username === 'ChessLearner') return
+    const today = new Date().toDateString()
+    if (profile.dailyBonusClaimed && profile.lastActiveDate === today) return
+    dailyBonusChecked.current = true
+    setTimeout(() => claimDailyBonus(), 1500)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile.username])
 
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
