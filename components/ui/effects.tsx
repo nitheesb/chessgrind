@@ -81,7 +81,7 @@ export function TiltCard({
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
   const glareRef = useRef<HTMLDivElement>(null)
-  const rafRef = useRef<number>()
+  const rafRef = useRef<number | undefined>(undefined)
   const currentRef = useRef({ rotateX: 0, rotateY: 0, scale: 1 })
   const targetRef = useRef({ rotateX: 0, rotateY: 0, scale: 1 })
 

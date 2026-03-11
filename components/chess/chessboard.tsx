@@ -231,8 +231,8 @@ function AnimatedPiece({
   pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
 }) {
   const [position, setPosition] = useState({ x: 0, y: 0 })
-  const rafRef = useRef<number>()
-  const startTimeRef = useRef<number>()
+  const rafRef = useRef<number | undefined>(undefined)
+  const startTimeRef = useRef<number | undefined>(undefined)
 
   const getPos = useCallback((square: string) => {
     const { row, col } = squareToIndex(square)
