@@ -351,5 +351,288 @@ export const TRAPS: Trap[] = [
     side: 'black',
     xpReward: 30,
   },
+  {
+    id: 'cambridge-springs',
+    name: 'Cambridge Springs Trap',
+    opening: "Queen's Gambit Declined",
+    moves: ['d4', 'd5', 'c4', 'e6', 'Nc3', 'Nf6', 'Bg5', 'Nbd7', 'Nf3', 'c6', 'e3', 'Qa5', 'Nd2', 'Bb4', 'Qc2', 'O-O', 'Bd3', 'dxc4', 'Bxc4', 'Nd5'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A famous trap from the QGD where Black pins the knight and creates tactical threats.',
+    explanation: [
+      'Black develops Qa5 pinning the Nc3 to the king',
+      'Combined with Bb4, this creates a double pin',
+      'Black wins material or achieves a dominant position',
+      'The Nd5 forks multiple pieces after the pawn exchange'
+    ],
+    moveAnnotations: [
+      'Standard QGD opening', 'Mirrors', 'Offers the gambit', 'Declines',
+      'Develops knight', 'Natural development', 'Pins the knight', 'Develops behind pawns',
+      'Standard', 'Prepares Qa5', 'Supports center', 'The Cambridge Springs move!',
+      'Retreats the knight', 'Pins another piece', 'Unpins', 'Castles safely',
+      'Develops bishop', 'Opens the center', 'Recaptures', 'Powerful centralized knight'
+    ],
+    difficulty: 'intermediate',
+    side: 'black',
+    xpReward: 35,
+  },
+  {
+    id: 'mortimer-trap',
+    name: 'Mortimer Trap',
+    opening: 'Ruy Lopez',
+    moves: ['e4', 'e5', 'Nf3', 'Nf6', 'Nxe5', 'd6', 'Nf3', 'Nxe4', 'd3', 'Nf6', 'd4', 'd5', 'Bd3', 'Bd6', 'O-O', 'O-O', 'Nc3', 'Bg4'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A positional trap where Black equalizes quickly and pins the knight for lasting pressure.',
+    explanation: [
+      'Black counter-attacks with Nf6 in the Petrov Defense',
+      'After Nxe4 and d3, Black retreats and builds a solid position',
+      'Bg4 pins the f3 knight, creating lasting pressure',
+      'Black achieves a comfortable, active position'
+    ],
+    difficulty: 'intermediate',
+    side: 'black',
+    xpReward: 35,
+  },
+  {
+    id: 'siberian-trap',
+    name: 'Siberian Trap',
+    opening: 'Smith-Morra Gambit',
+    moves: ['d4', 'd5', 'c4', 'e6', 'Nc3', 'Nf6', 'Nf3', 'Bb4', 'Bg5', 'dxc4', 'e4', 'c5', 'Bxc4', 'cxd4', 'Nxd4', 'Qa5'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A cunning trap where Black wins material with a queen attack.',
+    explanation: [
+      'Black plays Bb4 pinning the knight early',
+      'After taking on c4 and d4, Black opens the position',
+      'Qa5 attacks the pinned knight and the bishop on g5',
+      'White cannot defend both pieces simultaneously'
+    ],
+    difficulty: 'intermediate',
+    side: 'black',
+    xpReward: 35,
+  },
+  {
+    id: 'tarrasch-trap',
+    name: 'Tarrasch Trap',
+    opening: 'Ruy Lopez',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'a6', 'Ba4', 'Nf6', 'O-O', 'Nxe4', 'd4', 'b5', 'Bb3', 'd5', 'dxe5', 'Be6', 'c3', 'Bc5', 'Nbd2', 'O-O'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A classical trap in the Ruy Lopez Open Defense where Black gets excellent piece activity.',
+    explanation: [
+      'Black takes on e4 in the Open Ruy Lopez',
+      'After d5, Black gets strong central pawns',
+      'Be6 and Bc5 create pressure on f2',
+      'Black achieves active piece play with a dangerous initiative'
+    ],
+    difficulty: 'advanced',
+    side: 'black',
+    xpReward: 40,
+  },
+  {
+    id: 'caro-kann-smothered',
+    name: 'Caro-Kann Smothered Mate',
+    opening: 'Caro-Kann Defense',
+    moves: ['e4', 'c6', 'd4', 'd5', 'Nc3', 'dxe4', 'Nxe4', 'Nd7', 'Qe2', 'Ngf6', 'Nd6#'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A devastating smothered mate in the Caro-Kann where White delivers checkmate on move 6!',
+    explanation: [
+      'Black develops Nd7 and Ngf6 blocking the king escape squares',
+      'Qe2 prevents the king from fleeing to e7',
+      'Nd6# is checkmate — the king is surrounded by its own pieces',
+      'One of the fastest possible checkmates in the Caro-Kann'
+    ],
+    moveAnnotations: [
+      'Standard opening', 'The Caro-Kann', 'Advances center', 'Challenges center',
+      'Develops knight', 'Takes', 'Recaptures centrally', 'Develops — but blocks the king!',
+      'Crucial! Controls e7', 'Develops — sealed in!', 'Smothered checkmate!'
+    ],
+    difficulty: 'beginner',
+    side: 'white',
+    xpReward: 30,
+  },
+  {
+    id: 'petroff-trap',
+    name: 'Petroff Trap',
+    opening: 'Petrov Defense',
+    moves: ['e4', 'e5', 'Nf3', 'Nf6', 'Nxe5', 'Nxe4', 'Qe2', 'Nf6', 'Nc6+', 'Be7', 'Nxd8', 'Kxd8'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A trap where White wins the queen by exploiting the knight on e5.',
+    explanation: [
+      'After Nxe5 Nxe4, White plays the tricky Qe2',
+      'Black retreats Nf6, but Nc6+ is a discovered attack',
+      'The knight on c6 attacks the queen with check',
+      'White wins the black queen for a knight'
+    ],
+    difficulty: 'beginner',
+    side: 'white',
+    xpReward: 30,
+  },
+  {
+    id: 'philidor-trap',
+    name: 'Philidor Trap',
+    opening: 'Philidor Defense',
+    moves: ['e4', 'e5', 'Nf3', 'd6', 'Bc4', 'Bg4', 'Nc3', 'g6', 'Nxe5', 'Bxd1', 'Bxf7+', 'Ke7', 'Nd5#'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A queen sacrifice leading to a spectacular checkmate with minor pieces.',
+    explanation: [
+      'White sacrifices the queen with Nxe5, inviting Bxd1',
+      'Bxf7+ forces the king to e7',
+      'Nd5# is checkmate — the two knights and bishop create a net',
+      'Similar to Legal\'s Trap but from the Philidor Defense'
+    ],
+    moveAnnotations: [
+      'Standard', 'The Philidor', 'Develops', 'Attacks f7',
+      'Pins the knight — mistake!', 'Develops but weakens dark squares', 'Aggressive',
+      'Nxe5 threatens queen and f7', 'Black greedily takes the queen',
+      'Bishop sacrifice with check', 'Forced king move', 'Checkmate!'
+    ],
+    difficulty: 'beginner',
+    side: 'white',
+    xpReward: 30,
+  },
+  {
+    id: 'budapest-trap',
+    name: 'Budapest Gambit Trap',
+    opening: 'Budapest Gambit',
+    moves: ['d4', 'Nf6', 'c4', 'e5', 'dxe5', 'Ng4', 'Bf4', 'Nc6', 'Nf3', 'Bb4+', 'Nbd2', 'Qe7', 'a3', 'Ngxe5', 'axb4', 'Nd3#'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A devastating smothered mate trap from the Budapest Gambit.',
+    explanation: [
+      'Black sacrifices the bishop with Bb4+ and Qe7',
+      'White takes the bishop with axb4',
+      'But Ngxe5 opens the path for Nd3#',
+      'Nd3 is smothered checkmate — the king is trapped by its own pieces'
+    ],
+    moveAnnotations: [
+      'Standard', 'Indian setup', 'Natural', 'The Budapest!',
+      'Accepts the gambit', 'Knight attacks e5 and f2', 'Develops with defense',
+      'Counterattack on e5', 'Develops', 'Check! Creating a battery',
+      'Blocks', 'Prepares the trap', 'Takes the bishop — fatal error!',
+      'Recaptures and threatens', 'Takes bishop anyway', 'Smothered checkmate!'
+    ],
+    difficulty: 'intermediate',
+    side: 'black',
+    xpReward: 35,
+  },
+  {
+    id: 'albin-counter',
+    name: 'Albin Countergambit Trap',
+    opening: 'Albin Countergambit',
+    moves: ['d4', 'd5', 'c4', 'e5', 'dxe5', 'd4', 'e3', 'Bb4+', 'Bd2', 'dxe3', 'Bxb4', 'exf2+', 'Ke2', 'fxg1=N+', 'Ke1', 'Qh4+'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A wild trap featuring an underpromotion to knight with devastating effect.',
+    explanation: [
+      'Black pushes d4 creating a dangerous passed pawn',
+      'After exchanges, the pawn reaches f2 with check',
+      'fxg1=N+ is a brilliant underpromotion to knight with check!',
+      'Qh4+ follows with a crushing attack'
+    ],
+    moveAnnotations: [
+      'Standard', 'Mirrors', 'QG', 'The Albin Counter!',
+      'Accepts', 'Dangerous passed pawn', 'Tries to block',
+      'Check!', 'Blocks', 'Pawn storms forward', 'Takes bishop',
+      'Pawn promotes with check!', 'Forced', 'Underpromotion to knight with check!',
+      'Forced king move', 'Crushing check — the attack continues'
+    ],
+    difficulty: 'advanced',
+    side: 'black',
+    xpReward: 40,
+  },
+  {
+    id: 'halosar-trap',
+    name: 'Halosar Trap',
+    opening: 'Blackmar-Diemer Gambit',
+    moves: ['d4', 'd5', 'e4', 'dxe4', 'Nc3', 'Nf6', 'f3', 'exf3', 'Qxf3', 'Qxd4', 'Be3', 'Qb4', 'O-O-O', 'Bg4', 'Nb5', 'Bxf3', 'Nxc7#'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A brilliant queen sacrifice leading to checkmate with a knight fork.',
+    explanation: [
+      'White gambits multiple pawns for rapid development',
+      'When Black grabs the queen on f3, it removes a defender',
+      'Nb5 threatens Nxc7+ and the queen simultaneously',
+      'Nxc7# is checkmate — the knight, rook, and bishop control all escape squares'
+    ],
+    moveAnnotations: [
+      'Gambit opening', 'Accepts', 'Gambit continues', 'Develops',
+      'Recaptures', 'Takes pawn', 'Attacks queen', 'Takes pawn — greedy!',
+      'Queen retreats', 'Develops with attack', 'Castles queenside — powerful',
+      'Pins the queen? Not quite...', 'Attacks c7 and queen!',
+      'Takes the queen!', 'Takes the queen — but...', 'Checkmate!'
+    ],
+    difficulty: 'intermediate',
+    side: 'white',
+    xpReward: 35,
+  },
+  {
+    id: 'scotch-trap',
+    name: 'Scotch Game Trap',
+    opening: 'Scotch Game',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'd4', 'exd4', 'Nxd4', 'Nf6', 'Nc3', 'Bb4', 'Nxc6', 'bxc6', 'Bd3', 'd5', 'exd5', 'cxd5', 'O-O', 'O-O', 'Bg5', 'c6'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A positional trap in the Scotch where Black gets a strong pawn center and active pieces.',
+    explanation: [
+      'Black develops Bb4 pinning the knight aggressively',
+      'After exchanges, Black achieves a strong pawn center with d5',
+      'The bishop pair and central pawns give Black excellent play',
+      'c6 solidifies the center, completing a harmonious setup'
+    ],
+    difficulty: 'intermediate',
+    side: 'black',
+    xpReward: 35,
+  },
+  {
+    id: 'vienna-trap',
+    name: 'Vienna Game Trap',
+    opening: 'Vienna Game',
+    moves: ['e4', 'e5', 'Nc3', 'Nf6', 'f4', 'd5', 'fxe5', 'Nxe4', 'Nf3', 'Bg4', 'Qe2', 'Nc5', 'd4', 'Bxf3', 'Qxf3', 'Ne6'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A counter-attacking trap where Black turns the Vienna Gambit against White.',
+    explanation: [
+      'Black plays d5 challenging the center immediately',
+      'Nxe4 grabs the pawn with tempo',
+      'Bg4 pins the knight creating tactical threats',
+      'Ne6 blockades the e-pawn and targets d4 and f4'
+    ],
+    difficulty: 'intermediate',
+    side: 'black',
+    xpReward: 35,
+  },
+  {
+    id: 'kings-gambit-trap',
+    name: "King's Gambit Trap",
+    opening: "King's Gambit",
+    moves: ['e4', 'e5', 'f4', 'exf4', 'Nf3', 'g5', 'h4', 'g4', 'Ne5', 'Nf6', 'Bc4', 'd5', 'exd5', 'Bd6', 'd4', 'Nh5'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A trap where Black counter-attacks in the King\'s Gambit with piece activity.',
+    explanation: [
+      'Black advances g5-g4 pushing the knight away',
+      'Ne5 looks strong but Black develops rapidly',
+      'Bd6 attacks the knight on e5',
+      'Nh5 eyes f4 and g3, preparing a kingside attack'
+    ],
+    difficulty: 'advanced',
+    side: 'black',
+    xpReward: 40,
+  },
+  {
+    id: 'dutch-defense-trap',
+    name: 'Dutch Defense Trap',
+    opening: 'Dutch Defense',
+    moves: ['d4', 'f5', 'Bg5', 'h6', 'Bh4', 'g5', 'Bg3', 'f4', 'e3', 'h5', 'Bd3', 'Rh6', 'Qxh5+', 'Rxh5', 'Bg6#'],
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    description: 'A spectacular queen sacrifice leading to a rare bishop checkmate.',
+    explanation: [
+      'White provokes Black into weakening the kingside with h6 and g5',
+      'The bishop retreats to g3, then the d3 diagonal opens up',
+      'Qxh5+! sacrifices the queen, and Black is forced to take with the rook',
+      'Bg6# is a stunning checkmate — the bishop delivers mate on g6!'
+    ],
+    moveAnnotations: [
+      'Standard', 'The Dutch', 'Unusual bishop sortie', 'Chases the bishop',
+      'Retreats', 'Overextends!', 'Safe', 'Attacks the bishop',
+      'Opens lines', 'Weakens further', 'Lines up on h7', 'Defensive move',
+      'Queen sacrifice!', 'Forced recapture', 'Bishop checkmate!'
+    ],
+    difficulty: 'intermediate',
+    side: 'white',
+    xpReward: 35,
+  },
 ]
 

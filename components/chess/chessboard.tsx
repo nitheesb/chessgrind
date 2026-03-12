@@ -419,6 +419,14 @@ export function Chessboard({
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
   const prevFenRef = useRef(fen)
+  // Touch tap vs drag detection
+  const wasTouchDragRef = useRef(false)
+  const touchStartPosRef = useRef({ x: 0, y: 0 })
+  const tapActionRef = useRef<'select' | 'deselect' | null>(null)
+  // Mouse drag support
+  const mouseDragStartRef = useRef<{ x: number; y: number } | null>(null)
+  const mouseDragPendingRef = useRef<{ piece: string; from: string } | null>(null)
+  const wasMouseDragRef = useRef(false)
   const squareSize = size / 8
 
   // Use either hintArrow or showHint
@@ -489,14 +497,27 @@ export function Chessboard({
   // All arrows to render (external + drawn)
   const allArrows = useMemo(() => [...externalArrows, ...drawnArrows], [externalArrows, drawnArrows])
 
-  // Handle right-click mousedown (start arrow)
+  // Handle mousedown (right-click: arrow, left-click: start drag tracking)
   const handleMouseDown = useCallback((e: React.MouseEvent, displayRow: number, displayCol: number) => {
-    if (e.button !== 2 || !allowArrowDrawing) return
-    e.preventDefault()
-    const { row, col } = getActualCoords(displayRow, displayCol)
-    const square = indexToSquare(row, col)
-    rightDragRef.current = { from: square, modifiers: { ctrl: e.ctrlKey, shift: e.shiftKey } }
-  }, [allowArrowDrawing, getActualCoords])
+    // Right-click: arrow drawing
+    if (e.button === 2 && allowArrowDrawing) {
+      e.preventDefault()
+      const { row, col } = getActualCoords(displayRow, displayCol)
+      const square = indexToSquare(row, col)
+      rightDragRef.current = { from: square, modifiers: { ctrl: e.ctrlKey, shift: e.shiftKey } }
+      return
+    }
+    // Left-click: prepare for potential mouse drag
+    if (e.button === 0 && interactive) {
+      const { row, col } = getActualCoords(displayRow, displayCol)
+      const piece = board[row]?.[col]
+      if (piece) {
+        wasMouseDragRef.current = false
+        mouseDragStartRef.current = { x: e.clientX, y: e.clientY }
+        mouseDragPendingRef.current = { piece, from: indexToSquare(row, col) }
+      }
+    }
+  }, [allowArrowDrawing, getActualCoords, interactive, board])
 
   // Handle right-click mouseup (complete arrow)
   const handleMouseUp = useCallback((e: React.MouseEvent, displayRow: number, displayCol: number) => {
@@ -526,8 +547,69 @@ export function Chessboard({
     rightDragRef.current = { from: null, modifiers: { ctrl: false, shift: false } }
   }, [allowArrowDrawing, getActualCoords, onArrowDraw])
 
+  // Board-level mouse move for drag
+  const handleBoardMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!mouseDragStartRef.current || !mouseDragPendingRef.current) return
+    if (!wasMouseDragRef.current) {
+      const dx = e.clientX - mouseDragStartRef.current.x
+      const dy = e.clientY - mouseDragStartRef.current.y
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        wasMouseDragRef.current = true
+        const { piece, from } = mouseDragPendingRef.current
+        setDragPiece({ piece, from, x: e.clientX, y: e.clientY })
+        setSelectedSquare(from)
+      }
+    } else if (dragPiece) {
+      setDragPiece(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null)
+    }
+  }, [dragPiece])
+
+  // Board-level mouse up for drag drop
+  const handleBoardMouseUp = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return
+    mouseDragStartRef.current = null
+    mouseDragPendingRef.current = null
+    if (!wasMouseDragRef.current) {
+      return // Was a click - let onClick handle it
+    }
+    if (!dragPiece || !boardRef.current) {
+      setDragPiece(null)
+      return
+    }
+    const rect = boardRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const displayCol = Math.floor(x / squareSize)
+    const displayRow = Math.floor(y / squareSize)
+    const soundHaptics = getGlobalSoundHaptics()
+    if (displayCol >= 0 && displayCol < 8 && displayRow >= 0 && displayRow < 8) {
+      const { row, col } = getActualCoords(displayRow, displayCol)
+      const targetSquare = indexToSquare(row, col)
+      const targetPiece = board[row]?.[col]
+      if (targetSquare !== dragPiece.from && onMove) {
+        if (isPromotionMove(dragPiece.from, targetSquare)) {
+          const { row: fromRow2, col: fromCol2 } = squareToIndex(dragPiece.from)
+          const p = board[fromRow2]?.[fromCol2]
+          setPromotionPending({ from: dragPiece.from, to: targetSquare, color: p?.startsWith('w') ? 'w' : 'b' })
+          setDragPiece(null)
+          setSelectedSquare(null)
+          return
+        }
+        const success = onMove(dragPiece.from, targetSquare)
+        if (success) {
+          soundHaptics.playSound(targetPiece ? 'capture' : 'move')
+          soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
+        }
+      }
+    }
+    setDragPiece(null)
+    setSelectedSquare(null)
+  }, [dragPiece, squareSize, onMove, getActualCoords, board, isPromotionMove])
+
   const handleSquareClick = useCallback((displayRow: number, displayCol: number) => {
     if (!interactive) return
+    // Skip if this was a mouse drag (already handled in handleBoardMouseUp)
+    if (wasMouseDragRef.current) { wasMouseDragRef.current = false; return }
 
     // Left-click clears drawn arrows
     if (allowArrowDrawing && drawnArrows.length > 0) {
@@ -619,28 +701,35 @@ export function Chessboard({
     const piece = board[row]?.[col]
     const square = indexToSquare(row, col)
     const soundHaptics = getGlobalSoundHaptics()
+    const touch = e.touches[0]
 
-    if (piece) {
-      const touch = e.touches[0]
-      const touchX = touch.clientX
-      const touchY = touch.clientY
-      // Start long press timer
-      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
-      longPressTimerRef.current = setTimeout(() => {
-        setLongPressTooltip({ piece, x: touchX, y: touchY })
-        setTimeout(() => setLongPressTooltip(null), 2000)
-      }, 600)
-      soundHaptics.playSound('click')
-      soundHaptics.triggerHaptic('selection')
-      setDragPiece({ piece, from: square, x: touchX, y: touchY })
-      setSelectedSquare(square)
-    } else if (selectedSquare) {
+    wasTouchDragRef.current = false
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY }
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
+
+    // If a piece is already selected, try to move first
+    if (selectedSquare) {
+      if (square === selectedSquare) {
+        // Tapping same piece - start drag for potential drag, mark as deselect for tap
+        tapActionRef.current = 'deselect'
+        if (piece) {
+          longPressTimerRef.current = setTimeout(() => {
+            setLongPressTooltip({ piece, x: touch.clientX, y: touch.clientY })
+            setTimeout(() => setLongPressTooltip(null), 2000)
+          }, 600)
+          setDragPiece({ piece, from: square, x: touch.clientX, y: touch.clientY })
+        }
+        return
+      }
+
+      // Different square - try to move from selectedSquare
       if (onMove) {
         if (isPromotionMove(selectedSquare, square)) {
           const { row: fromRow2, col: fromCol2 } = squareToIndex(selectedSquare)
           const p = board[fromRow2]?.[fromCol2]
           setPromotionPending({ from: selectedSquare, to: square, color: p?.startsWith('w') ? 'w' : 'b' })
           setSelectedSquare(null)
+          tapActionRef.current = null
           return
         }
         const targetPiece = board[row]?.[col]
@@ -648,26 +737,65 @@ export function Chessboard({
         if (success) {
           soundHaptics.playSound(targetPiece ? 'capture' : 'move')
           soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
+          setSelectedSquare(null)
+          tapActionRef.current = null
+          return
         }
       }
-      setSelectedSquare(null)
+
+      // Move failed - if piece exists, select new piece and start drag
+      if (piece) {
+        soundHaptics.playSound('click')
+        soundHaptics.triggerHaptic('selection')
+        longPressTimerRef.current = setTimeout(() => {
+          setLongPressTooltip({ piece, x: touch.clientX, y: touch.clientY })
+          setTimeout(() => setLongPressTooltip(null), 2000)
+        }, 600)
+        setDragPiece({ piece, from: square, x: touch.clientX, y: touch.clientY })
+        setSelectedSquare(square)
+        tapActionRef.current = 'select'
+      } else {
+        soundHaptics.playSound('illegal')
+        soundHaptics.triggerHaptic('error')
+        setSelectedSquare(null)
+        tapActionRef.current = null
+      }
+      return
     }
-  }, [interactive, board, selectedSquare, onMove, getActualCoords])
+
+    // No selection - if piece, select it and start drag
+    if (piece) {
+      soundHaptics.playSound('click')
+      soundHaptics.triggerHaptic('selection')
+      longPressTimerRef.current = setTimeout(() => {
+        setLongPressTooltip({ piece, x: touch.clientX, y: touch.clientY })
+        setTimeout(() => setLongPressTooltip(null), 2000)
+      }, 600)
+      setDragPiece({ piece, from: square, x: touch.clientX, y: touch.clientY })
+      setSelectedSquare(square)
+      tapActionRef.current = 'select'
+    }
+  }, [interactive, board, selectedSquare, onMove, getActualCoords, isPromotionMove])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!dragPiece) return
     e.preventDefault()
-    // Cancel long press on drag
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current)
       longPressTimerRef.current = null
     }
     const touch = e.touches[0]
+    if (!wasTouchDragRef.current) {
+      const dx = touch.clientX - touchStartPosRef.current.x
+      const dy = touch.clientY - touchStartPosRef.current.y
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        wasTouchDragRef.current = true
+      }
+    }
     setDragPiece(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null)
   }, [dragPiece])
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    // Cancel long press timer
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current)
       longPressTimerRef.current = null
@@ -678,6 +806,18 @@ export function Chessboard({
     }
     e.preventDefault()
 
+    // Tap (not drag) - preserve selection for tap-to-move workflow
+    if (!wasTouchDragRef.current) {
+      setDragPiece(null)
+      if (tapActionRef.current === 'deselect') {
+        setSelectedSquare(null)
+      }
+      // 'select' keeps selectedSquare as set in touchStart
+      tapActionRef.current = null
+      return
+    }
+
+    // Drag drop
     const rect = boardRef.current.getBoundingClientRect()
     const touch = e.changedTouches[0]
     const x = touch.clientX - rect.left
@@ -691,7 +831,6 @@ export function Chessboard({
       const targetSquare = indexToSquare(row, col)
       const targetPiece = board[row]?.[col]
       if (targetSquare !== dragPiece.from && onMove) {
-        // Check for pawn promotion
         if (isPromotionMove(dragPiece.from, targetSquare)) {
           const { row: fromRow2, col: fromCol2 } = squareToIndex(dragPiece.from)
           const p = board[fromRow2]?.[fromCol2]
@@ -710,7 +849,7 @@ export function Chessboard({
 
     setDragPiece(null)
     setSelectedSquare(null)
-  }, [dragPiece, squareSize, onMove, getActualCoords, board])
+  }, [dragPiece, squareSize, onMove, getActualCoords, board, isPromotionMove])
 
   // Pre-compute square states for performance
   const highlightSet = useMemo(() => new Set(highlightSquares), [highlightSquares])
@@ -757,6 +896,8 @@ export function Chessboard({
           boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08), inset 0 2px 4px rgba(255,255,255,0.05)',
         }}
         onContextMenu={(e) => e.preventDefault()}
+        onMouseMove={handleBoardMouseMove}
+        onMouseUp={handleBoardMouseUp}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >

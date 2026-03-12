@@ -63,7 +63,7 @@ export const OPENINGS: Opening[] = [
     name: 'Sicilian Defense',
     eco: 'B20',
     moves: ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'a6', 'Be3', 'e5', 'Nb3', 'Be6', 'f3', 'Be7', 'Qd2', 'O-O', 'O-O-O', 'Nbd7', 'g4', 'b5', 'g5', 'Nh5', 'Kb1', 'Nb6', 'Na5', 'Rc8', 'Rg1', 'Nc4', 'Nxc4', 'bxc4'],
-    fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2',
+    fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
     description: 'The most popular and best-scoring response to e4. Black fights for the center asymmetrically, leading to sharp tactical play.',
     difficulty: 'intermediate',
     category: 'e4',
@@ -245,7 +245,7 @@ export const OPENINGS: Opening[] = [
     name: 'Queen\'s Gambit',
     eco: 'D06',
     moves: ['d4', 'd5', 'c4', 'e6', 'Nc3', 'Nf6', 'Bg5', 'Be7', 'e3', 'O-O', 'Nf3', 'Nbd7', 'Rc1', 'c6', 'Bd3', 'dxc4', 'Bxc4', 'Nd5', 'Bxe7', 'Qxe7', 'O-O', 'Nxc3', 'Rxc3', 'e5', 'dxe5', 'Nxe5', 'Nxe5', 'Qxe5', 'f3', 'Bf5', 'Qb3', 'Rfd8', 'Rf2', 'Rd7', 'Qxb7', 'Rad8'],
-    fen: 'rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2',
+    fen: 'rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2',
     description: 'One of the oldest known openings. White offers a pawn to gain control of the center. It\'s not a true gambit as the pawn can usually be recovered.',
     difficulty: 'beginner',
     category: 'd4',
@@ -485,7 +485,7 @@ export const OPENINGS: Opening[] = [
     name: 'English Opening',
     eco: 'A10',
     moves: ['c4', 'e5', 'Nc3', 'Nf6', 'Nf3', 'Nc6', 'g3', 'Bb4', 'Bg2', 'O-O', 'O-O', 'e4', 'Ng5', 'Bxc3', 'bxc3', 'Re8', 'd3', 'exd3', 'Qxd3', 'd6', 'Rb1', 'h6', 'Nf3', 'Bg4', 'h3', 'Bh5', 'g4', 'Bg6', 'Nh4', 'Ne5', 'Qe3'],
-    fen: 'rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq c3 0 1',
+    fen: 'rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq - 0 1',
     description: 'A flexible flank opening that can transpose into many other openings. Named after Howard Staunton who employed it in 1843.',
     difficulty: 'intermediate',
     category: 'other',
@@ -541,7 +541,7 @@ export const OPENINGS: Opening[] = [
     name: 'Scotch Game',
     eco: 'C45',
     moves: ['e4', 'e5', 'Nf3', 'Nc6', 'd4', 'exd4', 'Nxd4', 'Nf6', 'Nxc6', 'bxc6', 'e5', 'Qe7', 'Qe2', 'Nd5', 'c4', 'Ba6', 'b3', 'g6', 'Ba3', 'Qe6', 'Nd2', 'Bg7', 'O-O-O', 'O-O-O', 'Re1', 'Rhe8', 'Nf3', 'Nb4', 'Bb2', 'c5', 'Nd4', 'Qd5'],
-    fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq d3 0 3',
+    fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq - 0 3',
     description: 'An aggressive opening where White immediately challenges the center. Garry Kasparov revived this opening in the 1990s.',
     difficulty: 'beginner',
     category: 'e4',
@@ -709,7 +709,7 @@ export const OPENINGS: Opening[] = [
     name: 'Dutch Defense',
     eco: 'A80',
     moves: ['d4', 'f5', 'g3', 'Nf6', 'Bg2', 'e6', 'Nf3', 'Be7', 'O-O', 'O-O', 'c4', 'd6', 'Nc3', 'Qe8', 'Qc2', 'Qh5', 'b3', 'Nc6', 'Ba3', 'a5', 'Nb5', 'Bd7', 'Nxd6', 'cxd6', 'Bxd6', 'Bxd6', 'Qxf5', 'Ne4', 'Qh3', 'Qxh3', 'Bxh3', 'Nxd4', 'Nxd4'],
-    fen: 'rnbqkbnr/ppppp1pp/8/5p2/3P4/8/PPP1PPPP/RNBQKBNR w KQkq f6 0 2',
+    fen: 'rnbqkbnr/ppppp1pp/8/5p2/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2',
     description: 'An aggressive defense where Black stakes a claim on the kingside with f5. It leads to unbalanced positions.',
     difficulty: 'intermediate',
     category: 'd4',
@@ -979,6 +979,772 @@ export const OPENINGS: Opening[] = [
     variations: [
       { name: 'Hanham Variation', moves: ['e4', 'e5', 'Nf3', 'd6', 'd4', 'Nd7', 'Bc4', 'c6', 'O-O', 'Be7', 'a4', 'Ngf6', 'Re1', 'O-O'], description: 'A solid setup with Nd7 keeping options flexible for the other knight' },
       { name: 'Exchange Variation', moves: ['e4', 'e5', 'Nf3', 'd6', 'd4', 'exd4', 'Nxd4', 'Nf6', 'Nc3', 'Be7', 'Be2', 'O-O', 'O-O', 'c5', 'Nf3', 'Nc6'], description: 'The exchange leads to open positions with active piece play for both sides' },
+    ]
+  },
+  {
+    id: 'sicilian-najdorf',
+    name: 'Sicilian Defense: Najdorf Variation',
+    eco: 'B90',
+    moves: ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'a6', 'Bg5', 'e6', 'f4', 'Be7', 'Qf3', 'Qc7', 'O-O-O', 'Nbd7'],
+    fen: 'rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6',
+    description: 'The most theoretically complex opening in chess. Black plays 5...a6 to prepare counterplay with ...e5 or ...b5 while maintaining flexibility.',
+    difficulty: 'advanced',
+    category: 'e4',
+    popularity: 95,
+    winRate: { white: 36, draw: 30, black: 34 },
+    keyIdeas: [
+      'Flexible pawn structure allows multiple plans',
+      'Prepare ...e5 or ...b5 expansions',
+      'Rich tactical and strategic complexity',
+      'Black fights for the initiative from move one'
+    ],
+    variations: [
+      { name: 'English Attack', moves: ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'a6', 'Be3', 'e5', 'Nb3', 'Be6', 'f3', 'Be7', 'Qd2', 'O-O', 'O-O-O'], description: 'White plays Be3, f3, Qd2 and O-O-O for a kingside pawn storm' },
+      { name: 'Poisoned Pawn', moves: ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'a6', 'Bg5', 'e6', 'f4', 'Qb6'], description: 'Black grabs the b2 pawn at the cost of king safety — extremely sharp' },
+    ]
+  },
+  {
+    id: 'sicilian-dragon',
+    name: 'Sicilian Defense: Dragon Variation',
+    eco: 'B70',
+    moves: ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'g6', 'Be3', 'Bg7', 'f3', 'O-O', 'Qd2', 'Nc6', 'Bc4', 'Bd7', 'O-O-O'],
+    fen: 'rnbqkb1r/pp2pp1p/3p1np1/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6',
+    description: 'Black fianchettoes the dark-squared bishop creating a dragon-like pawn formation. Leads to opposite-side castling and mutual attacks.',
+    difficulty: 'advanced',
+    category: 'e4',
+    popularity: 82,
+    winRate: { white: 37, draw: 27, black: 36 },
+    keyIdeas: [
+      'Fianchettoed bishop exerts pressure on the long diagonal',
+      'Opposite-side castling creates attacking chances for both sides',
+      'Black aims for queenside counterplay with ...Rc8 and ...a5',
+      'One of the sharpest openings in chess'
+    ],
+    variations: [
+      { name: 'Yugoslav Attack', moves: ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'g6', 'Be3', 'Bg7', 'f3', 'O-O', 'Qd2', 'Nc6', 'Bc4'], description: 'The critical test of the Dragon — White aims for a kingside pawn storm with g4-h4-h5' },
+      { name: 'Classical Dragon', moves: ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'g6', 'Be2', 'Bg7', 'O-O', 'O-O', 'Be3', 'Nc6'], description: 'A more positional approach where White develops calmly with Be2 and O-O' },
+    ]
+  },
+  {
+    id: 'sicilian-scheveningen',
+    name: 'Sicilian Defense: Scheveningen Variation',
+    eco: 'B80',
+    moves: ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'e6', 'Be2', 'Be7', 'O-O', 'O-O', 'f4', 'Nc6', 'Be3', 'a6'],
+    fen: 'rnbqkb1r/pp3ppp/3ppn2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6',
+    description: 'A flexible Sicilian setup where Black builds a small center with ...e6 and ...d6. The pawn structure allows rich strategic play.',
+    difficulty: 'advanced',
+    category: 'e4',
+    popularity: 75,
+    winRate: { white: 37, draw: 30, black: 33 },
+    keyIdeas: [
+      'The e6/d6 pawn duo provides solid central control',
+      'Black prepares ...b5 or ...a6 queenside expansion',
+      'Flexible piece placement behind the pawn chain',
+      'White often attacks with f4-f5 or the Keres Attack'
+    ],
+    variations: [
+      { name: 'Keres Attack', moves: ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'e6', 'g4'], description: 'An aggressive early g4 push to seize kingside space before Black castles' },
+      { name: 'English Attack', moves: ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'e6', 'Be3', 'Be7', 'f3', 'O-O', 'Qd2', 'a6', 'O-O-O'], description: 'White castles queenside and prepares a kingside pawn storm' },
+    ]
+  },
+  {
+    id: 'sicilian-sveshnikov',
+    name: 'Sicilian Defense: Sveshnikov Variation',
+    eco: 'B33',
+    moves: ['e4', 'c5', 'Nf3', 'Nc6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'e5', 'Ndb5', 'd6', 'Bg5', 'a6', 'Na3', 'b5', 'Nd5', 'Be7', 'Bxf6', 'Bxf6', 'c3'],
+    fen: 'r1bqkb1r/pp1p1ppp/2n2n2/4p3/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6',
+    description: 'A modern and dynamic Sicilian where Black accepts a backward d6 pawn and a hole on d5 in exchange for active piece play.',
+    difficulty: 'advanced',
+    category: 'e4',
+    popularity: 78,
+    winRate: { white: 35, draw: 31, black: 34 },
+    keyIdeas: [
+      'Black accepts structural weaknesses for dynamic compensation',
+      'The d5 square is a key outpost for White',
+      'Black gets active bishop pair and central space',
+      'Sharp play with mutual chances'
+    ],
+    variations: [
+      { name: 'Chelyabinsk Variation', moves: ['e4', 'c5', 'Nf3', 'Nc6', 'd4', 'cxd4', 'Nxd4', 'Nf6', 'Nc3', 'e5', 'Ndb5', 'd6', 'Bg5', 'a6', 'Na3', 'b5'], description: 'The main line where Black expands on the queenside immediately' },
+    ]
+  },
+  {
+    id: 'sicilian-kan',
+    name: 'Sicilian Defense: Kan Variation',
+    eco: 'B41',
+    moves: ['e4', 'c5', 'Nf3', 'e6', 'd4', 'cxd4', 'Nxd4', 'a6', 'Bd3', 'Nf6', 'O-O', 'Qc7', 'Qe2', 'd6', 'c4', 'g6'],
+    fen: 'rnbqkbnr/1p1p1ppp/p3p3/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 0 5',
+    description: 'A flexible Sicilian where Black plays ...a6 early, keeping options open for piece placement. Can transpose into many Sicilian systems.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 65,
+    winRate: { white: 37, draw: 31, black: 32 },
+    keyIdeas: [
+      'Maximum flexibility — delays committing the knight to c6',
+      'Can transpose to Scheveningen, Taimanov, or Hedgehog setups',
+      'The a6 pawn controls b5 and prepares ...b5 expansion',
+      'A favorite of positional Sicilian players'
+    ],
+    variations: [
+      { name: 'Hedgehog Setup', moves: ['e4', 'c5', 'Nf3', 'e6', 'd4', 'cxd4', 'Nxd4', 'a6', 'c4', 'Nf6', 'Nc3', 'Qc7', 'Be2', 'b6', 'O-O', 'Bb7'], description: 'Black adopts the famous Hedgehog formation with pawns on a6, b6, d6, e6' },
+    ]
+  },
+  {
+    id: 'ruy-lopez-berlin',
+    name: 'Ruy Lopez: Berlin Defense',
+    eco: 'C65',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'Nf6', 'O-O', 'Nxe4', 'd4', 'Nd6', 'Bxc6', 'dxc6', 'dxe5', 'Nf5', 'Qxd8+', 'Kxd8'],
+    fen: 'r1bqkb1r/pppp1ppp/2n2n2/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4',
+    description: 'Known as the "Berlin Wall" after Kramnik used it to dethrone Kasparov in 2000. Leads to a queenless middlegame with lasting endgame complexity.',
+    difficulty: 'advanced',
+    category: 'e4',
+    popularity: 85,
+    winRate: { white: 33, draw: 40, black: 27 },
+    keyIdeas: [
+      'Early queen exchange leads to complex endgames',
+      'Black king loses castling rights but is relatively safe',
+      'White has a space advantage and better pawn structure',
+      'Extremely solid for Black — hard for White to win'
+    ],
+    variations: [
+      { name: 'Berlin Endgame', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'Nf6', 'O-O', 'Nxe4', 'd4', 'Nd6', 'Bxc6', 'dxc6', 'dxe5', 'Nf5', 'Qxd8+', 'Kxd8', 'Nc3', 'Ke8', 'h3', 'Be7'], description: 'The main Berlin endgame where Black untangles with ...Ke8 and ...Be7' },
+    ]
+  },
+  {
+    id: 'ruy-lopez-marshall',
+    name: 'Ruy Lopez: Marshall Attack',
+    eco: 'C89',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'a6', 'Ba4', 'Nf6', 'O-O', 'Be7', 'Re1', 'b5', 'Bb3', 'O-O', 'c3', 'd5', 'exd5', 'Nxd5', 'd4', 'Bg4'],
+    fen: 'r1bq1rk1/2p1bppp/p1n2n2/1p1pp3/4P3/1BP2N2/PP1P1PPP/RNBQR1K1 w - - 0 9',
+    description: 'A legendary gambit where Black sacrifices a pawn for a ferocious attack. Prepared by Frank Marshall and first played in 1918.',
+    difficulty: 'advanced',
+    category: 'e4',
+    popularity: 72,
+    winRate: { white: 32, draw: 38, black: 30 },
+    keyIdeas: [
+      'Black sacrifices the e5 pawn for rapid piece activity',
+      'The rook comes to e8 with tempo on the White queen',
+      'Black gets long-lasting attacking chances on the kingside',
+      'One of the most deeply analyzed gambits in chess history'
+    ],
+    variations: [
+      { name: 'Main Line', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'a6', 'Ba4', 'Nf6', 'O-O', 'Be7', 'Re1', 'b5', 'Bb3', 'O-O', 'c3', 'd5', 'exd5', 'Nxd5', 'd4', 'Bg4', 'Be3'], description: 'White counters with Be3, supporting the center' },
+    ]
+  },
+  {
+    id: 'ruy-lopez-closed',
+    name: 'Ruy Lopez: Closed Variation',
+    eco: 'C84',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'a6', 'Ba4', 'Nf6', 'O-O', 'Be7', 'Re1', 'b5', 'Bb3', 'd6', 'c3', 'O-O', 'h3', 'Nb8', 'd4'],
+    fen: 'r1bqk2r/1pppbppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQ1RK1 w kq - 4 6',
+    description: 'The mainline Ruy Lopez where Black plays ...Be7. A cornerstone of classical chess leading to deep strategic battles.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 88,
+    winRate: { white: 37, draw: 33, black: 30 },
+    keyIdeas: [
+      'White maintains long-term pressure on the center',
+      'The bishop on a4/b3 pins the knight and eyes f7',
+      'Slow maneuvering leads to rich middlegame positions',
+      'Black often uses the Breyer or Chigorin setup'
+    ],
+    variations: [
+      { name: 'Breyer Variation', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'a6', 'Ba4', 'Nf6', 'O-O', 'Be7', 'Re1', 'b5', 'Bb3', 'd6', 'c3', 'O-O', 'h3', 'Nb8', 'd4', 'Nbd7'], description: 'The knight retreats to b8 and reroutes to d7 — a modern positional concept' },
+      { name: 'Chigorin Variation', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'a6', 'Ba4', 'Nf6', 'O-O', 'Be7', 'Re1', 'b5', 'Bb3', 'd6', 'c3', 'O-O', 'h3', 'Na5', 'Bc2', 'c5'], description: 'Black activates the knight via a5 and expands with ...c5' },
+    ]
+  },
+  {
+    id: 'evans-gambit',
+    name: 'Evans Gambit',
+    eco: 'C51',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5', 'b4', 'Bxb4', 'c3', 'Ba5', 'd4', 'exd4', 'O-O', 'd6', 'cxd4', 'Bb6'],
+    fen: 'r1bqk1nr/pppp1ppp/2n5/2b1p3/1PB1P3/5N2/P1PP1PPP/RNBQK2R b KQkq - 0 4',
+    description: 'A romantic era gambit where White sacrifices the b-pawn for rapid development and a strong center. A favorite of Morphy and Kasparov.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 60,
+    winRate: { white: 40, draw: 25, black: 35 },
+    keyIdeas: [
+      'Sacrifice a pawn for tempo and open lines',
+      'Rapid development gives White attacking chances',
+      'Control the center with d4 and e4',
+      'Aggressive play against the Black king'
+    ],
+    variations: [
+      { name: 'Accepted Main Line', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5', 'b4', 'Bxb4', 'c3', 'Ba5', 'd4', 'exd4', 'O-O', 'Nge7'], description: 'Black accepts and develops the knight to e7 for flexibility' },
+      { name: 'Declined', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5', 'b4', 'Bb6', 'a4', 'a6', 'd4'], description: 'Black declines the gambit and retreats the bishop to b6' },
+    ]
+  },
+  {
+    id: 'french-winawer',
+    name: 'French Defense: Winawer Variation',
+    eco: 'C15',
+    moves: ['e4', 'e6', 'd4', 'd5', 'Nc3', 'Bb4', 'e5', 'c5', 'a3', 'Bxc3+', 'bxc3', 'Ne7', 'Qg4', 'Qc7', 'Qxg7', 'Rg8', 'Qxh7', 'cxd4'],
+    fen: 'rnbqk1nr/ppp2ppp/4p3/3p4/1b1PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4',
+    description: 'The most ambitious French Defense variation. Black pins the knight with ...Bb4, leading to wild, unbalanced positions.',
+    difficulty: 'advanced',
+    category: 'e4',
+    popularity: 70,
+    winRate: { white: 38, draw: 28, black: 34 },
+    keyIdeas: [
+      'Black trades the dark-squared bishop for the knight',
+      'White gets the bishop pair but damaged pawns',
+      'Extremely sharp and tactical positions arise',
+      'Black attacks the White center with ...c5'
+    ],
+    variations: [
+      { name: 'Poisoned Pawn', moves: ['e4', 'e6', 'd4', 'd5', 'Nc3', 'Bb4', 'e5', 'c5', 'a3', 'Bxc3+', 'bxc3', 'Ne7', 'Qg4', 'Qc7', 'Qxg7', 'Rg8', 'Qxh7', 'cxd4', 'Ne2'], description: 'White grabs pawns while Black seizes the center — razor-sharp play' },
+    ]
+  },
+  {
+    id: 'french-tarrasch',
+    name: 'French Defense: Tarrasch Variation',
+    eco: 'C03',
+    moves: ['e4', 'e6', 'd4', 'd5', 'Nd2', 'Nf6', 'e5', 'Nfd7', 'Bd3', 'c5', 'c3', 'Nc6', 'Ne2', 'cxd4', 'cxd4', 'f6'],
+    fen: 'rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPPN1PPP/R1BQKBNR b KQkq - 1 3',
+    description: 'White plays Nd2 instead of Nc3, avoiding the Winawer pin. Leads to a solid positional battle with less sharp lines.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 65,
+    winRate: { white: 37, draw: 32, black: 31 },
+    keyIdeas: [
+      'Avoids the Winawer pin on Nc3',
+      'White maintains a solid pawn center',
+      'The knight on d2 supports e4 and can reroute',
+      'Less sharp than the Winawer but strategically rich'
+    ],
+    variations: [
+      { name: 'Open Tarrasch', moves: ['e4', 'e6', 'd4', 'd5', 'Nd2', 'c5', 'exd5', 'exd5', 'Ngf3', 'Nf6', 'Bb5+', 'Bd7'], description: 'Black plays ...c5 immediately, leading to open positions with an isolated queen pawn' },
+    ]
+  },
+  {
+    id: 'french-advance',
+    name: 'French Defense: Advance Variation',
+    eco: 'C02',
+    moves: ['e4', 'e6', 'd4', 'd5', 'e5', 'c5', 'c3', 'Nc6', 'Nf3', 'Qb6', 'a3', 'c4', 'Nbd2', 'Na5', 'Be2', 'Bd7'],
+    fen: 'rnbqkbnr/ppp2ppp/4p3/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 3',
+    description: 'White pushes e5 to gain space, creating a fixed pawn chain. Black counterattacks the base of the chain with ...c5.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 72,
+    winRate: { white: 38, draw: 30, black: 32 },
+    keyIdeas: [
+      'White gains kingside space with e5',
+      'Black attacks the pawn chain base with ...c5',
+      'Strategic battle revolves around the d4 pawn',
+      'Black\'s light-squared bishop is initially restricted'
+    ],
+    variations: [
+      { name: 'Milner-Barry Gambit', moves: ['e4', 'e6', 'd4', 'd5', 'e5', 'c5', 'c3', 'Nc6', 'Nf3', 'Qb6', 'Bd3', 'cxd4', 'cxd4', 'Bd7', 'O-O', 'Nxd4', 'Nxd4', 'Qxd4', 'Nc3'], description: 'White sacrifices the d4 pawn for rapid development and attacking chances' },
+    ]
+  },
+  {
+    id: 'caro-kann-classical',
+    name: 'Caro-Kann Defense: Classical Variation',
+    eco: 'B18',
+    moves: ['e4', 'c6', 'd4', 'd5', 'Nc3', 'dxe4', 'Nxe4', 'Bf5', 'Ng3', 'Bg6', 'h4', 'h6', 'Nf3', 'Nd7', 'h5', 'Bh7', 'Bd3', 'Bxd3', 'Qxd3'],
+    fen: 'rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5',
+    description: 'The main line of the Caro-Kann where Black develops the bishop to f5 before playing ...e6. A solid and reliable system.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 78,
+    winRate: { white: 36, draw: 34, black: 30 },
+    keyIdeas: [
+      'Black develops the light-squared bishop outside the pawn chain',
+      'Solid pawn structure with few weaknesses',
+      'Black aims for a sound positional game',
+      'White gets a slight space advantage'
+    ],
+    variations: [
+      { name: 'Karpov Variation', moves: ['e4', 'c6', 'd4', 'd5', 'Nc3', 'dxe4', 'Nxe4', 'Nd7', 'Nf3', 'Ngf6', 'Nxf6+', 'Nxf6', 'Be2', 'Bf5'], description: 'Black plays ...Nd7 first — Karpov\'s favorite, avoiding the h4-h5 advance' },
+    ]
+  },
+  {
+    id: 'caro-kann-advance',
+    name: 'Caro-Kann Defense: Advance Variation',
+    eco: 'B12',
+    moves: ['e4', 'c6', 'd4', 'd5', 'e5', 'Bf5', 'Nf3', 'e6', 'Be2', 'c5', 'Be3', 'Nd7', 'O-O', 'Ne7', 'c3'],
+    fen: 'rnbqkbnr/pp2pppp/2p5/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 3',
+    description: 'White advances e5 to clamp down on space. Black counterattacks the pawn chain and develops the bishop to f5.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 70,
+    winRate: { white: 37, draw: 32, black: 31 },
+    keyIdeas: [
+      'White fixes the center and gains kingside space',
+      'Black develops the bishop to f5 before ...e6',
+      'The c5 break is key to Black\'s counterplay',
+      'Positional struggle around the d4/e5 chain'
+    ],
+    variations: [
+      { name: 'Short System', moves: ['e4', 'c6', 'd4', 'd5', 'e5', 'Bf5', 'Nf3', 'e6', 'Be2', 'Ne7', 'O-O', 'Nd7', 'Nbd2'], description: 'A solid setup by White inspired by Nigel Short\'s games' },
+    ]
+  },
+  {
+    id: 'kings-indian-saemisch',
+    name: 'King\'s Indian Defense: Sämisch Variation',
+    eco: 'E80',
+    moves: ['d4', 'Nf6', 'c4', 'g6', 'Nc3', 'Bg7', 'e4', 'd6', 'f3', 'O-O', 'Be3', 'e5', 'd5', 'Nh5', 'Qd2', 'f5'],
+    fen: 'rnbqk2r/ppp1ppbp/3p1np1/8/2PPP3/2N2P2/PP4PP/R1BQKBNR b KQkq - 0 5',
+    description: 'White plays f3 to build a massive pawn center. Leads to double-edged positions where both sides attack on opposite flanks.',
+    difficulty: 'advanced',
+    category: 'd4',
+    popularity: 68,
+    winRate: { white: 38, draw: 29, black: 33 },
+    keyIdeas: [
+      'White builds the biggest possible center with f3 and e4',
+      'Black counters with ...e5 and ...f5 pawn breaks',
+      'Opposite-side attacks create wild tactical play',
+      'Strategic complexity with multiple pawn breaks for both sides'
+    ],
+    variations: [
+      { name: 'Panno Variation', moves: ['d4', 'Nf6', 'c4', 'g6', 'Nc3', 'Bg7', 'e4', 'd6', 'f3', 'O-O', 'Be3', 'Nc6', 'Qd2', 'a6', 'Nge2', 'Rb8'], description: 'Black delays ...e5 and prepares queenside play with ...b5' },
+    ]
+  },
+  {
+    id: 'queens-gambit-accepted',
+    name: 'Queen\'s Gambit Accepted',
+    eco: 'D20',
+    moves: ['d4', 'd5', 'c4', 'dxc4', 'Nf3', 'Nf6', 'e3', 'e6', 'Bxc4', 'c5', 'O-O', 'a6', 'Qe2', 'b5', 'Bb3', 'Bb7'],
+    fen: 'rnbqkbnr/ppp1pppp/8/8/2pP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3',
+    description: 'Black accepts the gambit pawn, conceding the center temporarily. Black aims to equalize with ...c5 and develop actively.',
+    difficulty: 'intermediate',
+    category: 'd4',
+    popularity: 72,
+    winRate: { white: 37, draw: 32, black: 31 },
+    keyIdeas: [
+      'Black takes the c4 pawn but must return central control',
+      'The ...c5 break is essential for equality',
+      'Black develops freely after returning the pawn',
+      'White gets a slight initiative from the open center'
+    ],
+    variations: [
+      { name: 'Classical Main Line', moves: ['d4', 'd5', 'c4', 'dxc4', 'Nf3', 'Nf6', 'e3', 'e6', 'Bxc4', 'c5', 'O-O', 'a6', 'Qe2'], description: 'White develops naturally and recaptures the pawn with Bxc4' },
+    ]
+  },
+  {
+    id: 'slav-defense',
+    name: 'Slav Defense',
+    eco: 'D10',
+    moves: ['d4', 'd5', 'c4', 'c6', 'Nf3', 'Nf6', 'Nc3', 'dxc4', 'a4', 'Bf5', 'e3', 'e6', 'Bxc4', 'Bb4', 'O-O', 'O-O'],
+    fen: 'rnbqkbnr/pp2pppp/2p5/3p4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3',
+    description: 'A solid defense to the Queen\'s Gambit. Black supports d5 with ...c6, keeping the light-squared bishop free to develop.',
+    difficulty: 'intermediate',
+    category: 'd4',
+    popularity: 80,
+    winRate: { white: 36, draw: 34, black: 30 },
+    keyIdeas: [
+      'Supports d5 without blocking the light-squared bishop',
+      'Solid pawn structure with few weaknesses',
+      'Black can develop the bishop to f5 or g4',
+      'Reliable choice at all levels'
+    ],
+    variations: [
+      { name: 'Exchange Slav', moves: ['d4', 'd5', 'c4', 'c6', 'cxd5', 'cxd5', 'Nc3', 'Nf6', 'Bf4', 'Nc6', 'e3', 'Bf5'], description: 'White exchanges early, leading to symmetrical positions with minority attack plans' },
+      { name: 'Chebanenko Slav', moves: ['d4', 'd5', 'c4', 'c6', 'Nf3', 'Nf6', 'Nc3', 'a6'], description: 'The flexible ...a6 move prepares ...b5 without committing to a pawn structure' },
+    ]
+  },
+  {
+    id: 'semi-slav-defense',
+    name: 'Semi-Slav Defense',
+    eco: 'D43',
+    moves: ['d4', 'd5', 'c4', 'c6', 'Nf3', 'Nf6', 'Nc3', 'e6', 'Bg5', 'Nbd7', 'e3', 'Qa5', 'Nd2', 'Bb4', 'Qc2', 'O-O'],
+    fen: 'rnbqkb1r/pp3ppp/2p1pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 0 5',
+    description: 'A hybrid of the Slav and Queen\'s Gambit Declined. Black plays both ...c6 and ...e6, creating a solid but flexible setup.',
+    difficulty: 'advanced',
+    category: 'd4',
+    popularity: 82,
+    winRate: { white: 35, draw: 35, black: 30 },
+    keyIdeas: [
+      'Combines the solidity of the Slav with QGD ideas',
+      'The light-squared bishop is temporarily restricted',
+      'Black aims for ...dxc4 followed by ...b5',
+      'Many sharp and well-analyzed variations'
+    ],
+    variations: [
+      { name: 'Meran Variation', moves: ['d4', 'd5', 'c4', 'c6', 'Nf3', 'Nf6', 'Nc3', 'e6', 'e3', 'Nbd7', 'Bd3', 'dxc4', 'Bxc4', 'b5', 'Bd3', 'Bb7'], description: 'Black breaks with ...b5 to activate the queenside and free the bishop' },
+      { name: 'Botvinnik Variation', moves: ['d4', 'd5', 'c4', 'c6', 'Nf3', 'Nf6', 'Nc3', 'e6', 'Bg5', 'dxc4', 'e4', 'b5', 'e5', 'h6', 'Bh4', 'g5'], description: 'One of the sharpest lines in all of chess theory — deeply analyzed tactical positions' },
+    ]
+  },
+  {
+    id: 'queens-indian-defense',
+    name: 'Queen\'s Indian Defense',
+    eco: 'E12',
+    moves: ['d4', 'Nf6', 'c4', 'e6', 'Nf3', 'b6', 'g3', 'Bb7', 'Bg2', 'Be7', 'O-O', 'O-O', 'Nc3', 'Ne4', 'Qc2', 'Nxc3', 'Qxc3'],
+    fen: 'rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 4',
+    description: 'A solid hypermodern defense where Black fianchettoes the queen\'s bishop to control the central light squares, especially e4.',
+    difficulty: 'intermediate',
+    category: 'd4',
+    popularity: 75,
+    winRate: { white: 35, draw: 36, black: 29 },
+    keyIdeas: [
+      'Control of e4 via the fianchettoed bishop on b7',
+      'Solid and flexible pawn structure',
+      'Black maintains balance in the center',
+      'Often transposes to Catalan-like structures'
+    ],
+    variations: [
+      { name: 'Petrosian System', moves: ['d4', 'Nf6', 'c4', 'e6', 'Nf3', 'b6', 'a3', 'Bb7', 'Nc3', 'd5', 'cxd5', 'Nxd5'], description: 'White plays a3 to prevent ...Bb4 and controls the center' },
+    ]
+  },
+  {
+    id: 'bogo-indian-defense',
+    name: 'Bogo-Indian Defense',
+    eco: 'E11',
+    moves: ['d4', 'Nf6', 'c4', 'e6', 'Nf3', 'Bb4+', 'Bd2', 'Bxd2+', 'Qxd2', 'O-O', 'Nc3', 'd5', 'e3', 'Nbd7'],
+    fen: 'rnbqk2r/pppp1ppp/4pn2/8/1bPP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 2 4',
+    description: 'Black checks on b4 to disrupt White\'s natural development. A solid alternative to the Nimzo-Indian when White avoids 3.Nc3.',
+    difficulty: 'intermediate',
+    category: 'd4',
+    popularity: 58,
+    winRate: { white: 35, draw: 35, black: 30 },
+    keyIdeas: [
+      'The check forces White to make a concession',
+      'If Bd2, Black trades bishops for a solid structure',
+      'If Nbd2, White\'s knight is passively placed',
+      'Flexible setup with multiple development plans'
+    ],
+    variations: [
+      { name: 'Nimzowitsch Variation', moves: ['d4', 'Nf6', 'c4', 'e6', 'Nf3', 'Bb4+', 'Nbd2', 'O-O', 'a3', 'Be7', 'e4', 'd5'], description: 'White blocks with Nbd2 to avoid doubled pawns and aims for e4' },
+    ]
+  },
+  {
+    id: 'reti-opening',
+    name: 'Réti Opening',
+    eco: 'A05',
+    moves: ['Nf3', 'd5', 'c4', 'e6', 'g3', 'Nf6', 'Bg2', 'Be7', 'O-O', 'O-O', 'd4', 'Nbd7', 'Qc2', 'c6'],
+    fen: 'rnbqkbnr/ppp1pppp/8/3p4/2P5/5N2/PP1PPPPP/RNBQKB1R b KQkq - 0 2',
+    description: 'A hypermodern opening where White fianchettoes and controls the center from the flanks. Named after Richard Réti who pioneered hypermodern ideas.',
+    difficulty: 'intermediate',
+    category: 'other',
+    popularity: 70,
+    winRate: { white: 37, draw: 33, black: 30 },
+    keyIdeas: [
+      'Control the center with pieces rather than pawns',
+      'Fianchetto the bishop to g2 for long-diagonal pressure',
+      'Flexible setup that can transpose to many systems',
+      'Delays central pawn advances to maintain options'
+    ],
+    variations: [
+      { name: 'King\'s Indian Attack Setup', moves: ['Nf3', 'd5', 'g3', 'Nf6', 'Bg2', 'c6', 'O-O', 'Bg4', 'd3', 'Nbd7', 'Nbd2', 'e5'], description: 'White adopts a King\'s Indian reversed setup' },
+    ]
+  },
+  {
+    id: 'birds-opening',
+    name: 'Bird\'s Opening',
+    eco: 'A02',
+    moves: ['f4', 'd5', 'Nf3', 'Nf6', 'e3', 'g6', 'Be2', 'Bg7', 'O-O', 'O-O', 'd3', 'c5', 'Qe1', 'Nc6'],
+    fen: 'rnbqkbnr/pppppppp/8/8/5P2/8/PPPPP1PP/RNBQKBNR b KQkq - 0 1',
+    description: 'An offbeat opening where White seizes kingside space with f4. Can lead to a reversed Dutch Defense setup.',
+    difficulty: 'intermediate',
+    category: 'other',
+    popularity: 40,
+    winRate: { white: 36, draw: 30, black: 34 },
+    keyIdeas: [
+      'Immediate kingside space with f4',
+      'Can transpose to a Leningrad Dutch reversed',
+      'Control of the e5 square',
+      'Surprise value against unprepared opponents'
+    ],
+    variations: [
+      { name: 'From\'s Gambit', moves: ['f4', 'e5', 'fxe5', 'd6', 'exd6', 'Bxd6', 'Nf3', 'g5'], description: 'Black sacrifices a pawn for a dangerous attack on the kingside' },
+    ]
+  },
+  {
+    id: 'kings-gambit',
+    name: 'King\'s Gambit',
+    eco: 'C30',
+    moves: ['e4', 'e5', 'f4', 'exf4', 'Nf3', 'd6', 'Bc4', 'h6', 'd4', 'g5', 'O-O', 'Bg7', 'c3'],
+    fen: 'rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR b KQkq - 0 2',
+    description: 'One of the oldest and most romantic openings. White sacrifices the f-pawn for rapid development and an attack on f7.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 55,
+    winRate: { white: 38, draw: 26, black: 36 },
+    keyIdeas: [
+      'Sacrifice the f-pawn to open lines toward the Black king',
+      'Rapid development and central control with d4',
+      'Attack the f7 square and the kingside',
+      'Romantic, tactical play from the start'
+    ],
+    variations: [
+      { name: 'King\'s Gambit Accepted', moves: ['e4', 'e5', 'f4', 'exf4', 'Nf3', 'g5', 'h4', 'g4', 'Ne5'], description: 'Black holds the pawn with ...g5 but weakens the kingside' },
+      { name: 'King\'s Gambit Declined', moves: ['e4', 'e5', 'f4', 'Bc5', 'Nf3', 'd6', 'c3', 'Nf6'], description: 'Black declines the gambit and develops naturally' },
+    ]
+  },
+  {
+    id: 'petrovs-defense',
+    name: 'Petrov\'s Defense',
+    eco: 'C42',
+    moves: ['e4', 'e5', 'Nf3', 'Nf6', 'Nxe5', 'd6', 'Nf3', 'Nxe4', 'd4', 'd5', 'Bd3', 'Nc6', 'O-O', 'Be7', 'c4', 'Nb4'],
+    fen: 'rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3',
+    description: 'A symmetrical defense where Black mirrors White\'s knight development. Solid and drawish, but with hidden complexity.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 72,
+    winRate: { white: 34, draw: 38, black: 28 },
+    keyIdeas: [
+      'Symmetrical structure leads to equal positions',
+      'Black must not fall into the trap of 3...Nxe4?? 4.Qe2',
+      'Solid and reliable at the highest level',
+      'White has a slight initiative but Black is solid'
+    ],
+    variations: [
+      { name: 'Classical Attack', moves: ['e4', 'e5', 'Nf3', 'Nf6', 'Nxe5', 'd6', 'Nf3', 'Nxe4', 'd4', 'd5', 'Bd3', 'Nc6', 'O-O', 'Be7', 'c4'], description: 'White challenges Black\'s center immediately with c4' },
+      { name: 'Stafford Gambit', moves: ['e4', 'e5', 'Nf3', 'Nf6', 'Nxe5', 'Nc6', 'Nxc6', 'dxc6'], description: 'An unsound but tricky gambit popular in online play' },
+    ]
+  },
+  {
+    id: 'four-knights-game',
+    name: 'Four Knights Game',
+    eco: 'C46',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Nc3', 'Nf6', 'Bb5', 'Bb4', 'O-O', 'O-O', 'd3', 'd6', 'Bg5', 'Bxc3', 'bxc3', 'Qe7'],
+    fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 4 4',
+    description: 'A solid symmetrical opening where all four knights are developed early. Leads to balanced positions with clear plans.',
+    difficulty: 'beginner',
+    category: 'e4',
+    popularity: 62,
+    winRate: { white: 36, draw: 34, black: 30 },
+    keyIdeas: [
+      'Rapid development of all minor pieces',
+      'Symmetrical structure leads to balanced play',
+      'Good for beginners learning development principles',
+      'Can lead to the Spanish Four Knights or Scotch Four Knights'
+    ],
+    variations: [
+      { name: 'Spanish Four Knights', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Nc3', 'Nf6', 'Bb5', 'Bb4', 'O-O', 'O-O', 'd3', 'd6'], description: 'Both sides develop bishops to active squares in a symmetrical fashion' },
+      { name: 'Scotch Four Knights', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Nc3', 'Nf6', 'd4', 'exd4', 'Nxd4', 'Bb4', 'Nxc6', 'bxc6', 'Bd3', 'd5'], description: 'White opens the center early, creating more dynamic play' },
+    ]
+  },
+  {
+    id: 'trompowsky-attack',
+    name: 'Trompowsky Attack',
+    eco: 'A45',
+    moves: ['d4', 'Nf6', 'Bg5', 'Ne4', 'Bf4', 'd5', 'e3', 'c5', 'Bd3', 'Nd6', 'Nf3', 'Nc6', 'c3'],
+    fen: 'rnbqkb1r/pppppppp/5n2/6B1/3P4/8/PPP1PPPP/RN1QKBNR b KQkq - 2 2',
+    description: 'A modern opening where White develops the bishop to g5 early, pinning the knight and avoiding mainstream theory.',
+    difficulty: 'intermediate',
+    category: 'd4',
+    popularity: 55,
+    winRate: { white: 38, draw: 30, black: 32 },
+    keyIdeas: [
+      'Avoid mainstream d4 theory',
+      'Pin the knight and potentially double Black\'s pawns',
+      'Flexible development plans for White',
+      'Surprise value and less theory to study'
+    ],
+    variations: [
+      { name: 'Main Line', moves: ['d4', 'Nf6', 'Bg5', 'Ne4', 'Bf4', 'd5', 'e3', 'c5', 'Bd3', 'Nc6', 'c3', 'Qb6'], description: 'Black challenges the center immediately with ...c5 and ...Qb6' },
+    ]
+  },
+  {
+    id: 'budapest-gambit',
+    name: 'Budapest Gambit',
+    eco: 'A51',
+    moves: ['d4', 'Nf6', 'c4', 'e5', 'dxe5', 'Ng4', 'Bf4', 'Nc6', 'Nf3', 'Bb4+', 'Nbd2', 'Qe7', 'a3', 'Ngxe5'],
+    fen: 'rnbqkb1r/pppp1ppp/5n2/4p3/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3',
+    description: 'A surprise gambit where Black sacrifices the e-pawn to seize the initiative. Rarely seen at the top level but tricky in practice.',
+    difficulty: 'intermediate',
+    category: 'd4',
+    popularity: 35,
+    winRate: { white: 38, draw: 28, black: 34 },
+    keyIdeas: [
+      'Sacrifice the e-pawn for quick development',
+      'The knight comes to g4 with tempo',
+      'Black aims to regain the pawn with active pieces',
+      'Good surprise weapon at club level'
+    ],
+    variations: [
+      { name: 'Adler Variation', moves: ['d4', 'Nf6', 'c4', 'e5', 'dxe5', 'Ng4', 'Bf4', 'Nc6', 'Nf3', 'Bb4+', 'Nc3', 'Bxc3+', 'bxc3', 'Qe7'], description: 'Black develops quickly and pressures the e5 pawn' },
+    ]
+  },
+  {
+    id: 'modern-defense',
+    name: 'Modern Defense',
+    eco: 'B06',
+    moves: ['e4', 'g6', 'd4', 'Bg7', 'Nc3', 'd6', 'f4', 'a6', 'Nf3', 'b5', 'Bd3', 'Bb7', 'O-O', 'Nd7'],
+    fen: 'rnbqk1nr/ppppppbp/6p1/8/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 1 3',
+    description: 'A hypermodern defense where Black allows White to build a big center, planning to undermine it later with ...c5 or ...e5.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 45,
+    winRate: { white: 42, draw: 26, black: 32 },
+    keyIdeas: [
+      'Allow White a big center and attack it later',
+      'Fianchettoed bishop on g7 pressures the center',
+      'Flexible pawn structure with multiple plans',
+      'Can transpose to Pirc or King\'s Indian setups'
+    ],
+    variations: [
+      { name: 'Austrian Attack', moves: ['e4', 'g6', 'd4', 'Bg7', 'Nc3', 'd6', 'f4', 'Nf6', 'Nf3', 'O-O', 'Bd3', 'Na6'], description: 'White builds an aggressive center with f4, similar to the Pirc Austrian Attack' },
+    ]
+  },
+  {
+    id: 'tarrasch-defense',
+    name: 'Tarrasch Defense',
+    eco: 'D32',
+    moves: ['d4', 'd5', 'c4', 'e6', 'Nc3', 'c5', 'cxd5', 'exd5', 'Nf3', 'Nc6', 'g3', 'Nf6', 'Bg2', 'Be7', 'O-O', 'O-O'],
+    fen: 'rnbqkbnr/pp3ppp/4p3/2pp4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4',
+    description: 'Black plays ...c5 in the Queen\'s Gambit, accepting an isolated queen pawn for active piece play. Championed by Siegbert Tarrasch.',
+    difficulty: 'intermediate',
+    category: 'd4',
+    popularity: 55,
+    winRate: { white: 37, draw: 32, black: 31 },
+    keyIdeas: [
+      'Active piece play compensates for the isolated d-pawn',
+      'Pieces become very active around the IQP',
+      'Black\'s pieces coordinate well for a kingside attack',
+      'The d5 pawn can be a weakness or a strength'
+    ],
+    variations: [
+      { name: 'Swedish Variation', moves: ['d4', 'd5', 'c4', 'e6', 'Nc3', 'c5', 'cxd5', 'exd5', 'Nf3', 'Nc6', 'g3', 'c4'], description: 'Black pushes ...c4, creating an unusual pawn structure' },
+    ]
+  },
+  {
+    id: 'symmetrical-english',
+    name: 'English Opening: Symmetrical Variation',
+    eco: 'A30',
+    moves: ['c4', 'c5', 'Nc3', 'Nc6', 'g3', 'g6', 'Bg2', 'Bg7', 'Nf3', 'Nf6', 'O-O', 'O-O', 'd3', 'd6', 'Rb1', 'a5'],
+    fen: 'r1bqk1nr/pp1pppbp/2n3p1/2p5/2P5/2N3P1/PP1PPPBP/R1BQK1NR w KQkq - 2 5',
+    description: 'Both sides fianchetto and develop symmetrically. A flexible system that can lead to Hedgehog, Maroczy Bind, or reversed Sicilian structures.',
+    difficulty: 'intermediate',
+    category: 'other',
+    popularity: 65,
+    winRate: { white: 35, draw: 36, black: 29 },
+    keyIdeas: [
+      'Symmetrical structure gives equal chances',
+      'Both bishops control long diagonals',
+      'Strategic maneuvering and positional play',
+      'Can transpose to many different structures'
+    ],
+    variations: [
+      { name: 'Hedgehog', moves: ['c4', 'c5', 'Nf3', 'Nf6', 'Nc3', 'e6', 'g3', 'b6', 'Bg2', 'Bb7', 'd4', 'cxd4', 'Qxd4', 'd6'], description: 'Black adopts the compact Hedgehog formation with pawns on a6, b6, d6, e6' },
+    ]
+  },
+  {
+    id: 'ponziani-opening',
+    name: 'Ponziani Opening',
+    eco: 'C44',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'c3', 'd5', 'Qa4', 'f6', 'd4', 'Bd6', 'dxe5', 'Bxe5'],
+    fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/2P2N2/PP1P1PPP/RNBQKB1R b KQkq - 0 3',
+    description: 'An old opening where White supports d4 with c3. Less common than the Italian or Scotch but with its own character.',
+    difficulty: 'beginner',
+    category: 'e4',
+    popularity: 30,
+    winRate: { white: 37, draw: 28, black: 35 },
+    keyIdeas: [
+      'Prepare d4 with pawn support from c3',
+      'Solid but somewhat slow center buildup',
+      'Can surprise opponents unfamiliar with the lines',
+      'Leads to open positions after d4'
+    ],
+    variations: [
+      { name: 'Steinitz Variation', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'c3', 'd5', 'Qa4', 'Nf6', 'Nxe5', 'Bd6'], description: 'Black plays aggressively with ...d5 and develops pieces rapidly' },
+    ]
+  },
+  {
+    id: 'old-indian-defense',
+    name: 'Old Indian Defense',
+    eco: 'A53',
+    moves: ['d4', 'Nf6', 'c4', 'd6', 'Nc3', 'e5', 'Nf3', 'Nbd7', 'e4', 'Be7', 'Be2', 'O-O', 'O-O', 'c6'],
+    fen: 'rnbqkb1r/ppp2ppp/3p1n2/4p3/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4',
+    description: 'A solid but passive defense where Black plays ...d6 and ...e5. Predecessor to the King\'s Indian Defense with a more restrained character.',
+    difficulty: 'beginner',
+    category: 'd4',
+    popularity: 35,
+    winRate: { white: 40, draw: 30, black: 30 },
+    keyIdeas: [
+      'Solid pawn structure with ...d6 and ...e5',
+      'Less dynamic than the King\'s Indian',
+      'Black develops pieces solidly behind the center',
+      'Plan for a later ...c6 and ...d5 break'
+    ],
+    variations: [
+      { name: 'Ukrainian Variation', moves: ['d4', 'Nf6', 'c4', 'd6', 'Nc3', 'e5', 'Nf3', 'Nbd7', 'g3', 'Be7', 'Bg2', 'O-O', 'O-O', 'c6'], description: 'White fianchettoes the bishop for long-term pressure' },
+    ]
+  },
+  {
+    id: 'nimzowitsch-defense',
+    name: 'Nimzowitsch Defense',
+    eco: 'B00',
+    moves: ['e4', 'Nc6', 'd4', 'd5', 'e5', 'Bf5', 'Nf3', 'e6', 'Be2', 'Nge7', 'O-O', 'Ng6'],
+    fen: 'r1bqkbnr/ppp1pppp/2n5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3',
+    description: 'An unorthodox defense where Black develops the knight to c6 on move one. Aims for an asymmetric game and to avoid mainstream theory.',
+    difficulty: 'intermediate',
+    category: 'e4',
+    popularity: 25,
+    winRate: { white: 42, draw: 26, black: 32 },
+    keyIdeas: [
+      'Avoid mainstream e4 theory entirely',
+      'The knight on c6 fights for the center',
+      'Black can transpose to various openings',
+      'Surprise value is the main weapon'
+    ],
+    variations: [
+      { name: 'Scandinavian Variation', moves: ['e4', 'Nc6', 'd4', 'd5', 'e5', 'Bf5', 'Nf3', 'e6', 'c3'], description: 'White builds a solid center with c3, maintaining the space advantage' },
+    ]
+  },
+  {
+    id: 'kings-indian-attack',
+    name: 'King\'s Indian Attack',
+    eco: 'A07',
+    moves: ['Nf3', 'd5', 'g3', 'Nf6', 'Bg2', 'c6', 'O-O', 'Bg4', 'd3', 'Nbd7', 'Nbd2', 'e5', 'e4', 'dxe4', 'dxe4'],
+    fen: 'rn1qkb1r/pp2pppp/2p2n2/3p4/6b1/5NP1/PPPPPPBP/RNBQ1RK1 w kq - 2 5',
+    description: 'A flexible system where White builds a King\'s Indian structure with reversed colors. Popular with Fischer who used it to devastating effect.',
+    difficulty: 'intermediate',
+    category: 'other',
+    popularity: 60,
+    winRate: { white: 38, draw: 30, black: 32 },
+    keyIdeas: [
+      'A system opening — can be played against many Black setups',
+      'Kingside fianchetto with plans for e4 and d3',
+      'Flexible piece placement allows multiple plans',
+      'Fischer\'s famous weapon in the 1960s'
+    ],
+    variations: [
+      { name: 'vs French Setup', moves: ['Nf3', 'd5', 'g3', 'Nf6', 'Bg2', 'e6', 'O-O', 'Be7', 'd3', 'O-O', 'Nbd2', 'c5', 'e4'], description: 'Against a French-like structure, White aims for e4 with tempo' },
+    ]
+  },
+  {
+    id: 'italian-giuoco-piano',
+    name: 'Italian Game: Giuoco Piano',
+    eco: 'C53',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5', 'd3', 'Nf6', 'O-O', 'O-O', 'c3', 'd6', 'Re1', 'a6', 'a4', 'Ba7', 'Nbd2', 'Be6'],
+    fen: 'r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R b KQkq - 0 4',
+    description: 'The "Quiet Game" — a classical Italian setup where White develops solidly with d3. Rich strategic play with slow maneuvering.',
+    difficulty: 'beginner',
+    category: 'e4',
+    popularity: 85,
+    winRate: { white: 38, draw: 32, black: 30 },
+    keyIdeas: [
+      'Slow, solid buildup with d3 instead of the sharp d4',
+      'White prepares c3 and d4 gradually',
+      'The game is positional with long-term plans',
+      'Both sides castle early and maneuver pieces'
+    ],
+    variations: [
+      { name: 'Giuoco Pianissimo', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5', 'd3', 'Nf6', 'O-O', 'O-O', 'c3', 'd6', 'Re1', 'a6', 'a4', 'Ba7', 'Nbd2'], description: 'The quietest approach — slow and methodical buildup' },
+    ]
+  },
+  {
+    id: 'queens-gambit-declined-exchange',
+    name: 'Queen\'s Gambit Declined: Exchange Variation',
+    eco: 'D35',
+    moves: ['d4', 'd5', 'c4', 'e6', 'Nc3', 'Nf6', 'cxd5', 'exd5', 'Bg5', 'Be7', 'e3', 'O-O', 'Bd3', 'Nbd7', 'Nf3', 'Re8', 'Qc2', 'c6'],
+    fen: 'rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4',
+    description: 'White exchanges on d5 creating a symmetrical pawn structure. White plans a minority attack on the queenside with b4-b5.',
+    difficulty: 'intermediate',
+    category: 'd4',
+    popularity: 70,
+    winRate: { white: 37, draw: 35, black: 28 },
+    keyIdeas: [
+      'The minority attack with a3, b4, b5 targets Black\'s queenside',
+      'Symmetrical center but White has a slight pull',
+      'Strategic maneuvering replaces tactical play',
+      'Black must find counterplay on the kingside'
+    ],
+    variations: [
+      { name: 'Carlsbad Structure', moves: ['d4', 'd5', 'c4', 'e6', 'Nc3', 'Nf6', 'cxd5', 'exd5', 'Bg5', 'c6', 'e3', 'Bf5', 'Qf3', 'Bg6'], description: 'The classic Carlsbad pawn structure with minority attack plans' },
     ]
   },
 ]
