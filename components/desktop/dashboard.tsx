@@ -120,371 +120,258 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
   ]
 
   return (
-    <div
-      className="p-8 max-w-7xl mx-auto"
-    >
-      {/* Hero Header */}
-      <div className="mb-10">
-        <div className="glass-card p-10 relative overflow-hidden accent-line-top" >
-          {/* Background decoration orbs */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/[0.06] to-transparent rounded-full translate-x-1/3 -translate-y-1/3" />
-          <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-gradient-to-tr from-blue-500/[0.04] to-transparent rounded-full -translate-x-1/4 translate-y-1/4" />
-          <div className="absolute top-1/2 right-1/4 w-[200px] h-[200px] bg-gradient-to-br from-purple-500/[0.03] to-transparent rounded-full" />
+    <div className="p-6 max-w-7xl mx-auto space-y-5">
 
-          <div className="flex items-center justify-between relative z-10">
+      {/* ── ROW 1: Compact header ── */}
+      <div className="flex items-center justify-between gap-6">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-primary/70 uppercase tracking-widest font-medium mb-1 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          </p>
+          <h1 className="text-3xl font-display font-bold text-foreground truncate">
+            Welcome back, <span className="text-primary">{profile.username}</span> 👋
+          </h1>
+        </div>
+
+        {/* Level + XP bar */}
+        <div className="flex-none flex items-center gap-4 glass-card px-5 py-3 min-w-[260px]">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-amber-500/20 flex-none">
+            <Crown className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-muted-foreground">Level {currentLevel.level} — <span className="text-primary font-medium">{currentLevel.title}</span></span>
+              <span className="text-xs font-bold text-primary">{Math.round(progress)}%</span>
+            </div>
+            <div className="h-2 rounded-full xp-bar-track overflow-hidden">
+              <div className="h-full rounded-full xp-bar-fill transition-all duration-700" style={{ width: `${Math.min(progress, 100)}%` }} />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">{xpIntoLevel} / {xpForLevel} XP to next level</p>
+          </div>
+        </div>
+
+        {/* Streak + Combo chips */}
+        <div className="flex-none flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20">
+            <span className="text-base">🔥</span>
             <div>
-              <motion.p
-                className="text-sm font-medium text-primary/80 mb-3 flex items-center gap-1.5 tracking-wide uppercase"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-              >
-                <Sparkles className="w-4 h-4" />
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-              </motion.p>
-              <motion.h1
-                className="text-5xl xl:text-6xl font-display font-bold hero-text-large mb-4 text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              >
-                Welcome back,<br />
-                <TypewriterText text={profile.username + '.'} speed={60} delay={600} />
-              </motion.h1>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-                className="flex items-center gap-4 mt-6"
-              >
-                <button
-                  onClick={() => handleNavigate('puzzles')}
-                  className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] hover:-translate-y-0.5 transition-all text-sm flex items-center gap-2"
-                >
-                  <Play className="w-4 h-4" fill="currentColor" />
-                  Continue Training
-                </button>
-                <p className="text-muted-foreground text-sm">
-                  Resume your chess mastery journey
-                </p>
-              </motion.div>
-            </div>
-            <div
-              className="flex items-center gap-6"
-            >
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Level</p>
-                <p className="text-4xl font-display font-bold text-foreground">{currentLevel.level}</p>
-                <p className="text-sm text-primary font-medium">{currentLevel.title}</p>
-              </div>
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 flex items-center justify-center relative overflow-hidden shadow-lg shadow-amber-500/20">
-                <Crown className="w-10 h-10 text-white relative z-10" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-              </div>
+              <p className="text-sm font-bold text-orange-400 leading-none">{profile.streak}</p>
+              <p className="text-[10px] text-orange-400/60 leading-none">day streak</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* XP Progress */}
-      <div className="mb-10">
-        <div className="glass-card p-7 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
-                <Zap className="w-5 h-5 text-primary" />
-              </div>
+          {profile.combo > 0 && (
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <span className="text-base">⚡</span>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-widest">Experience</p>
-                <p className="text-xl font-display font-bold text-foreground">
-                  <AnimatedCounter value={profile.xp} duration={1.5} suffix=" XP" />
-                </p>
+                <p className="text-sm font-bold text-amber-400 leading-none">{profile.combo}x</p>
+                <p className="text-[10px] text-amber-400/60 leading-none">combo</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground uppercase tracking-widest">Progress</p>
-              <p className="text-xl font-display font-bold text-primary">
-                <AnimatedCounter value={Math.round(progress)} suffix="%" />
-              </p>
-            </div>
-          </div>
-          <div className="h-3 rounded-full xp-bar-track overflow-hidden" role="progressbar" aria-valuenow={Math.min(Math.round(progress), 100)} aria-valuemin={0} aria-valuemax={100} aria-label="XP progress">
-            <div
-              className="h-full rounded-full xp-bar-fill relative transition-all duration-700 ease-out"
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-            </div>
-          </div>
-          <div className="flex items-center justify-between mt-2.5">
-            <p className="text-xs text-muted-foreground">{xpIntoLevel} / {xpForLevel} XP</p>
-            {nextLevel.level !== currentLevel.level && (
-              <p className="text-xs text-muted-foreground">Next: <span className="text-primary font-medium">{nextLevel.title}</span></p>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Welcome banner for new users */}
-      {profile.xp === 0 && profile.puzzlesSolved === 0 && (
-        <div className="mb-8 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-1">👋 Welcome to ChessGrind!</h2>
-            <p className="text-sm text-muted-foreground">Start with a quick puzzle to earn your first XP and unlock achievements.</p>
-          </div>
-          <motion.button
-            onClick={() => onNavigate('puzzles')}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="px-6 py-3 rounded-xl bg-amber-500 text-white text-sm font-semibold shrink-0 ml-4"
-          >
-            Solve First Puzzle →
-          </motion.button>
-        </div>
-      )}
-
-      {/* Stats Grid */}
-      <RevealGrid className="grid grid-cols-4 gap-5 mb-6" staggerDelay={100}>
-        {stats.map((stat, index) => (
+      {/* ── ROW 2: 4 mode launch cards ── */}
+      <RevealGrid className="grid grid-cols-4 gap-4" staggerDelay={80}>
+        {quickActions.map((action) => (
           <div
-            key={stat.label}
-            className={`glass-card p-6 group cursor-default relative overflow-hidden ${stat.hoverCard} hover:border-white/10 transition-all duration-300 hover:shadow-lg`}
+            key={action.id}
+            onClick={() => handleNavigate(action.id)}
+            className="glass-card p-5 cursor-pointer group relative overflow-hidden hover:border-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20"
           >
-            <div className="flex items-center gap-3 mb-4 relative z-10">
-              <div className={`w-11 h-11 rounded-xl ${stat.bgClass} flex items-center justify-center ${stat.colorClass} transition-transform duration-300 group-hover:scale-110`}>
-                {stat.icon}
-              </div>
+            <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.07] transition-opacity duration-300`} />
+            <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-3 shadow-md relative z-10 ring-1 ring-white/10`}>
+              <span className="text-white text-xl">{action.icon}</span>
             </div>
-            <p className="text-4xl font-display font-bold text-foreground mb-1.5 relative z-10">
-              <OdometerCounter value={typeof stat.value === 'number' ? stat.value : 0} />
-            </p>
-            <p className="text-sm text-muted-foreground relative z-10">{stat.label}</p>
+            <h3 className="font-semibold text-foreground mb-0.5 relative z-10" style={{ fontSize: 'var(--fs-sm)' }}>{action.label}</h3>
+            <p className="text-muted-foreground leading-snug relative z-10" style={{ fontSize: 'var(--fs-xs)' }}>{action.description}</p>
+            <div className="flex items-center gap-1 mt-3 text-primary font-medium opacity-0 group-hover:opacity-100 transition-all duration-200 relative z-10" style={{ fontSize: 'var(--fs-xs)' }}>
+              Start <ChevronRight className="w-3.5 h-3.5" />
+            </div>
           </div>
         ))}
       </RevealGrid>
 
-      {/* Activity Heatmap */}
-      <div className="mb-10">
-        <div className="glass-card p-5">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-3">Activity (last 52 weeks)</p>
-          <ActivityHeatmap activityDates={profile.activityDates} compact />
-        </div>
-      </div>
+      {/* ── ROW 3: stats + daily challenge ── */}
+      <div className="grid grid-cols-[1fr_280px] gap-4">
 
-      {/* Streak Warning + Combo + Achievement Progress */}
-      <div className="grid grid-cols-3 gap-4">
-        <StreakWarning />
-        {profile.combo > 0 && (
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
-            <span className="text-xl">🔥</span>
-            <div>
-              <span className="text-sm font-bold text-orange-400">{profile.combo}x Combo</span>
-              <p className="text-[10px] text-orange-400/70">Keep solving for bonus XP!</p>
+        {/* Left: stats chips */}
+        <div className="space-y-4">
+          <RevealGrid className="grid grid-cols-4 gap-3" staggerDelay={60}>
+            {stats.map((stat) => (
+              <div key={stat.label} className={`glass-card px-4 py-3 group cursor-default relative overflow-hidden ${stat.hoverCard} hover:border-white/10 transition-all duration-200`}>
+                <div className={`w-9 h-9 rounded-xl ${stat.bgClass} flex items-center justify-center ${stat.colorClass} mb-2 transition-transform duration-200 group-hover:scale-105`}>
+                  {stat.icon}
+                </div>
+                <p className="text-2xl font-display font-bold text-foreground leading-none mb-0.5">
+                  <OdometerCounter value={typeof stat.value === 'number' ? stat.value : 0} />
+                </p>
+                <p className="text-muted-foreground" style={{ fontSize: 'var(--fs-xs)' }}>{stat.label}</p>
+              </div>
+            ))}
+          </RevealGrid>
+
+          {/* Welcome banner for new users */}
+          {profile.xp === 0 && profile.puzzlesSolved === 0 && (
+            <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-5 flex items-center justify-between">
+              <div>
+                <h2 className="font-bold text-foreground mb-0.5" style={{ fontSize: 'var(--fs-sm)' }}>👋 Welcome to ChessGrind!</h2>
+                <p className="text-muted-foreground" style={{ fontSize: 'var(--fs-xs)' }}>Start with a quick puzzle to earn your first XP and unlock achievements.</p>
+              </div>
+              <button onClick={() => handleNavigate('puzzles')} className="px-5 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold shrink-0 ml-4 hover:bg-amber-600 transition-colors">
+                Solve First Puzzle →
+              </button>
             </div>
-          </div>
-        )}
-        <NextAchievementPreview />
-      </div>
+          )}
 
-      <div className="grid grid-cols-3 gap-7">
-        {/* Left Column - Quick Actions */}
-        <div className="col-span-2 space-y-7">
-          {/* Quick Actions */}
-          <div>
-            <h2 className="text-xl font-display font-semibold text-foreground mb-5 tracking-tight flex items-center gap-2">
-              <Zap className="w-5 h-5 text-primary" /> Quick Start
-            </h2>
-            <RevealGrid className="grid grid-cols-2 gap-5" staggerDelay={120}>
-              {quickActions.map((action, i) => (
-                  <div
-                    key={action.id}
-                    className="glass-card p-7 text-left group relative overflow-hidden cursor-pointer h-full border border-white/5 hover:border-white/10 transition-all duration-300 hover:shadow-lg hover:shadow-black/20"
-                    onClick={() => handleNavigate(action.id)}
-                  >
-                    {/* Hover gradient overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.08] transition-opacity duration-500`} />
+          {/* Streak Warning */}
+          <StreakWarning />
 
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-5 shadow-[0_8px_16px_rgba(0,0,0,0.3)] relative z-10 ring-1 ring-white/20`}>
-                      <span className="text-white drop-shadow-md">{action.icon}</span>
-                    </div>
-                    <h3 className="text-lg font-display font-semibold text-foreground mb-1.5 relative z-10 transition-colors">{action.label}</h3>
-                    <p className="text-sm text-muted-foreground relative z-10 leading-relaxed">{action.description}</p>
-                    <div className="flex items-center gap-1 mt-6 text-primary text-sm font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-[-10px] group-hover:translate-x-0 relative z-10">
-                      Start now <ChevronRight className="w-4 h-4" />
-                    </div>
-                  </div>
-              ))}
-            </RevealGrid>
-          </div>
+          {/* Next Achievement */}
+          <NextAchievementPreview />
 
           {/* Weekly Missions */}
           {profile.weeklyMissions.length > 0 && (
-            <div className="mt-6">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Weekly Missions</h2>
+            <div>
+              <h2 className="font-semibold text-foreground mb-3 flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)' }}>
+                🎯 Weekly Missions
+              </h2>
               <WeeklyMissions missions={profile.weeklyMissions} />
             </div>
           )}
+        </div>
 
-          {/* Featured Opening */}
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-display font-semibold text-foreground">Featured Opening</h2>
-              <button
-                onClick={() => handleNavigate('openings')}
-                className="text-sm text-primary font-medium flex items-center gap-1 hover:gap-2 transition-all"
-              >
-                View all <ChevronRight className="w-4 h-4" />
-              </button>
+        {/* Right: Daily Challenge */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-foreground flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)' }}>
+              <Star className="w-4 h-4 text-amber-400" /> Daily Challenge
+            </h2>
+            <span className="text-xs text-muted-foreground px-2 py-1 rounded-lg glass-card border border-white/5 flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+          <motion.button
+            onClick={() => handleNavigate('puzzles')}
+            className="w-full glass-card-hover p-5 text-left relative overflow-hidden group border border-white/5 hover:border-white/10 transition-all"
+            whileHover={{ y: -2 }}
+          >
+            {profile.dailyChallengeCompleted && (
+              <div className="absolute top-3 right-3 px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-semibold flex items-center gap-1 border border-amber-500/20 z-10">
+                <Star className="w-3 h-3" /> Done
+              </div>
+            )}
+            <div className="absolute top-0 right-0 w-28 h-28 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4 group-hover:bg-primary/10 transition-colors duration-500" />
+            <div className="flex justify-center mb-4 relative z-10">
+              <div className="rounded-xl overflow-hidden shadow-lg ring-1 ring-white/10 group-hover:-translate-y-1 transition-transform duration-300">
+                <MiniChessboard fen={dailyPuzzle?.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'} size={160} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
+              </div>
             </div>
-            <motion.button
-              onClick={() => handleNavigate('openings')}
-              className="w-full glass-card-hover p-6 flex items-center gap-6 text-left group"
+            <div className="flex items-center justify-between mb-3 relative z-10">
+              <span className={`px-2 py-0.5 rounded-lg text-xs font-semibold border ${
+                dailyPuzzle?.difficulty === 'hard' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+              }`}>{dailyPuzzle?.difficulty}</span>
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="w-3 h-3" /> {dailyPuzzle?.moves.length || 0} moves
+              </span>
+            </div>
+            <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-semibold border border-primary/20 group-hover:from-primary/20 transition-all btn-shine w-full text-sm relative z-10">
+              <Play className="w-3.5 h-3.5" fill="currentColor" />
+              {profile.dailyChallengeCompleted ? 'Play Again' : 'Solve Now'}
+            </div>
+          </motion.button>
+        </div>
+      </div>
 
-            >
-              <div className="rounded-2xl overflow-hidden ring-1 ring-white/5 relative z-10" style={{ width: 120, height: 120 }}>
-                <MiniChessboard fen={OPENINGS[0].fen} size={120} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
-              </div>
-              <div className="flex-1 relative z-10">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary border border-primary/20">
-                    {OPENINGS[0].eco}
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-secondary text-muted-foreground capitalize">
-                    {OPENINGS[0].difficulty}
-                  </span>
-                </div>
-                <h3 className="text-xl font-display font-semibold text-foreground mb-2">{OPENINGS[0].name}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-2">{OPENINGS[0].description}</p>
-              </div>
-              <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all relative z-10" />
-            </motion.button>
+      {/* ── BELOW FOLD: Activity + Opening + Games + Achievements ── */}
+      <div className="grid grid-cols-3 gap-5 pt-2">
+
+        {/* Activity heatmap */}
+        <div className="col-span-3">
+          <div className="glass-card p-4">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-3">Activity (last 52 weeks)</p>
+            <ActivityHeatmap activityDates={profile.activityDates} compact />
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-7">
-          {/* Daily Challenge */}
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-display font-semibold text-foreground tracking-tight">Daily Challenge</h2>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-xl glass-card border border-white/5">
-                <Calendar className="w-3.5 h-3.5" />
-                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              </div>
-            </div>
-            <motion.button
-              onClick={() => handleNavigate('puzzles')}
-              className="w-full glass-card-hover p-7 text-left relative overflow-hidden group border border-white/5 hover:border-white/10"
-
-            >
-              {profile.dailyChallengeCompleted && (
-                <div className="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-semibold flex items-center gap-1 border border-amber-500/20 z-10 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-                  <Star className="w-3 h-3" /> Completed
-                </div>
-              )}
-              {/* Subtle accent glow */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4 group-hover:bg-primary/10 transition-colors duration-500" />
-
-              <div className="flex justify-center mb-6 relative z-10">
-                <div className="rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.4)] ring-1 ring-white/10 group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] transition-all duration-300 transform group-hover:-translate-y-1" style={{ width: 180, height: 180 }}>
-                  <MiniChessboard fen={dailyPuzzle?.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'} size={180} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
-                </div>
-              </div>
-              <div className="flex items-center justify-between mb-5 relative z-10">
-                <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${dailyPuzzle?.difficulty === 'easy' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]' :
-                  dailyPuzzle?.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]' :
-                    'bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]'
-                  }`}>
-                  {dailyPuzzle?.difficulty}
-                </span>
-                <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5">
-                  <Clock className="w-3 h-3" /> {dailyPuzzle?.moves.length || 0} moves
-                </span>
-              </div>
-              <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-semibold border border-primary/20 group-hover:from-primary/20 group-hover:to-primary/10 transition-all btn-shine relative z-10 shadow-inner inline-flex w-full">
-                <Play className="w-4 h-4" fill="currentColor" />
-                {profile.dailyChallengeCompleted ? 'Play Again' : 'Solve Now'}
-              </div>
-            </motion.button>
+        {/* Featured Opening */}
+        <div className="col-span-2">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-foreground" style={{ fontSize: 'var(--fs-sm)' }}>Featured Opening</h2>
+            <button onClick={() => handleNavigate('openings')} className="text-xs text-primary flex items-center gap-1 hover:gap-2 transition-all">
+              View all <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-
-          {/* Recent Games */}
-          {profile.recentGames && profile.recentGames.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-xl font-display font-semibold text-foreground">Recent Games</h2>
-                <button
-                  onClick={() => handleNavigate('profile')}
-                  className="text-sm text-primary font-medium flex items-center gap-1 hover:gap-2 transition-all"
-                >
-                  View all <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="glass-card p-5 space-y-1">
-                {profile.recentGames.slice(0, 3).map((game) => (
-                  <div key={game.id} className="flex items-center gap-3 py-1.5 border-b border-border/20 last:border-0">
-                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                      game.result === 'win' ? 'bg-amber-500/10 text-amber-400' :
-                      game.result === 'draw' ? 'bg-amber-500/10 text-amber-400' :
-                      'bg-red-500/10 text-red-400'
-                    }`}>
-                      {game.result === 'win' ? 'W' : game.result === 'draw' ? 'D' : 'L'}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">vs {game.opponent}</p>
-                      <p className="text-xs text-muted-foreground">{game.moves} moves</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <motion.button onClick={() => handleNavigate('openings')} className="w-full glass-card-hover p-5 flex items-center gap-5 text-left group">
+            <div className="rounded-xl overflow-hidden ring-1 ring-white/5 flex-none">
+              <MiniChessboard fen={OPENINGS[0].fen} size={100} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
             </div>
-          )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="px-2 py-0.5 rounded-lg text-xs font-medium bg-primary/10 text-primary border border-primary/20">{OPENINGS[0].eco}</span>
+                <span className="px-2 py-0.5 rounded-lg text-xs font-medium bg-secondary text-muted-foreground capitalize">{OPENINGS[0].difficulty}</span>
+              </div>
+              <h3 className="font-semibold text-foreground mb-1" style={{ fontSize: 'var(--fs-sm)' }}>{OPENINGS[0].name}</h3>
+              <p className="text-muted-foreground line-clamp-2" style={{ fontSize: 'var(--fs-xs)' }}>{OPENINGS[0].description}</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-none" />
+          </motion.button>
+        </div>
 
-          {/* Recent Achievements */}
+        {/* Chess Tip */}
+        <div className="rounded-xl bg-blue-500/5 border border-blue-500/15 p-4 flex items-start gap-3">
+          <span className="text-2xl flex-none">💡</span>
           <div>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-display font-semibold text-foreground">Achievements</h2>
-              <button
-                onClick={() => handleNavigate('profile')}
-                className="text-sm text-primary font-medium flex items-center gap-1 hover:gap-2 transition-all"
-              >
-                View all <ChevronRight className="w-4 h-4" />
-              </button>
+            <p className="text-xs font-semibold text-blue-400 mb-1.5">Chess Tip of the Day</p>
+            <p className="text-muted-foreground leading-relaxed" style={{ fontSize: 'var(--fs-xs)' }}>{tip}</p>
+          </div>
+        </div>
+
+        {/* Recent Games */}
+        {profile.recentGames && profile.recentGames.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-foreground" style={{ fontSize: 'var(--fs-sm)' }}>Recent Games</h2>
+              <button onClick={() => handleNavigate('profile')} className="text-xs text-primary flex items-center gap-1 hover:gap-2 transition-all">View all <ChevronRight className="w-3.5 h-3.5" /></button>
             </div>
-            <div className="glass-card p-5 space-y-2">
-              {profile.achievements.slice(0, 4).map((achievement) => (
-                <div
-                  key={achievement.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${achievement.earned
-                    ? 'bg-primary/[0.04] hover:bg-primary/[0.07]'
-                    : 'opacity-40 hover:opacity-60'
-                    }`}
-                >
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl ${achievement.earned ? 'bg-primary/10' : 'bg-secondary'
-                    }`}>
-                    {achievement.icon}
-                  </div>
+            <div className="glass-card p-4 space-y-1">
+              {profile.recentGames.slice(0, 4).map((game) => (
+                <div key={game.id} className="flex items-center gap-3 py-1.5 border-b border-border/20 last:border-0">
+                  <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-none ${
+                    game.result === 'win' ? 'bg-amber-500/10 text-amber-400' :
+                    game.result === 'draw' ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'
+                  }`}>{game.result === 'win' ? 'W' : game.result === 'draw' ? 'D' : 'L'}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{achievement.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{achievement.description}</p>
+                    <p className="text-sm font-medium text-foreground truncate">vs {game.opponent}</p>
+                    <p className="text-xs text-muted-foreground">{game.moves} moves</p>
                   </div>
-                  {achievement.earned && (
-                    <Award className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                  )}
                 </div>
               ))}
             </div>
           </div>
+        )}
 
-          {/* Chess Tip of the Day */}
-          <div className="rounded-xl bg-blue-500/5 border border-blue-500/15 p-4">
-            <div className="flex items-start gap-3">
-              <span className="text-xl">💡</span>
-              <div>
-                <p className="text-xs font-semibold text-blue-400 mb-1">Chess Tip of the Day</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">{tip}</p>
+        {/* Achievements */}
+        <div className={profile.recentGames && profile.recentGames.length > 0 ? '' : 'col-span-2'}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-foreground" style={{ fontSize: 'var(--fs-sm)' }}>Achievements</h2>
+            <button onClick={() => handleNavigate('profile')} className="text-xs text-primary flex items-center gap-1 hover:gap-2 transition-all">View all <ChevronRight className="w-3.5 h-3.5" /></button>
+          </div>
+          <div className="glass-card p-4 space-y-1.5">
+            {profile.achievements.slice(0, 4).map((achievement) => (
+              <div key={achievement.id} className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${achievement.earned ? 'bg-primary/[0.04] hover:bg-primary/[0.07]' : 'opacity-40 hover:opacity-60'}`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-none ${achievement.earned ? 'bg-primary/10' : 'bg-secondary'}`}>
+                  {achievement.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{achievement.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{achievement.description}</p>
+                </div>
+                {achievement.earned && <Award className="w-4 h-4 text-amber-400 flex-none" />}
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
