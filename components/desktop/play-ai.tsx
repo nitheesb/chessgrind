@@ -112,43 +112,46 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const [analysisLog, setAnalysisLog] = useState<Array<{ moveNum: number; eval: number; comment: string; move: string }>>([])
   const analysisLogRef = useRef<HTMLDivElement>(null)
 
-  // Run analysis after each move
+  // Run analysis after each move (debounced to avoid blocking the main thread)
   useEffect(() => {
     if (!gameStarted || gameStatus !== 'playing' || moveHistory.length === 0) {
       setAnalysis(null)
       return
     }
-    const result = analyzePosition(game, 4)
-    setAnalysis(result)
+    const tid = setTimeout(() => {
+      const result = analyzePosition(game, 4)
+      setAnalysis(result)
 
-    const evalFromPlayer = playerColor === 'white' ? result.eval : -result.eval
-    let comment = ''
-    if (result.isMate) {
-      comment = result.mateIn !== null && result.mateIn > 0
-        ? (game.turn() === (playerColor === 'white' ? 'w' : 'b') ? `Mate in ${result.mateIn} for opponent` : `Mate in ${result.mateIn}!`)
-        : 'Checkmate'
-    } else if (evalFromPlayer > 3) {
-      comment = 'Winning position — major advantage'
-    } else if (evalFromPlayer > 1.5) {
-      comment = 'Clear advantage'
-    } else if (evalFromPlayer > 0.5) {
-      comment = 'Slight edge'
-    } else if (evalFromPlayer > -0.5) {
-      comment = 'Equal position'
-    } else if (evalFromPlayer > -1.5) {
-      comment = 'Slight disadvantage'
-    } else if (evalFromPlayer > -3) {
-      comment = 'Opponent has clear advantage'
-    } else {
-      comment = 'Losing position — find counterplay'
-    }
+      const evalFromPlayer = playerColor === 'white' ? result.eval : -result.eval
+      let comment = ''
+      if (result.isMate) {
+        comment = result.mateIn !== null && result.mateIn > 0
+          ? (game.turn() === (playerColor === 'white' ? 'w' : 'b') ? `Mate in ${result.mateIn} for opponent` : `Mate in ${result.mateIn}!`)
+          : 'Checkmate'
+      } else if (evalFromPlayer > 3) {
+        comment = 'Winning position — major advantage'
+      } else if (evalFromPlayer > 1.5) {
+        comment = 'Clear advantage'
+      } else if (evalFromPlayer > 0.5) {
+        comment = 'Slight edge'
+      } else if (evalFromPlayer > -0.5) {
+        comment = 'Equal position'
+      } else if (evalFromPlayer > -1.5) {
+        comment = 'Slight disadvantage'
+      } else if (evalFromPlayer > -3) {
+        comment = 'Opponent has clear advantage'
+      } else {
+        comment = 'Losing position — find counterplay'
+      }
 
-    setAnalysisLog(prev => [...prev, {
-      moveNum: moveHistory.length,
-      eval: evalFromPlayer,
-      comment,
-      move: moveHistory[moveHistory.length - 1],
-    }])
+      setAnalysisLog(prev => [...prev, {
+        moveNum: moveHistory.length,
+        eval: evalFromPlayer,
+        comment,
+        move: moveHistory[moveHistory.length - 1],
+      }])
+    }, 50)
+    return () => clearTimeout(tid)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moveHistory.length, gameStarted, gameStatus])
 
@@ -619,17 +622,19 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
       {/* Right: all game controls */}
       <div className="lm-right-panel p-5 space-y-4">
-        {/* New Game link */}
-        <button
-          onClick={resetGame}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          New Game
-        </button>
+        {/* Sticky top: New Game link + player cards */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-4 -mx-5 px-5 pt-5 space-y-4">
+          {/* New Game link */}
+          <button
+            onClick={resetGame}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            New Game
+          </button>
 
-        {/* Players card */}
-        <div className="glass-card p-5 space-y-4">
+          {/* Players card */}
+          <div className="glass-card p-5 space-y-4">
           <div className={`flex items-center gap-3 p-3 rounded-xl ${game.turn() === (playerColor === 'white' ? 'b' : 'w') ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/50'
             }`}>
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
@@ -654,6 +659,8 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               <CapturedPieces fen={game.fen()} color={playerColor === 'white' ? 'w' : 'b'} pieceSize={14} />
             </div>
           </div>
+        </div>
+        {/* end sticky top */}
         </div>
 
         {/* Timer card */}
@@ -743,8 +750,8 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                   const wq = moveQualities[i * 2] || ''
                   const bq = moveQualities[i * 2 + 1] || ''
                   return (
-                    <div key={i} className={`flex gap-2 px-2 py-0.5 rounded ${isLastPair ? 'bg-primary/10' : i % 2 === 0 ? 'bg-secondary/30' : ''}`}>
-                      <span className="text-muted-foreground w-6 text-right">{i + 1}.</span>
+                    <div key={i} className={`flex gap-2 px-3 py-1.5 rounded ${isLastPair ? 'bg-primary/10' : i % 2 === 0 ? 'bg-secondary/30' : ''}`}>
+                      <span className="text-muted-foreground w-6 text-right font-mono">{i + 1}.</span>
                       <span className={`w-20 ${isLastPair && moveHistory.length % 2 !== 0 ? 'text-primary font-bold' : 'text-foreground'}`}>
                         {moveHistory[i * 2]}{wq && <span className={`ml-0.5 ${getQualityColor(wq)}`}>{wq}</span>}
                       </span>
@@ -871,7 +878,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Evaluation</span>
-                <span className={`text-xl font-bold font-mono ${
+                <span className={`text-sm font-bold font-mono ${
                   analysis.isMate
                     ? 'text-red-400'
                     : analysis.eval > 0.5
@@ -958,26 +965,26 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         {/* Material Count */}
         <div className="glass-card p-4">
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Material</span>
-          <div className="flex justify-between mt-2">
-            <div className="text-center">
-              <div className="text-sm font-mono text-foreground">
+          <div className="flex items-center justify-between mt-2 gap-2">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground w-8">White</span>
+              <span className="text-xs font-mono text-foreground">
                 {(() => {
                   const fen = game.fen().split(' ')[0]
                   const w = { q: (fen.match(/Q/g) || []).length, r: (fen.match(/R/g) || []).length, b: (fen.match(/B/g) || []).length, n: (fen.match(/N/g) || []).length, p: (fen.match(/P/g) || []).length }
                   return `♕${w.q} ♖${w.r} ♗${w.b} ♘${w.n} ♙${w.p}`
                 })()}
-              </div>
-              <span className="text-[10px] text-muted-foreground">White</span>
+              </span>
             </div>
-            <div className="text-center">
-              <div className="text-sm font-mono text-foreground">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground w-8 text-right">Black</span>
+              <span className="text-xs font-mono text-foreground text-right">
                 {(() => {
                   const fen = game.fen().split(' ')[0]
                   const b = { q: (fen.match(/q/g) || []).length, r: (fen.match(/r/g) || []).length, b: (fen.match(/b/g) || []).length, n: (fen.match(/n/g) || []).length, p: (fen.match(/p/g) || []).length }
                   return `♛${b.q} ♜${b.r} ♝${b.b} ♞${b.n} ♟${b.p}`
                 })()}
-              </div>
-              <span className="text-[10px] text-muted-foreground">Black</span>
+              </span>
             </div>
           </div>
         </div>

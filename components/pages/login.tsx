@@ -11,10 +11,11 @@ import {
   UserPlus,
   LogIn,
   Loader2,
+  ChevronLeft,
 } from 'lucide-react'
 import { TextReveal } from '@/components/ui/animated-components'
 
-export function LoginPage() {
+export function LoginPage({ onBack }: { onBack?: () => void }) {
   const { login, register, authError, isLoading, isBackendEnabled } = useGame()
   const { playSound } = useSoundAndHaptics()
   const [username, setUsername] = useState('')
@@ -94,6 +95,18 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
+      {/* Back button */}
+      {onBack && (
+        <div className="relative z-20 px-4 pt-4">
+          <button
+            onClick={() => { playSound('click'); onBack() }}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors py-1.5 px-3 rounded-lg hover:bg-white/[0.06] active:scale-95"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back to Play AI
+          </button>
+        </div>
+      )}
       {/* Mesh gradient background */}
       <div className="ambient-bg" />
       

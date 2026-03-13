@@ -112,6 +112,7 @@ export function startLayoutManager(): () => void {
   update()
 
   // ResizeObserver on <html> catches all resize events including virtual keyboard
+  if (observer) { observer.disconnect() }
   observer = new ResizeObserver(update)
   observer.observe(document.documentElement)
 

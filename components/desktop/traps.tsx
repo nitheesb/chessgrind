@@ -80,7 +80,7 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
                 playSound('click')
                 setActiveTrap(trap)
               }}
-              className="w-full glass-card-hover p-3 text-left group hover-lift"
+              className="w-full glass-card-hover py-3 px-4 text-left group hover-lift rounded-xl border-l-2 border-transparent hover:border-primary transition-all"
             >
               <div className="flex gap-3">
                 <div className="rounded-lg overflow-hidden shadow-sm flex-shrink-0" style={{ width: 56, height: 56 }}>
@@ -108,7 +108,7 @@ export function DesktopTraps({ onNavigate }: DesktopTrapsProps) {
       {/* Right: placeholder when no trap selected */}
       <div className="flex-1 h-full flex items-center justify-center bg-black/10">
         <div className="text-center text-muted-foreground opacity-40">
-          <Target className="w-20 h-20 mx-auto mb-4" />
+          <div className="text-6xl mb-4">♟</div>
           <p style={{ fontSize: 'var(--fs-lg)' }}>Select a trap to study</p>
         </div>
       </div>

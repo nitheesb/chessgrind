@@ -52,6 +52,13 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
     return groups
   }, [filteredOpenings])
 
+  const categoryCounts = useMemo(() => ({
+    all: OPENINGS.length,
+    e4: OPENINGS.filter(o => o.category === 'e4').length,
+    d4: OPENINGS.filter(o => o.category === 'd4').length,
+    other: OPENINGS.filter(o => o.category === 'other').length,
+  }), [])
+
   if (activeOpening) {
     return (
       <DesktopOpeningViewer
@@ -76,13 +83,14 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
               playSound('click')
               setFilterCategory(cat)
             }}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
               filterCategory === cat
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]'
             }`}
           >
-            {cat === 'all' ? 'All Openings' : cat === 'e4' ? '1.e4 Openings' : cat === 'd4' ? '1.d4 Openings' : 'Other'}
+            <span>{cat === 'all' ? 'All Openings' : cat === 'e4' ? '1.e4 Openings' : cat === 'd4' ? '1.d4 Openings' : 'Other'}</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">{categoryCounts[cat]}</span>
           </button>
         ))}
       </div>

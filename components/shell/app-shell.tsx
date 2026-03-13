@@ -117,7 +117,7 @@ export function AppShell() {
 
   // Allow Play AI without login; gate other pages
   if (!isLoggedIn && currentPage !== 'play') {
-    return <LoginPage />
+    return <LoginPage onBack={() => handleNavigate('play')} />
   }
 
   return (

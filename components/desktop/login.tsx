@@ -4,9 +4,13 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
-import { Crown, User, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
+import { Crown, User, Lock, Eye, EyeOff, ArrowRight, Loader2, ChevronLeft } from 'lucide-react'
 
-export function DesktopLogin() {
+interface DesktopLoginProps {
+  onBack?: () => void
+}
+
+export function DesktopLogin({ onBack }: DesktopLoginProps) {
   const { login, register, isBackendEnabled } = useGame()
   const { playSound } = useSoundAndHaptics()
   const [isLogin, setIsLogin] = useState(true)
@@ -86,7 +90,20 @@ export function DesktopLogin() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Back button bar */}
+      {onBack && (
+        <div className="flex-none px-4 py-2 border-b border-white/[0.06] bg-background/50">
+          <button
+            onClick={() => { playSound('click'); onBack() }}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors py-1 px-2 rounded-lg hover:bg-white/[0.04]"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back to Play AI
+          </button>
+        </div>
+      )}
+      <div className="flex-1 flex overflow-hidden">
       {/* Left side - Branding */}
       <motion.div
         className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden"
@@ -336,6 +353,7 @@ export function DesktopLogin() {
           )}
         </div>
       </motion.div>
+      </div>
     </div>
   )
 }

@@ -107,23 +107,23 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
         <div className="grid grid-cols-2 gap-3">
           <div className="glass-card p-4 text-center">
             <PuzzleIcon className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={stats.solved} /></p>
-            <p className="text-xs text-muted-foreground">Solved</p>
+            <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.solved} /></p>
+            <p className="text-xs text-muted-foreground mt-1">Solved</p>
           </div>
           <div className="glass-card p-4 text-center">
             <Target className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={stats.accuracy} suffix="%" /></p>
-            <p className="text-xs text-muted-foreground">Accuracy</p>
+            <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.accuracy} suffix="%" /></p>
+            <p className="text-xs text-muted-foreground mt-1">Accuracy</p>
           </div>
           <div className="glass-card p-4 text-center">
             <TrendingUp className="w-5 h-5 text-purple-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={stats.rating} /></p>
-            <p className="text-xs text-muted-foreground">Rating</p>
+            <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.rating} /></p>
+            <p className="text-xs text-muted-foreground mt-1">Rating</p>
           </div>
           <div className="glass-card p-4 text-center">
             <Trophy className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={stats.total} /></p>
-            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.total} /></p>
+            <p className="text-xs text-muted-foreground mt-1">Total</p>
           </div>
         </div>
 
@@ -236,7 +236,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
                 playSound('click')
                 setActivePuzzle(puzzle)
               }}
-              className="glass-card-hover p-5 text-left group"
+              className="glass-card-hover p-5 text-left group transition-transform hover:scale-[1.02]"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">

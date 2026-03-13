@@ -138,7 +138,7 @@ export function DesktopShell() {
   }, [handleNavigate])
 
   if (showSplash) return <SplashScreen onComplete={handleSplashComplete} />
-  if (!isLoggedIn && currentPage !== 'play') return <DesktopLogin />
+  if (!isLoggedIn && currentPage !== 'play') return <DesktopLogin onBack={() => handleNavigate('play')} />
 
   const isBoardPage = BOARD_PAGES.has(currentPage)
 
@@ -170,10 +170,10 @@ export function DesktopShell() {
       />
 
       <header
-        className="lm-topbar flex-none flex items-center px-4 gap-1 z-40 border-b border-white/[0.06]"
+        className="lm-topbar flex-none flex items-center px-4 gap-3 z-40 border-b border-white/[0.06]"
         style={{ background: 'rgba(10,9,8,0.92)', backdropFilter: 'saturate(160%) blur(20px)', WebkitBackdropFilter: 'saturate(160%) blur(20px)' }}
       >
-        <div className="flex items-center gap-2 mr-3 flex-none">
+        <div className="flex items-center gap-2 flex-none">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center lm-gpu">
             <Crown className="w-3.5 h-3.5 text-white" />
           </div>
@@ -189,16 +189,9 @@ export function DesktopShell() {
                 key={tab.id}
                 onClick={() => handleNavigate(tab.id)}
                 onMouseEnter={() => handleNavHover(tab.id)}
-                className={'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors duration-150 overflow-hidden ' + (isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]')}
+                className={'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors duration-150 ' + (isActive ? 'text-primary border-b-2 border-primary -mb-px' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]')}
                 style={{ fontSize: 'var(--fs-sm)' }}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="topnav-active-pill"
-                    className="absolute inset-0 rounded-lg bg-primary/10 lm-gpu"
-                    transition={{ duration: 0.2 }}
-                  />
-                )}
                 <Icon className="w-3.5 h-3.5 relative z-10 flex-none" />
                 <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
               </button>
@@ -223,8 +216,11 @@ export function DesktopShell() {
                 <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary font-bold border border-primary/20" style={{ fontSize: 'var(--fs-xs)' }}>
                   Lv.{profile.level || 1}
                 </span>
-                <div className="w-16 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                  <div className="h-full rounded-full xp-bar-fill lm-gpu" style={{ width: Math.min(progress, 100) + '%', transition: 'width 0.7s ease-out' }} />
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className="text-[10px] text-muted-foreground/60">{Math.round(progress)}%</span>
+                  <div className="w-16 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="h-full rounded-full xp-bar-fill lm-gpu" style={{ width: Math.min(progress, 100) + '%', transition: 'width 0.7s ease-out' }} />
+                  </div>
                 </div>
               </div>
               <div className="w-px h-4 bg-white/10" />
