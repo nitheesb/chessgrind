@@ -51,41 +51,40 @@ const DailyCalendarPage = lazy(() => import('@/components/chess/daily-calendar')
 type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'coords' | 'endgame' | 'puzzle-rush' | 'board-vision' | 'checkmate-patterns' | 'piece-quiz' | 'notation-trainer' | 'pawn-structures' | 'blunder-spotter' | 'move-calculator' | 'pgn-viewer' | 'daily-calendar'
 
 
-function DesktopPageSkeleton() {
+// Board-mode pages use the board-left layout (lm-board-panel + lm-right-panel)
+const BOARD_PAGES = new Set<Page>(['play', 'puzzles', 'openings', 'traps'])
+
+function BoardPageSkeleton() {
   return (
-    <div className="p-8 max-w-7xl mx-auto animate-pulse">
-      <div className="h-48 rounded-2xl bg-secondary mb-8" />
-      <div className="grid grid-cols-4 gap-5 mb-8">
-        {[1,2,3,4].map(i => <div key={i} className="h-28 rounded-xl bg-secondary" />)}
-      </div>
-      <div className="grid grid-cols-2 gap-5">
-        <div className="h-64 rounded-xl bg-secondary" />
-        <div className="h-64 rounded-xl bg-secondary" />
+    <div className="flex h-full animate-pulse">
+      <div className="lm-board-panel bg-secondary/20" />
+      <div className="lm-right-panel p-6 space-y-4">
+        <div className="h-8 w-48 rounded-xl bg-secondary" />
+        <div className="h-32 rounded-xl bg-secondary" />
+        <div className="h-24 rounded-xl bg-secondary" />
       </div>
     </div>
   )
 }
 
-interface NavItem {
-  id: Page
-  label: string
-  icon: React.ReactNode
+function ScrollPageSkeleton() {
+  return (
+    <div className="p-8 max-w-5xl mx-auto animate-pulse space-y-6">
+      <div className="h-12 w-64 rounded-xl bg-secondary" />
+      <div className="grid grid-cols-3 gap-5">
+        {[1,2,3,4,5,6].map(i => <div key={i} className="h-32 rounded-xl bg-secondary" />)}
+      </div>
+    </div>
+  )
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
-  { id: 'puzzles', label: 'Puzzles', icon: <Puzzle className="w-5 h-5" /> },
-  { id: 'openings', label: 'Openings', icon: <BookOpen className="w-5 h-5" /> },
-  { id: 'play', label: 'Play AI', icon: <Swords className="w-5 h-5" /> },
-  { id: 'traps', label: 'Traps', icon: <Target className="w-5 h-5" /> },
+const PRIMARY_TABS = [
+  { id: 'play' as Page,     label: 'Play AI',   icon: Swords },
+  { id: 'puzzles' as Page,  label: 'Puzzles',   icon: Puzzle },
+  { id: 'openings' as Page, label: 'Openings',  icon: BookOpen },
+  { id: 'traps' as Page,    label: 'Traps',     icon: Target },
+  { id: 'dashboard' as Page,label: 'Dashboard', icon: Home },
 ]
-
-const SECONDARY_NAV: NavItem[] = [
-  { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" /> },
-  { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
-]
-
-const NAV_ORDER: Page[] = ['dashboard', 'puzzles', 'openings', 'play', 'traps', 'profile', 'settings']
 
 export function DesktopShell() {
   const {
@@ -100,85 +99,64 @@ export function DesktopShell() {
   const [currentPage, setCurrentPage] = useState<Page>('play')
   const [showSplash, setShowSplash] = useState(true)
   const [, startTransition] = useTransition()
-  const { currentLevel, progress } = getLevelInfo(profile.xp)
-  const preloadedRef = useRef<Set<string>>(new Set(['dashboard']))
+  const { progress } = getLevelInfo(profile.xp)
+  const preloadedRef = useRef<Set<string>>(new Set(['play']))
 
-  useEffect(() => {
-    checkAndUpdateStreak()
-  }, [checkAndUpdateStreak])
+  useEffect(() => { checkAndUpdateStreak() }, [checkAndUpdateStreak])
 
-  const handleSplashComplete = useCallback(() => {
-    setShowSplash(false)
-  }, [])
+  const handleSplashComplete = useCallback(() => setShowSplash(false), [])
 
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
-    startTransition(() => {
-      setCurrentPage(page as Page)
-    })
+    startTransition(() => setCurrentPage(page as Page))
   }, [playSound])
 
-  // Preload page modules on nav hover for instant switching
   const handleNavHover = useCallback((pageId: string) => {
     if (preloadedRef.current.has(pageId)) return
     preloadedRef.current.add(pageId)
     const importMap: Record<string, () => Promise<unknown>> = {
       openings: () => import('@/components/desktop/openings'),
-      traps: () => import('@/components/desktop/traps'),
-      profile: () => import('@/components/desktop/profile'),
+      traps:    () => import('@/components/desktop/traps'),
+      profile:  () => import('@/components/desktop/profile'),
       settings: () => import('@/components/desktop/settings'),
-      puzzles: () => import('@/components/desktop/puzzles'),
-      play: () => import('@/components/desktop/play-ai'),
+      puzzles:  () => import('@/components/desktop/puzzles'),
+      play:     () => import('@/components/desktop/play-ai'),
     }
     importMap[pageId]?.()
   }, [])
 
-  const handleLogout = useCallback(() => {
-    playSound('click')
-    logout()
-  }, [playSound, logout])
+  const handleLogout = useCallback(() => { playSound('click'); logout() }, [playSound, logout])
 
-  // Keyboard shortcuts
   useEffect(() => {
-    const handleKeydown = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey) {
-        switch (e.key) {
-          case '1': e.preventDefault(); handleNavigate('dashboard'); break
-          case '2': e.preventDefault(); handleNavigate('puzzles'); break
-          case '3': e.preventDefault(); handleNavigate('openings'); break
-          case '4': e.preventDefault(); handleNavigate('play'); break
-          case '5': e.preventDefault(); handleNavigate('traps'); break
-        }
-      }
+    const handler = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return
+      const map: Record<string, Page> = { '1': 'play', '2': 'puzzles', '3': 'openings', '4': 'traps', '5': 'dashboard' }
+      if (map[e.key]) { e.preventDefault(); handleNavigate(map[e.key]) }
     }
-    window.addEventListener('keydown', handleKeydown)
-    return () => window.removeEventListener('keydown', handleKeydown)
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [handleNavigate])
 
-  if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} />
-  }
+  if (showSplash) return <SplashScreen onComplete={handleSplashComplete} />
+  if (!isLoggedIn && currentPage !== 'play') return <DesktopLogin />
 
-  // Allow Play AI without login; gate other pages
-  if (!isLoggedIn && currentPage !== 'play') {
-    return <DesktopLogin />
-  }
+  const isBoardPage = BOARD_PAGES.has(currentPage)
 
   return (
-    <div className="min-h-screen flex bg-background relative">
-      {/* Lightweight ambient background — static radial gradients, no blur/animation */}
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
       <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
-        <div className="absolute w-[600px] h-[600px] rounded-full opacity-100" style={{
+        <div className="absolute rounded-full lm-gpu" style={{
+          width: 600, height: 600,
           background: 'radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%)',
           top: '-10%', right: '-5%',
         }} />
-        <div className="absolute w-[500px] h-[500px] rounded-full opacity-100" style={{
+        <div className="absolute rounded-full lm-gpu" style={{
+          width: 500, height: 500,
           background: 'radial-gradient(circle, rgba(99,102,241,0.025) 0%, transparent 70%)',
           bottom: '-5%', left: '-3%',
         }} />
       </div>
 
-      {/* Global overlays */}
       <XPPopup />
       <LevelUpOverlay />
       <ComboOverlay />
@@ -191,190 +169,126 @@ export function DesktopShell() {
         onDismiss={dismissAchievement}
       />
 
-      {/* Sidebar — Apple Sidebar */}
-      <aside
-        className="fixed left-0 top-0 bottom-0 z-40 flex flex-col w-[220px]"
-        style={{
-          background: 'rgba(255, 255, 255, 0.04)',
-          backdropFilter: 'saturate(150%) blur(20px)',
-          WebkitBackdropFilter: 'saturate(150%) blur(20px)',
-          borderRight: '0.5px solid rgba(255, 255, 255, 0.10)',
-          boxShadow: 'inset -0.5px 0 0 0 rgba(255,255,255,0.05), 4px 0 24px rgba(0,0,0,0.1)',
-        }}
+      <header
+        className="lm-topbar flex-none flex items-center px-4 gap-1 z-40 border-b border-white/[0.06]"
+        style={{ background: 'rgba(10,9,8,0.92)', backdropFilter: 'saturate(160%) blur(20px)', WebkitBackdropFilter: 'saturate(160%) blur(20px)' }}
       >
-        {/* Logo */}
-        <div className="h-14 flex items-center px-5 border-b border-white/[0.06]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 flex items-center justify-center relative overflow-hidden">
-              <Crown className="w-4.5 h-4.5 text-white relative z-10" />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
-            </div>
-            <span className="font-display font-bold text-[15px] tracking-tight shimmer-text">ChessGrind</span>
+        <div className="flex items-center gap-2 mr-3 flex-none">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center lm-gpu">
+            <Crown className="w-3.5 h-3.5 text-white" />
           </div>
+          <span className="font-bold shimmer-text" style={{ fontSize: 'var(--fs-sm)' }}>ChessGrind</span>
         </div>
 
-        {/* User info */}
-        <div className="px-4 py-3 border-b border-white/[0.06]">
-          {isLoggedIn ? (
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-primary/12 flex items-center justify-center border border-primary/15">
-                <span className="text-xs font-semibold text-primary">{profile?.level || 1}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{profile?.username || 'Player'}</p>
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
-                  <span className="flex items-center gap-0.5">
-                    <Flame className="w-3 h-3 text-orange-400" />
-                    {profile?.streak || 0}
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <Zap className="w-3 h-3 text-amber-400" />
-                    {profile?.xp || 0}
-                  </span>
-                </div>
-                {/* XP bar */}
-                <div className="mt-1.5 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
-                  <div
-                    className="h-full rounded-full xp-bar-fill relative transition-all duration-700 ease-out"
-                    style={{ width: `${Math.min(progress, 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
-                <User className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">Guest</p>
-                <p className="text-[11px] text-muted-foreground">Sign in to save progress</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Main Navigation */}
-        <nav className="flex-1 py-2 px-2.5 space-y-0.5 overflow-hidden">
-          {/* Command palette trigger */}
-          <div className="mb-2">
-            <CommandPaletteTrigger />
-          </div>
-          {NAV_ITEMS.map((item) => {
-            const isActive = currentPage === item.id
+        <nav className="flex items-center gap-0.5 flex-none">
+          {PRIMARY_TABS.map(tab => {
+            const Icon = tab.icon
+            const isActive = currentPage === tab.id
             return (
               <button
-                key={item.id}
-                onClick={() => handleNavigate(item.id)}
-                onMouseEnter={() => handleNavHover(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-[9px] rounded-xl text-left transition-colors duration-150 relative overflow-hidden group ${isActive
-                  ? 'bg-primary/10 text-primary font-semibold shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/20'
-                  : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
-                  }`}
+                key={tab.id}
+                onClick={() => handleNavigate(tab.id)}
+                onMouseEnter={() => handleNavHover(tab.id)}
+                className={'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors duration-150 overflow-hidden ' + (isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]')}
+                style={{ fontSize: 'var(--fs-sm)' }}
               >
-                {/* Subtle gradient hover block */}
-                {!isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/[0.03] to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
-                )}
                 {isActive && (
                   <motion.div
-                    layoutId="desktop-nav-indicator"
-                    className="absolute left-0 top-[6px] bottom-[6px] w-[3px] bg-primary rounded-r-full shadow-[0_0_8px_rgba(245,158,11,0.8)]"
-                    transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                    layoutId="topnav-active-pill"
+                    className="absolute inset-0 rounded-lg bg-primary/10 lm-gpu"
+                    transition={{ duration: 0.2 }}
                   />
                 )}
-                <span className={`flex-shrink-0 z-10 ${isActive ? 'text-primary drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]' : ''}`}>
-                  {item.icon}
-                </span>
-                <span className="text-[13px] tracking-wide z-10">{item.label}</span>
+                <Icon className="w-3.5 h-3.5 relative z-10 flex-none" />
+                <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
               </button>
             )
           })}
         </nav>
 
-        {/* Secondary Navigation */}
-        <div className="py-2 px-2.5 border-t border-white/[0.06] space-y-0.5">
-          {SECONDARY_NAV.map((item) => {
-            const isActive = currentPage === item.id
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavigate(item.id)}
-                onMouseEnter={() => handleNavHover(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-[9px] rounded-xl text-left transition-colors duration-150 relative overflow-hidden group ${isActive
-                  ? 'bg-primary/10 text-primary font-semibold shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/20'
-                  : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
-                  }`}
-              >
-                {/* Subtle gradient hover block */}
-                {!isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/[0.03] to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
-                )}
-                <span className={`flex-shrink-0 z-10 ${isActive ? 'text-primary drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]' : ''}`}>
-                  {item.icon}
-                </span>
-                <span className="text-[13px] tracking-wide z-10">{item.label}</span>
-              </button>
-            )
-          })}
-
-          {/* Logout / Sign In */}
+        <div className="ml-auto flex items-center gap-2 flex-none">
           {isLoggedIn ? (
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-150"
-            >
-              <LogOut className="w-5 h-5" />
-              <span className="text-[13px] font-medium">Logout</span>
-            </button>
+            <>
+              <div className="flex items-center gap-3 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                <span className="flex items-center gap-1" style={{ fontSize: 'var(--fs-xs)' }}>
+                  <Flame className="w-3.5 h-3.5 text-orange-400 flex-none" />
+                  <span className="text-muted-foreground font-mono">{profile.streak || 0}</span>
+                </span>
+                <span className="flex items-center gap-1" style={{ fontSize: 'var(--fs-xs)' }}>
+                  <Zap className="w-3.5 h-3.5 text-amber-400 flex-none" />
+                  <span className="text-muted-foreground font-mono">{profile.xp || 0}</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary font-bold border border-primary/20" style={{ fontSize: 'var(--fs-xs)' }}>
+                  Lv.{profile.level || 1}
+                </span>
+                <div className="w-16 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div className="h-full rounded-full xp-bar-fill lm-gpu" style={{ width: Math.min(progress, 100) + '%', transition: 'width 0.7s ease-out' }} />
+                </div>
+              </div>
+              <div className="w-px h-4 bg-white/10" />
+              <button onClick={() => handleNavigate('profile')} onMouseEnter={() => handleNavHover('profile')} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors" title="Profile">
+                <User className="w-4 h-4" />
+              </button>
+              <button onClick={() => handleNavigate('settings')} onMouseEnter={() => handleNavHover('settings')} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors" title="Settings">
+                <Settings className="w-4 h-4" />
+              </button>
+              <button onClick={handleLogout} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Logout">
+                <LogOut className="w-4 h-4" />
+              </button>
+            </>
           ) : (
-            <button
-              onClick={() => handleNavigate('dashboard')}
-              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-primary hover:bg-primary/10 transition-all duration-150"
-            >
-              <User className="w-5 h-5" />
-              <span className="text-[13px] font-medium">Sign In</span>
-            </button>
+            <>
+              <button onClick={() => handleNavigate('dashboard')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors" style={{ fontSize: 'var(--fs-sm)' }}>
+                <User className="w-3.5 h-3.5" /> Sign In
+              </button>
+              <button onClick={() => handleNavigate('settings')} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors">
+                <Settings className="w-4 h-4" />
+              </button>
+            </>
           )}
         </div>
-      </aside>
+      </header>
 
-      {/* Main Content */}
-      <main
-        className="flex-1 relative z-10"
-        style={{ marginLeft: 220 }}
-      >
+      <main className="lm-content flex-none relative z-10">
         <AnimatePresence mode="popLayout">
           <motion.div
             key={currentPage}
+            className="h-full"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.12, ease: 'easeOut' }}
-            className="min-h-screen"
+            transition={{ duration: 0.1, ease: 'easeOut' }}
           >
-            {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}
-            {currentPage !== 'dashboard' && (
-              <Suspense fallback={<DesktopPageSkeleton />}>
+            {isBoardPage && (
+              <Suspense fallback={<BoardPageSkeleton />}>
+                {currentPage === 'play'     && <DesktopPlayAI   onNavigate={handleNavigate} />}
+                {currentPage === 'puzzles'  && <DesktopPuzzles  onNavigate={handleNavigate} />}
                 {currentPage === 'openings' && <DesktopOpenings onNavigate={handleNavigate} />}
-                {currentPage === 'traps' && <DesktopTraps onNavigate={handleNavigate} />}
-                {currentPage === 'profile' && <DesktopProfile onNavigate={handleNavigate} />}
-                {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
-                {currentPage === 'puzzles' && <DesktopPuzzles onNavigate={handleNavigate} />}
-                {currentPage === 'play' && <DesktopPlayAI onNavigate={handleNavigate} />}
-                {currentPage === 'coords' && <div className="p-8 max-w-4xl mx-auto"><CoordinateTrainerPage onClose={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'endgame' && <div className="p-8 max-w-4xl mx-auto"><EndgamePracticePage onBack={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'puzzle-rush' && <div className="p-8 max-w-4xl mx-auto"><PuzzleRushPage onClose={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'board-vision' && <div className="p-8 max-w-4xl mx-auto"><BoardVisionPage onClose={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'checkmate-patterns' && <div className="p-8 max-w-5xl mx-auto"><CheckmatePatternsPage onClose={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'piece-quiz' && <div className="p-8 max-w-4xl mx-auto"><PieceValueQuizPage onClose={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'notation-trainer' && <div className="p-8 max-w-4xl mx-auto"><NotationTrainerPage onClose={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'pawn-structures' && <div className="p-8 max-w-5xl mx-auto"><PawnStructuresPage onClose={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'blunder-spotter' && <div className="p-8 max-w-4xl mx-auto"><BlunderSpotterPage onClose={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'move-calculator' && <div className="p-8 max-w-4xl mx-auto"><MoveCalculatorPage onClose={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'pgn-viewer' && <div className="p-8 max-w-5xl mx-auto"><PGNViewerPage onClose={() => handleNavigate('dashboard')} /></div>}
-                {currentPage === 'daily-calendar' && <div className="p-8 max-w-4xl mx-auto"><DailyCalendarPage onClose={() => handleNavigate('dashboard')} /></div>}
+                {currentPage === 'traps'    && <DesktopTraps    onNavigate={handleNavigate} />}
               </Suspense>
+            )}
+            {!isBoardPage && (
+              <div className="h-full overflow-y-auto overflow-x-hidden">
+                {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}
+                <Suspense fallback={<ScrollPageSkeleton />}>
+                  {currentPage === 'profile'  && <DesktopProfile  onNavigate={handleNavigate} />}
+                  {currentPage === 'settings' && <DesktopSettings onNavigate={handleNavigate} />}
+                  {currentPage === 'coords'   && <div className="p-8 max-w-4xl mx-auto"><CoordinateTrainerPage onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'endgame'  && <div className="p-8 max-w-4xl mx-auto"><EndgamePracticePage  onBack={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'puzzle-rush'        && <div className="p-8 max-w-4xl mx-auto"><PuzzleRushPage         onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'board-vision'       && <div className="p-8 max-w-4xl mx-auto"><BoardVisionPage        onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'checkmate-patterns' && <div className="p-8 max-w-5xl mx-auto"><CheckmatePatternsPage  onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'piece-quiz'         && <div className="p-8 max-w-4xl mx-auto"><PieceValueQuizPage     onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'notation-trainer'   && <div className="p-8 max-w-4xl mx-auto"><NotationTrainerPage    onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'pawn-structures'    && <div className="p-8 max-w-5xl mx-auto"><PawnStructuresPage     onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'blunder-spotter'    && <div className="p-8 max-w-4xl mx-auto"><BlunderSpotterPage     onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'move-calculator'    && <div className="p-8 max-w-4xl mx-auto"><MoveCalculatorPage     onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'pgn-viewer'         && <div className="p-8 max-w-5xl mx-auto"><PGNViewerPage          onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'daily-calendar'     && <div className="p-8 max-w-4xl mx-auto"><DailyCalendarPage      onClose={() => handleNavigate('dashboard')} /></div>}
+                </Suspense>
+              </div>
             )}
           </motion.div>
         </AnimatePresence>
