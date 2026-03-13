@@ -9,6 +9,7 @@ import { AI_LEVELS } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { getBestMove, getEngineConfig, analyzePosition } from '@/lib/chess-engine'
+import { getBestMoveAsync, analyzePositionAsync } from '@/lib/chess-worker-client'
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
 import { staggerContainer, staggerItem } from '@/components/ui/animated-components'
@@ -312,8 +313,7 @@ function GameSession({
       setAnalysis(null)
       return
     }
-    const result = analyzePosition(game, 4)
-    setAnalysis(result)
+    analyzePositionAsync(game.fen(), 4).then(result => setAnalysis(result))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moveHistory.length, gameOver])
 
@@ -406,49 +406,47 @@ function GameSession({
     })
   }, [addXP, incrementGamesPlayed, aiLevel, addRecentGame, aiConfig.name, moveHistory.length])
 
-  // AI move using shared chess engine
+  // AI move using shared chess engine (off main thread via Web Worker)
   const makeAIMove = useCallback((currentGame: Chess) => {
     if (currentGame.isGameOver()) return
 
     setIsThinking(true)
+    const delay = 300 + Math.random() * 400
+    const config = getEngineConfig(aiConfig.depth)
+    const fen = currentGame.fen()
 
     setTimeout(() => {
-      const config = getEngineConfig(aiConfig.depth)
-      const bestMoveSan = getBestMove(currentGame, config)
+      getBestMoveAsync(fen, config).then(bestMoveSan => {
+        if (bestMoveSan) {
+          try {
+            const gameCopy = new Chess(fen)
+            const move = gameCopy.move(bestMoveSan)
+            if (move) {
+              setGame(gameCopy)
+              setLastMove({ from: move.from, to: move.to })
+              setMoveHistory(prev => [...prev, move.san])
 
-      if (bestMoveSan) {
-        try {
-          const gameCopy = new Chess(currentGame.fen())
-          const move = gameCopy.move(bestMoveSan)
-          if (move) {
-            setGame(gameCopy)
-            setLastMove({ from: move.from, to: move.to })
-            setMoveHistory(prev => [...prev, move.san])
+              if (timeControl.increment > 0) {
+                if (currentGame.turn() === 'w') {
+                  setWhiteTime(prev => prev + timeControl.increment)
+                } else {
+                  setBlackTime(prev => prev + timeControl.increment)
+                }
+              }
 
-            // Add increment
-            if (timeControl.increment > 0) {
-              if (currentGame.turn() === 'w') {
-                setWhiteTime(prev => prev + timeControl.increment)
-              } else {
-                setBlackTime(prev => prev + timeControl.increment)
+              if (gameCopy.isCheckmate()) {
+                handleGameEnd('Checkmate', gameCopy.turn() === playerColor ? false : true)
+              } else if (gameCopy.isDraw()) {
+                handleGameEnd('Draw', false)
+              } else if (gameCopy.isStalemate()) {
+                handleGameEnd('Stalemate', false)
               }
             }
-
-            // Check game end
-            if (gameCopy.isCheckmate()) {
-              handleGameEnd('Checkmate', gameCopy.turn() === playerColor ? false : true)
-            } else if (gameCopy.isDraw()) {
-              handleGameEnd('Draw', false)
-            } else if (gameCopy.isStalemate()) {
-              handleGameEnd('Stalemate', false)
-            }
-          }
-        } catch {
-          // fallback
+          } catch { }
         }
-      }
-      setIsThinking(false)
-    }, 300 + Math.random() * 400)
+        setIsThinking(false)
+      })
+    }, delay)
   }, [aiConfig.depth, playerColor, timeControl.increment, handleGameEnd])
 
   // Trigger AI move when it's AI's turn

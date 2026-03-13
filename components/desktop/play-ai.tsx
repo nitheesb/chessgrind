@@ -9,6 +9,7 @@ import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { getBestMove, getEngineConfig, analyzePosition } from '@/lib/chess-engine'
+import { getBestMoveAsync, analyzePositionAsync } from '@/lib/chess-worker-client'
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
 import {
@@ -119,37 +120,38 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
       return
     }
     const tid = setTimeout(() => {
-      const result = analyzePosition(game, 4)
-      setAnalysis(result)
+      analyzePositionAsync(game.fen(), 4).then(result => {
+        setAnalysis(result)
 
-      const evalFromPlayer = playerColor === 'white' ? result.eval : -result.eval
-      let comment = ''
-      if (result.isMate) {
-        comment = result.mateIn !== null && result.mateIn > 0
-          ? (game.turn() === (playerColor === 'white' ? 'w' : 'b') ? `Mate in ${result.mateIn} for opponent` : `Mate in ${result.mateIn}!`)
-          : 'Checkmate'
-      } else if (evalFromPlayer > 3) {
-        comment = 'Winning position — major advantage'
-      } else if (evalFromPlayer > 1.5) {
-        comment = 'Clear advantage'
-      } else if (evalFromPlayer > 0.5) {
-        comment = 'Slight edge'
-      } else if (evalFromPlayer > -0.5) {
-        comment = 'Equal position'
-      } else if (evalFromPlayer > -1.5) {
-        comment = 'Slight disadvantage'
-      } else if (evalFromPlayer > -3) {
-        comment = 'Opponent has clear advantage'
-      } else {
-        comment = 'Losing position — find counterplay'
-      }
+        const evalFromPlayer = playerColor === 'white' ? result.eval : -result.eval
+        let comment = ''
+        if (result.isMate) {
+          comment = result.mateIn !== null && result.mateIn > 0
+            ? (game.turn() === (playerColor === 'white' ? 'w' : 'b') ? `Mate in ${result.mateIn} for opponent` : `Mate in ${result.mateIn}!`)
+            : 'Checkmate'
+        } else if (evalFromPlayer > 3) {
+          comment = 'Winning position — major advantage'
+        } else if (evalFromPlayer > 1.5) {
+          comment = 'Clear advantage'
+        } else if (evalFromPlayer > 0.5) {
+          comment = 'Slight edge'
+        } else if (evalFromPlayer > -0.5) {
+          comment = 'Equal position'
+        } else if (evalFromPlayer > -1.5) {
+          comment = 'Slight disadvantage'
+        } else if (evalFromPlayer > -3) {
+          comment = 'Opponent has clear advantage'
+        } else {
+          comment = 'Losing position — find counterplay'
+        }
 
-      setAnalysisLog(prev => [...prev, {
-        moveNum: moveHistory.length,
-        eval: evalFromPlayer,
-        comment,
-        move: moveHistory[moveHistory.length - 1],
-      }])
+        setAnalysisLog(prev => [...prev, {
+          moveNum: moveHistory.length,
+          eval: evalFromPlayer,
+          comment,
+          move: moveHistory[moveHistory.length - 1],
+        }])
+      })
     }, 50)
     return () => clearTimeout(tid)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -209,30 +211,33 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
     setThinking(true)
 
+    const delay = 300 + Math.random() * 400
+    const config = getEngineConfig(DIFFICULTY_CONFIG[difficulty].depth)
+    const fen = currentGame.fen()
+
     setTimeout(() => {
-      const config = getEngineConfig(DIFFICULTY_CONFIG[difficulty].depth)
-      const bestMove = getBestMove(currentGame, config)
+      getBestMoveAsync(fen, config).then(bestMove => {
+        if (bestMove) {
+          const newGame = new Chess(fen)
+          const move = newGame.move(bestMove)
 
-      if (bestMove) {
-        const newGame = new Chess(currentGame.fen())
-        const move = newGame.move(bestMove)
+          if (move) {
+            setGame(newGame)
+            setLastMove({ from: move.from, to: move.to })
+            setMoveHistory(prev => [...prev, move.san])
+            playSound(move.captured ? 'capture' : 'move')
+            if (timeControl.increment > 0) {
+              setBlackTime(prev => prev + timeControl.increment)
+            }
 
-        if (move) {
-          setGame(newGame)
-          setLastMove({ from: move.from, to: move.to })
-          setMoveHistory(prev => [...prev, move.san])
-          playSound(move.captured ? 'capture' : 'move')
-          if (timeControl.increment > 0) {
-            setBlackTime(prev => prev + timeControl.increment)
-          }
-
-          if (newGame.isGameOver()) {
-            handleGameEnd(newGame.isCheckmate() ? 'lost' : 'draw')
+            if (newGame.isGameOver()) {
+              handleGameEnd(newGame.isCheckmate() ? 'lost' : 'draw')
+            }
           }
         }
-      }
-      setThinking(false)
-    }, 300 + Math.random() * 400)
+        setThinking(false)
+      })
+    }, delay)
   }, [difficulty, playSound, timeControl.increment, handleGameEnd])
 
   const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
