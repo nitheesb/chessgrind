@@ -70,6 +70,40 @@
     --gold: 43 96% 56%;
     --glass: 225 16% 10%;
     --glass-border: 225 12% 18%;
+
+    /* ── Layout Manager defaults (overridden at runtime by layout-manager.ts) ── */
+    --lm-vw: 1440px;
+    --lm-vh: 900px;
+    --lm-topbar-h: 56px;
+    --lm-content-h: 844px;
+    --lm-board-panel-w: 660px;
+    --lm-board-size: 580px;
+    --lm-right-panel-w: 780px;
+    --lm-sidebar-w: 320px;
+    --lm-gap: 0px;
+    --lm-scale: 1;
+
+    /* ── Fluid Typography — clamp(min, preferred, max) ── */
+    /* preferred = linear interpolation from 768px→1440px viewport */
+    --fs-xs:   clamp(0.65rem,  0.55rem + 0.18vw, 0.75rem);
+    --fs-sm:   clamp(0.75rem,  0.65rem + 0.22vw, 0.875rem);
+    --fs-base: clamp(0.875rem, 0.75rem + 0.28vw, 1rem);
+    --fs-md:   clamp(1rem,     0.85rem + 0.35vw, 1.125rem);
+    --fs-lg:   clamp(1.125rem, 0.95rem + 0.42vw, 1.25rem);
+    --fs-xl:   clamp(1.25rem,  1.05rem + 0.55vw, 1.5rem);
+    --fs-2xl:  clamp(1.5rem,   1.2rem  + 0.75vw, 1.875rem);
+    --fs-3xl:  clamp(1.875rem, 1.5rem  + 1vw,    2.25rem);
+    --fs-hero: clamp(2.25rem,  1.75rem + 1.4vw,  3rem);
+
+    /* ── Fluid Spacing ── */
+    --sp-1:  clamp(3px,  0.1rem + 0.2vw, 5px);
+    --sp-2:  clamp(6px,  0.2rem + 0.35vw, 9px);
+    --sp-3:  clamp(10px, 0.35rem + 0.5vw, 14px);
+    --sp-4:  clamp(14px, 0.5rem  + 0.65vw, 18px);
+    --sp-5:  clamp(18px, 0.7rem  + 0.85vw, 24px);
+    --sp-6:  clamp(22px, 0.9rem  + 1vw,    30px);
+    --sp-8:  clamp(28px, 1.2rem  + 1.3vw,  40px);
+    --sp-10: clamp(36px, 1.6rem  + 1.6vw,  52px);
   }
 }
 
@@ -1400,4 +1434,98 @@ input[type="email"]:focus {
   .shimmer-text {
     background-size: 100% 100% !important;
   }
+}
+/* ════════════════════════════════════════════════
+   LAYOUT MANAGER — CSS CONSUMPTION UTILITIES
+   Panels consume CSS custom properties set at
+   runtime by lib/layout-manager.ts
+   ════════════════════════════════════════════════ */
+
+/* Main shell chrome */
+.lm-topbar {
+  height: var(--lm-topbar-h);
+  will-change: transform;
+}
+
+.lm-content {
+  height: var(--lm-content-h);
+  overflow: hidden;
+}
+
+/* Board panel (left side in desktop board layouts) */
+.lm-board-panel {
+  flex: none;
+  width: var(--lm-board-panel-w);
+  height: var(--lm-content-h);
+  overflow: hidden;
+  /* GPU layer — won't cause layout reflow on resize */
+  will-change: contents;
+  contain: layout style;
+}
+
+/* Right controls panel */
+.lm-right-panel {
+  flex: 1 1 0;
+  min-width: 0;
+  height: var(--lm-content-h);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* Sidebar panel (list views: traps list, openings filter) */
+.lm-sidebar {
+  flex: none;
+  width: var(--lm-sidebar-w);
+  height: var(--lm-content-h);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* Chessboard wrapper — size driven by --lm-board-size */
+.lm-board-wrap {
+  width: var(--lm-board-size);
+  height: var(--lm-board-size);
+  flex: none;
+  /* Crisp pixel rendering for the board */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* ── Fluid text helpers ── */
+.text-fluid-xs   { font-size: var(--fs-xs); }
+.text-fluid-sm   { font-size: var(--fs-sm); }
+.text-fluid-base { font-size: var(--fs-base); }
+.text-fluid-md   { font-size: var(--fs-md); }
+.text-fluid-lg   { font-size: var(--fs-lg); }
+.text-fluid-xl   { font-size: var(--fs-xl); }
+.text-fluid-2xl  { font-size: var(--fs-2xl); }
+.text-fluid-3xl  { font-size: var(--fs-3xl); }
+.text-fluid-hero { font-size: var(--fs-hero); }
+
+/* ── GPU-accelerated slide/fade used by nav + panel transitions ──
+   Uses transform + opacity — no width/height/margin reflow        */
+@keyframes lm-slide-in-right {
+  from { transform: translateX(12px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes lm-slide-in-left {
+  from { transform: translateX(-12px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+@keyframes lm-fade-up {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+.lm-anim-slide-right { animation: lm-slide-in-right 0.18s cubic-bezier(0.25,0.1,0.25,1) both; }
+.lm-anim-slide-left  { animation: lm-slide-in-left  0.18s cubic-bezier(0.25,0.1,0.25,1) both; }
+.lm-anim-fade-up     { animation: lm-fade-up        0.18s cubic-bezier(0.25,0.1,0.25,1) both; }
+
+/* ── GPU layer promotion for board + eval bar ── */
+.lm-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }

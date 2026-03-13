@@ -62,92 +62,83 @@ export function DesktopOpenings({ onNavigate }: DesktopOpeningsProps) {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Opening Library</h1>
-        <p className="text-muted-foreground">Master the opening phase with {OPENINGS.length} curated lines</p>
+    <div className="flex h-full overflow-hidden">
+      {/* Left sidebar: category filter */}
+      <div className="lm-sidebar border-r border-white/[0.06] p-5 space-y-2 bg-black/10">
+        <h2 className="font-semibold mb-4" style={{ fontSize: 'var(--fs-md)' }}>Opening Library</h2>
+        <p className="text-muted-foreground mb-6" style={{ fontSize: 'var(--fs-xs)' }}>
+          {OPENINGS.length} curated lines
+        </p>
+        {(['all', 'e4', 'd4', 'other'] as const).map(cat => (
+          <button
+            key={cat}
+            onClick={() => {
+              playSound('click')
+              setFilterCategory(cat)
+            }}
+            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+              filterCategory === cat
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]'
+            }`}
+          >
+            {cat === 'all' ? 'All Openings' : cat === 'e4' ? '1.e4 Openings' : cat === 'd4' ? '1.d4 Openings' : 'Other'}
+          </button>
+        ))}
       </div>
 
-      {/* Filter */}
-      <div className="flex mb-8">
-        <div className="segmented-control flex">
-          {(['all', 'e4', 'd4', 'other'] as const).map((cat) => (
-            <button
-              key={cat}
-              onClick={() => {
-                playSound('click')
-                setFilterCategory(cat)
-              }}
-              className="relative"
-            >
-              {filterCategory === cat && (
-                <motion.div
-                  layoutId="opening-filter-pill"
-                  className="absolute inset-0 segmented-control-pill"
-                  transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-                />
-              )}
-              <span className={`relative z-10 ${
-                filterCategory === cat ? 'text-foreground' : 'text-muted-foreground'
-              }`}>
-                {cat === 'all' ? 'All Openings' : cat === 'e4' ? '1.e4 Openings' : cat === 'd4' ? '1.d4 Openings' : 'Other'}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Opening Grid by Difficulty */}
-      {['beginner', 'intermediate', 'advanced'].map(difficulty => (
-        groupedOpenings[difficulty] && (
-          <div key={difficulty} className="mb-8">
-            <h2 className="text-lg font-semibold text-foreground mb-4 capitalize flex items-center gap-2">
-              <Layers className="w-5 h-5 text-primary" />
-              {difficulty} Openings
-              <span className="text-sm font-normal text-muted-foreground">({groupedOpenings[difficulty].length})</span>
-            </h2>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {groupedOpenings[difficulty].map((opening) => (
-                <button
-                  key={opening.id}
-                  onClick={() => {
-                    playSound('click')
-                    setActiveOpening(opening)
-                  }}
-                  className="glass-card-hover p-5 text-left group"
-                >
-                  <div className="flex gap-4">
-                    <div className="rounded-xl overflow-hidden shadow-md flex-shrink-0" style={{ width: 80, height: 80 }}>
-                      <MiniChessboard fen={opening.fen} size={80} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
-                          {opening.eco}
-                        </span>
-                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-secondary text-muted-foreground">
-                          {opening.category}
-                        </span>
+      {/* Right: opening groups by difficulty */}
+      <div className="lm-right-panel p-5">
+        {['beginner', 'intermediate', 'advanced'].map(difficulty => (
+          groupedOpenings[difficulty] && (
+            <div key={difficulty} className="mb-8">
+              <h2 className="text-lg font-semibold text-foreground mb-4 capitalize flex items-center gap-2">
+                <Layers className="w-5 h-5 text-primary" />
+                {difficulty} Openings
+                <span className="text-sm font-normal text-muted-foreground">({groupedOpenings[difficulty].length})</span>
+              </h2>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                {groupedOpenings[difficulty].map((opening) => (
+                  <button
+                    key={opening.id}
+                    onClick={() => {
+                      playSound('click')
+                      setActiveOpening(opening)
+                    }}
+                    className="glass-card-hover p-5 text-left group"
+                  >
+                    <div className="flex gap-4">
+                      <div className="rounded-xl overflow-hidden shadow-md flex-shrink-0" style={{ width: 80, height: 80 }}>
+                        <MiniChessboard fen={opening.fen} size={80} boardStyle={settings.boardStyle} pieceStyle={settings.pieceStyle} />
                       </div>
-                      <h3 className="text-base font-semibold text-foreground mb-1 truncate">{opening.name}</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{opening.description}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                            {opening.eco}
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-secondary text-muted-foreground">
+                            {opening.category}
+                          </span>
+                        </div>
+                        <h3 className="text-base font-semibold text-foreground mb-1 truncate">{opening.name}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{opening.description}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {opening.moves.length} moves
-                    </span>
-                    <span className="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                      Study <ChevronRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                </button>
-              ))}
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {opening.moves.length} moves
+                      </span>
+                      <span className="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                        Study <ChevronRight className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )
-      ))}
+          )
+        ))}
+      </div>
     </div>
   )
 }
@@ -163,6 +154,18 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
   const [incorrectMove, setIncorrectMove] = useState(false)
   const [boardFlipped, setBoardFlipped] = useState(false)
+  const [boardSize, setBoardSize] = useState(580)
+
+  useEffect(() => {
+    const update = () => {
+      const val = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--lm-board-size'), 10)
+      if (val > 0) setBoardSize(val)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(document.documentElement)
+    return () => ro.disconnect()
+  }, [])
 
   const isUserTurn = moveIndex % 2 === 0
 
@@ -253,216 +256,200 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
   const progress = (moveIndex / opening.moves.length) * 100
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="p-8 max-w-7xl mx-auto"
-    >
-      <div className="grid grid-cols-3 gap-8">
-        {/* Left Panel */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
-        >
-          <button
-            onClick={() => {
-              playSound('click')
-              onBack()
-            }}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            Back to openings
-          </button>
-
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="px-2 py-1 rounded-lg text-sm font-semibold bg-primary/10 text-primary border border-primary/20">
-                {opening.eco}
-              </span>
-              <span className="px-2 py-1 rounded-lg text-xs font-medium bg-secondary text-muted-foreground capitalize">
-                {opening.difficulty}
-              </span>
+    <div className="flex h-full overflow-hidden">
+      {/* Left: board + controls */}
+      <div className="lm-board-panel flex items-center justify-center bg-black/20 border-r border-white/[0.06]">
+        <div className="flex flex-col items-center gap-3 py-4 w-full px-5">
+          {/* Progress Bar */}
+          <div className="w-full">
+            <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+              <span>Progress</span>
+              <span>{moveIndex} / {opening.moves.length} — {Math.round(progress)}%</span>
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">{opening.name}</h2>
-            <p className="text-muted-foreground">{opening.description}</p>
+            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-primary rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
           </div>
 
-          {/* Key Ideas */}
-          {opening.keyIdeas && (
-            <div className="glass-card p-5">
-              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Star className="w-4 h-4 text-amber-500" /> Key Ideas
-              </h3>
-              <ul className="space-y-2">
-                {opening.keyIdeas.map((idea, i) => (
-                  <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    {idea}
-                  </li>
-                ))}
-              </ul>
+          {/* Status badge */}
+          <div className="w-full text-center">
+            <AnimatePresence mode="wait">
+              {isCompleted ? (
+                <motion.div
+                  key="completed"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-500"
+                >
+                  <Check className="w-5 h-5" />
+                  <span className="font-semibold">Opening complete! +15 XP</span>
+                  <Zap className="w-4 h-4" />
+                </motion.div>
+              ) : isUserTurn ? (
+                <motion.div
+                  key="user-turn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary"
+                >
+                  <Lightbulb className="w-4 h-4" />
+                  <span className="text-sm font-medium">Your turn — play the next move</span>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="opponent-turn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary text-muted-foreground"
+                >
+                  <span className="text-sm">Opponent playing...</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Board */}
+          <div className={`lm-board-wrap lm-gpu ${incorrectMove ? 'animate-shake' : ''}`}>
+            <Chessboard
+              fen={game.fen()}
+              interactive={isUserTurn && !isCompleted}
+              onMove={handleMove}
+              lastMove={lastMove || undefined}
+              showHint={showHint && isUserTurn && expectedMove ? expectedMove : undefined}
+              flipped={boardFlipped}
+              size={boardSize}
+              isCheck={game.isCheck()}
+              boardStyle={settings.boardStyle}
+              pieceStyle={settings.pieceStyle}
+            />
+          </div>
+
+          {/* Controls: reset, hint, flip */}
+          <div className="flex items-center justify-center gap-4">
+            <motion.button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span className="text-sm font-medium">Reset</span>
+            </motion.button>
+            <motion.button
+              onClick={() => { playSound('click'); setShowHint(!showHint) }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
+                showHint
+                  ? 'bg-primary/10 text-primary'
+                  : 'bg-secondary text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {showHint ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              <span className="text-sm font-medium">{showHint ? 'Hint On' : 'Hint Off'}</span>
+            </motion.button>
+            <motion.button
+              onClick={() => setBoardFlipped(!boardFlipped)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all"
+            >
+              <FlipVertical className="w-4 h-4" />
+              <span className="text-sm font-medium">Flip</span>
+            </motion.button>
+          </div>
+        </div>
+      </div>
+
+      {/* Right: opening info + key ideas + move sequence */}
+      <div className="lm-right-panel p-5 space-y-4">
+        <button
+          onClick={() => {
+            playSound('click')
+            onBack()
+          }}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back to openings
+        </button>
+
+        <div className="glass-card p-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="px-2 py-1 rounded-lg text-sm font-semibold bg-primary/10 text-primary border border-primary/20">
+              {opening.eco}
+            </span>
+            <span className="px-2 py-1 rounded-lg text-xs font-medium bg-secondary text-muted-foreground capitalize">
+              {opening.difficulty}
+            </span>
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">{opening.name}</h2>
+          <p className="text-muted-foreground">{opening.description}</p>
+        </div>
+
+        {/* Key Ideas */}
+        {opening.keyIdeas && (
+          <div className="glass-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-500" /> Key Ideas
+            </h3>
+            <ul className="space-y-2">
+              {opening.keyIdeas.map((idea, i) => (
+                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                  <span className="text-primary mt-1">•</span>
+                  {idea}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Move Sequence */}
+        <div className="glass-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Move Sequence</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {opening.moves.map((move, idx) => {
+              const isWhite = idx % 2 === 0
+              const isPlayed = idx < moveIndex
+              const isCurrent = idx === moveIndex
+              return (
+                <span key={idx} className="flex items-center gap-0.5">
+                  {isWhite && (
+                    <span className="text-xs text-muted-foreground mr-0.5">{Math.floor(idx / 2) + 1}.</span>
+                  )}
+                  <span
+                    className={`px-2 py-1 rounded-lg text-sm font-mono transition-all ${
+                      isCurrent
+                        ? 'bg-primary text-primary-foreground'
+                        : isPlayed
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-secondary text-muted-foreground/50'
+                    }`}
+                  >
+                    {move}
+                  </span>
+                </span>
+              )
+            })}
+          </div>
+          {/* Move annotation */}
+          {opening.moveAnnotations && moveIndex > 0 && opening.moveAnnotations[moveIndex - 1] && (
+            <div className="mt-3 pt-3 border-t border-border/30">
+              <div className="flex items-start gap-2">
+                <Lightbulb className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-foreground/80 leading-relaxed">
+                  <span className="font-mono font-semibold text-primary mr-1">
+                    {opening.moves[moveIndex - 1]}
+                  </span>
+                  — {opening.moveAnnotations[moveIndex - 1]}
+                </p>
+              </div>
             </div>
           )}
-
-          {/* Move List */}
-          <div className="glass-card p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Move Sequence</h3>
-            <div className="flex flex-wrap gap-1.5">
-              {opening.moves.map((move, idx) => {
-                const isWhite = idx % 2 === 0
-                const isPlayed = idx < moveIndex
-                const isCurrent = idx === moveIndex
-                return (
-                  <span key={idx} className="flex items-center gap-0.5">
-                    {isWhite && (
-                      <span className="text-xs text-muted-foreground mr-0.5">{Math.floor(idx / 2) + 1}.</span>
-                    )}
-                    <span
-                      className={`px-2 py-1 rounded-lg text-sm font-mono transition-all ${
-                        isCurrent
-                          ? 'bg-primary text-primary-foreground'
-                          : isPlayed
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-secondary text-muted-foreground/50'
-                      }`}
-                    >
-                      {move}
-                    </span>
-                  </span>
-                )
-              })}
-            </div>
-            {opening.moveAnnotations && moveIndex > 0 && opening.moveAnnotations[moveIndex - 1] && (
-              <div className="mt-3 pt-3 border-t border-border/30">
-                <div className="flex items-start gap-2">
-                  <Lightbulb className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-foreground/80 leading-relaxed">
-                    <span className="font-mono font-semibold text-primary mr-1">
-                      {opening.moves[moveIndex - 1]}
-                    </span>
-                    — {opening.moveAnnotations[moveIndex - 1]}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Right - Chessboard */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="col-span-2"
-        >
-          <div className="glass-card p-6">
-            {/* Progress Bar */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                <span>Progress</span>
-                <span>{moveIndex} / {opening.moves.length} — {Math.round(progress)}%</span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-primary rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            </div>
-
-            {/* Status */}
-            <div className="text-center mb-4">
-              <AnimatePresence mode="wait">
-                {isCompleted ? (
-                  <motion.div
-                    key="completed"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-500"
-                  >
-                    <Check className="w-5 h-5" />
-                    <span className="font-semibold">Opening complete! +15 XP</span>
-                    <Zap className="w-4 h-4" />
-                  </motion.div>
-                ) : isUserTurn ? (
-                  <motion.div
-                    key="user-turn"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary"
-                  >
-                    <Lightbulb className="w-4 h-4" />
-                    <span className="text-sm font-medium">Your turn — play the next move</span>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="opponent-turn"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary text-muted-foreground"
-                  >
-                    <span className="text-sm">Opponent playing...</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Board */}
-            <div className="flex justify-center mb-6">
-              <div className={`transition-transform duration-100 ${incorrectMove ? 'animate-shake' : ''}`}>
-                <Chessboard
-                  fen={game.fen()}
-                  interactive={isUserTurn && !isCompleted}
-                  onMove={handleMove}
-                  lastMove={lastMove || undefined}
-                  showHint={showHint && isUserTurn && expectedMove ? expectedMove : undefined}
-                  flipped={boardFlipped}
-                  size={560}
-                  isCheck={game.isCheck()}
-                  boardStyle={settings.boardStyle}
-                  pieceStyle={settings.pieceStyle}
-                />
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center justify-center gap-4">
-              <motion.button
-                onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span className="text-sm font-medium">Reset</span>
-              </motion.button>
-              <motion.button
-                onClick={() => { playSound('click'); setShowHint(!showHint) }}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
-                  showHint
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-secondary text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {showHint ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                <span className="text-sm font-medium">{showHint ? 'Hint On' : 'Hint Off'}</span>
-              </motion.button>
-              <motion.button
-                onClick={() => setBoardFlipped(!boardFlipped)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all"
-              >
-                <FlipVertical className="w-4 h-4" />
-                <span className="text-sm font-medium">Flip</span>
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

@@ -32,8 +32,6 @@ import {
   TrendingUp,
   Volume2,
   VolumeX,
-  Minus,
-  Plus,
   Flame,
 } from 'lucide-react'
 
@@ -71,8 +69,8 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
   const stats = {
     solved: profile.puzzlesSolved,
     total: PUZZLES.length,
-    accuracy: profile.puzzlesAttempted > 0 
-      ? Math.round((profile.puzzlesCorrect / profile.puzzlesAttempted) * 100) 
+    accuracy: profile.puzzlesAttempted > 0
+      ? Math.round((profile.puzzlesCorrect / profile.puzzlesAttempted) * 100)
       : 0,
     rating: profile.puzzleRating || 800,
   }
@@ -102,178 +100,180 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Tactical Puzzles</h1>
-        <p className="text-muted-foreground">Sharpen your tactical vision with {PUZZLES.length} puzzles</p>
-      </div>
+    <div className="flex h-full overflow-hidden">
+      {/* Left sidebar: stats + puzzle rush + tactical radar */}
+      <div className="lm-sidebar border-r border-white/[0.06] p-5 space-y-4 bg-black/10">
+        {/* 2x2 stats grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="glass-card p-4 text-center">
+            <PuzzleIcon className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={stats.solved} /></p>
+            <p className="text-xs text-muted-foreground">Solved</p>
+          </div>
+          <div className="glass-card p-4 text-center">
+            <Target className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={stats.accuracy} suffix="%" /></p>
+            <p className="text-xs text-muted-foreground">Accuracy</p>
+          </div>
+          <div className="glass-card p-4 text-center">
+            <TrendingUp className="w-5 h-5 text-purple-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={stats.rating} /></p>
+            <p className="text-xs text-muted-foreground">Rating</p>
+          </div>
+          <div className="glass-card p-4 text-center">
+            <Trophy className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold text-foreground"><AnimatedCounter value={stats.total} /></p>
+            <p className="text-xs text-muted-foreground">Total</p>
+          </div>
+        </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-4">
-        <div className="glass-card p-5 text-center">
-          <PuzzleIcon className="w-6 h-6 text-amber-500 mx-auto mb-2" />
-          <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.solved} /></p>
-          <p className="text-sm text-muted-foreground">Puzzles Solved</p>
-        </div>
-        <div className="glass-card p-5 text-center">
-          <Target className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-          <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.accuracy} suffix="%" /></p>
-          <p className="text-sm text-muted-foreground">Accuracy</p>
-        </div>
-        <div className="glass-card p-5 text-center">
-          <TrendingUp className="w-6 h-6 text-purple-500 mx-auto mb-2" />
-          <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.rating} /></p>
-          <p className="text-sm text-muted-foreground">Puzzle Rating</p>
-        </div>
-        <div className="glass-card p-5 text-center">
-          <Trophy className="w-6 h-6 text-amber-500 mx-auto mb-2" />
-          <p className="text-3xl font-bold text-foreground"><AnimatedCounter value={stats.total} /></p>
-          <p className="text-sm text-muted-foreground">Total Puzzles</p>
-        </div>
-      </div>
-
-      {/* Tactical Weakness Radar */}
-      {Object.keys(profile.failedPuzzleThemes || {}).length >= 3 && (
-        <div className="glass-card p-5 mb-4 flex flex-col items-center">
-          <h3 className="text-sm font-semibold text-foreground mb-2">Tactical Strengths</h3>
-          <p className="text-xs text-muted-foreground mb-3">Based on your puzzle performance</p>
-          <TacticalRadar
-            data={Object.fromEntries(
-              Object.entries(profile.failedPuzzleThemes || {}).map(([theme, fails]) => [
-                theme, Math.max(10, 100 - (fails as number) * 15)
-              ])
-            )}
-            size={220}
-          />
-        </div>
-      )}
-
-      {/* Puzzle Rush */}
-      <div className="glass-card p-5 mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Flame className="w-4 h-4 text-orange-400" />
-          <h2 className="text-sm font-semibold text-foreground">Puzzle Rush</h2>
-          <span className="text-xs text-muted-foreground">Solve as many as you can!</span>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => { playSound('click'); setRushMinutes(3) }}
-            className="flex-1 py-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold text-sm hover:bg-orange-500/20 transition-all flex items-center justify-center gap-2"
-          >
-            <Timer className="w-4 h-4" />
-            3 min Rush
-          </button>
-          <button
-            onClick={() => { playSound('click'); setRushMinutes(5) }}
-            className="flex-1 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary font-semibold text-sm hover:bg-primary/20 transition-all flex items-center justify-center gap-2"
-          >
-            <Timer className="w-4 h-4" />
-            5 min Rush
-          </button>
-        </div>
-      </div>
-
-      {/* Filter */}
-      <div className="flex mb-6">
-        <div className="segmented-control flex">
-          {['all', 'easy', 'medium', 'hard', 'expert'].map((diff) => (
+        {/* Puzzle Rush */}
+        <div className="glass-card p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Flame className="w-4 h-4 text-orange-400" />
+            <h2 className="text-sm font-semibold text-foreground">Puzzle Rush</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">Solve as many as you can!</p>
+          <div className="flex gap-2">
             <button
-              key={diff}
-              onClick={() => {
-                playSound('click')
-                setFilterDifficulty(diff)
-              }}
-              className="relative"
+              onClick={() => { playSound('click'); setRushMinutes(3) }}
+              className="flex-1 py-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold text-xs hover:bg-orange-500/20 transition-all flex items-center justify-center gap-1.5"
             >
-              {filterDifficulty === diff && (
-                <motion.div
-                  layoutId="puzzle-filter-pill"
-                  className="absolute inset-0 segmented-control-pill"
-                  transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-                />
-              )}
-              <span className={`relative z-10 ${
-                filterDifficulty === diff ? 'text-foreground' : 'text-muted-foreground'
-              }`}>
-                {diff === 'all' ? 'All Puzzles' : diff.charAt(0).toUpperCase() + diff.slice(1)}
-              </span>
+              <Timer className="w-3.5 h-3.5" />
+              3 min
             </button>
-          ))}
+            <button
+              onClick={() => { playSound('click'); setRushMinutes(5) }}
+              className="flex-1 py-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary font-semibold text-xs hover:bg-primary/20 transition-all flex items-center justify-center gap-1.5"
+            >
+              <Timer className="w-3.5 h-3.5" />
+              5 min
+            </button>
+          </div>
         </div>
+
+        {/* Tactical Radar */}
+        {Object.keys(profile.failedPuzzleThemes || {}).length >= 3 && (
+          <div className="glass-card p-4 flex flex-col items-center">
+            <h3 className="text-sm font-semibold text-foreground mb-2">Tactical Strengths</h3>
+            <p className="text-xs text-muted-foreground mb-3">Based on your puzzle performance</p>
+            <TacticalRadar
+              data={Object.fromEntries(
+                Object.entries(profile.failedPuzzleThemes || {}).map(([theme, fails]) => [
+                  theme, Math.max(10, 100 - (fails as number) * 15)
+                ])
+              )}
+              size={220}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Theme Filter */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <button
-          onClick={() => { playSound('click'); setFilterTheme('all') }}
-          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-            filterTheme === 'all'
-              ? 'bg-accent/10 text-accent border-accent/30'
-              : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary'
-          }`}
-        >
-          All Themes
-        </button>
-        {uniqueThemes.map((theme) => (
+      {/* Right: filters + puzzle grid */}
+      <div className="lm-right-panel p-5">
+        {/* Difficulty filter */}
+        <div className="flex mb-6">
+          <div className="segmented-control flex">
+            {['all', 'easy', 'medium', 'hard', 'expert'].map((diff) => (
+              <button
+                key={diff}
+                onClick={() => {
+                  playSound('click')
+                  setFilterDifficulty(diff)
+                }}
+                className="relative"
+              >
+                {filterDifficulty === diff && (
+                  <motion.div
+                    layoutId="puzzle-filter-pill"
+                    className="absolute inset-0 segmented-control-pill"
+                    transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                  />
+                )}
+                <span className={`relative z-10 ${
+                  filterDifficulty === diff ? 'text-foreground' : 'text-muted-foreground'
+                }`}>
+                  {diff === 'all' ? 'All Puzzles' : diff.charAt(0).toUpperCase() + diff.slice(1)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Theme filter pills */}
+        <div className="flex flex-wrap gap-2 mb-6">
           <button
-            key={theme}
-            onClick={() => { playSound('click'); setFilterTheme(filterTheme === theme ? 'all' : theme) }}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border capitalize ${
-              filterTheme === theme
+            onClick={() => { playSound('click'); setFilterTheme('all') }}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+              filterTheme === 'all'
                 ? 'bg-accent/10 text-accent border-accent/30'
                 : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary'
             }`}
           >
-            {theme}
+            All Themes
           </button>
-        ))}
-      </div>
-
-      {/* Puzzle Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        {visiblePuzzles.map((puzzle, idx) => (
-          <button
-            key={puzzle.id}
-            onClick={() => {
-              playSound('click')
-              setActivePuzzle(puzzle)
-            }}
-            className="glass-card-hover p-5 text-left group"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
-                #{PUZZLES.indexOf(puzzle) + 1}
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Zap className="w-4 h-4 text-primary" />
-                <span className="text-sm text-primary font-semibold">+{puzzle.xpReward} XP</span>
-              </div>
-            </div>
-            <h3 className="text-lg font-semibold text-foreground mb-1">{puzzle.title}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{puzzle.description}</p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getDifficultyBg(puzzle.difficulty)}`}>
-                  {puzzle.difficulty}
-                </span>
-                <span className="text-xs text-muted-foreground">Rating: {puzzle.rating}</span>
-              </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-          </button>
-        ))}
-      </div>
-      {visibleCount < filteredPuzzles.length && (
-        <div className="flex justify-center pt-4">
-          <button
-            onClick={() => setVisibleCount(c => c + 24)}
-            className="px-6 py-2.5 rounded-xl glass-card-hover text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-          >
-            Load more puzzles ({filteredPuzzles.length - visibleCount} remaining)
-          </button>
+          {uniqueThemes.map((theme) => (
+            <button
+              key={theme}
+              onClick={() => { playSound('click'); setFilterTheme(filterTheme === theme ? 'all' : theme) }}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border capitalize ${
+                filterTheme === theme
+                  ? 'bg-accent/10 text-accent border-accent/30'
+                  : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary'
+              }`}
+            >
+              {theme}
+            </button>
+          ))}
         </div>
-      )}
+
+        {/* Puzzle grid - 2 columns */}
+        <div className="grid grid-cols-2 gap-4">
+          {visiblePuzzles.map((puzzle, idx) => (
+            <button
+              key={puzzle.id}
+              onClick={() => {
+                playSound('click')
+                setActivePuzzle(puzzle)
+              }}
+              className="glass-card-hover p-5 text-left group"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
+                  #{PUZZLES.indexOf(puzzle) + 1}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <span className="text-sm text-primary font-semibold">+{puzzle.xpReward} XP</span>
+                </div>
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-1">{puzzle.title}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{puzzle.description}</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getDifficultyBg(puzzle.difficulty)}`}>
+                    {puzzle.difficulty}
+                  </span>
+                  <span className="text-xs text-muted-foreground">Rating: {puzzle.rating}</span>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Load more */}
+        {visibleCount < filteredPuzzles.length && (
+          <div className="flex justify-center pt-4">
+            <button
+              onClick={() => setVisibleCount(c => c + 24)}
+              className="px-6 py-2.5 rounded-xl glass-card-hover text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              Load more puzzles ({filteredPuzzles.length - visibleCount} remaining)
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -297,10 +297,18 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
   const hadWrongMoveRef = useRef(false)
   const [wrongMoveHint, setWrongMoveHint] = useState<string | null>(null)
   const [earnedXP, setEarnedXP] = useState(0)
-  const [boardSize, setBoardSize] = useState(520)
-  const updateBoardSize = (delta: number) => {
-    setBoardSize(prev => Math.min(Math.max(prev + delta, 360), 600))
-  }
+  const [boardSize, setBoardSize] = useState(580)
+
+  useEffect(() => {
+    const update = () => {
+      const val = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--lm-board-size'), 10)
+      if (val > 0) setBoardSize(val)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(document.documentElement)
+    return () => ro.disconnect()
+  }, [])
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -332,12 +340,12 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
   const completePuzzle = useCallback(() => {
     setStatus('complete')
     if (timerRef.current) clearInterval(timerRef.current)
-    
+
     const comboMultiplier = incrementCombo()
     const isPerfect = !hadWrongMoveRef.current
     const perfectBonus = isPerfect ? 1.5 : 1
     const totalXP = Math.round(puzzle.xpReward * comboMultiplier * perfectBonus)
-    
+
     setEarnedXP(totalXP)
     // Delay XP popup slightly so combo overlay appears first
     setTimeout(() => addXP(totalXP), 300)
@@ -345,7 +353,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     updatePuzzleRating(puzzle.rating, true, timer)
     playSound('success')
     triggerHaptic('success')
-    
+
     if (isPerfect) {
       recordPerfectSolve()
     }
@@ -359,12 +367,12 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     }
 
     setStatus('opponent-moving')
-    
+
     setTimeout(() => {
       try {
         const opponentGame = new Chess(currentGame.fen())
         const opMove = opponentGame.move(opponentMoveStr)
-        
+
         if (opMove) {
           setGame(opponentGame)
           setLastMove({ from: opMove.from, to: opMove.to })
@@ -372,7 +380,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
           const nextIndex = currentMoveIndex + 1
           setMoveIndex(nextIndex)
           playSound('move')
-          
+
           if (nextIndex >= puzzle.moves.length) {
             completePuzzle()
           } else {
@@ -420,7 +428,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
         setHintArrow(null)
         setHighlightSquares([])
         setMoveHistory(prev => [...prev, move.san])
-        
+
         const nextMoveIndex = moveIndex + 1
 
         if (nextMoveIndex >= puzzle.moves.length) {
@@ -430,7 +438,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
           setMoveIndex(nextMoveIndex)
           setStatus('correct')
           playSound('move')
-          
+
           setTimeout(() => {
             playOpponentMove(gameCopy, nextMoveIndex)
           }, 300)
@@ -510,307 +518,281 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
   const playerColor = puzzle.fen.split(' ')[1] === 'w' ? 'white' : 'black'
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="p-8 max-w-7xl mx-auto"
-    >
-      <div className="grid grid-cols-3 gap-8">
-        {/* Left Panel - Puzzle Info */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
-        >
-          <button
-              onClick={() => {
-                playSound('click')
-                onBack()
-              }}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+    <div className="flex h-full overflow-hidden">
+      {/* Left: board + eval bar */}
+      <div className="lm-board-panel flex items-center justify-center bg-black/20 border-r border-white/[0.06]">
+        <div className="flex flex-col items-center gap-3 py-4">
+          {/* Status Bar */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={status}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className={`px-5 py-3 rounded-xl text-center font-medium ${
+                status === 'playing' || status === 'opponent-moving'
+                  ? 'bg-blue-500/10 text-blue-500'
+                  : status === 'correct'
+                  ? 'bg-amber-500/10 text-amber-500'
+                  : status === 'wrong'
+                  ? 'bg-red-500/10 text-red-500'
+                  : 'bg-amber-500/10 text-amber-500'
+              }`}
             >
-              <ChevronLeft className="w-5 h-5" />
-              Back to puzzles
-            </button>
-
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <PuzzleIcon className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">{puzzle.title}</h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium border ${getDifficultyBg(puzzle.difficulty)}`}>
-                    {puzzle.difficulty}
-                  </span>
-                  <span className="text-xs text-muted-foreground">Rating: {puzzle.rating}</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">{puzzle.description}</p>
-          </div>
-
-          {/* Timer & Stats */}
-          <div className="glass-card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-muted-foreground" />
-                <span className="text-2xl font-mono font-bold text-foreground">{formatTime(timer)}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Zap className="w-5 h-5 text-primary" />
-                <span className="text-lg font-bold text-primary">+{puzzle.xpReward} XP</span>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Move {Math.floor(moveIndex / 2) + 1} of {Math.ceil(puzzle.moves.length / 2)}
-            </div>
-          </div>
-
-          {/* Move History */}
-          <div className="glass-card p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Move History</h3>
-            <div className="space-y-1 max-h-40 overflow-y-auto">
-              {moveHistory.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">No moves yet</p>
-              ) : (
-                moveHistory.map((move, i) => (
-                  <div key={i} className={`text-sm px-2 py-1 rounded ${
-                    i % 2 === 0 ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
-                  }`}>
-                    {Math.floor(i / 2) + 1}{i % 2 === 0 ? '.' : '...'} {move}
-                  </div>
-                ))
+              {status === 'playing' && (
+                <span className="flex items-center justify-center gap-2">
+                  <span className={`w-3 h-3 rounded-full ${playerColor === 'white' ? 'bg-white border border-gray-300' : 'bg-gray-800'}`} />
+                  {playerColor === 'white' ? 'White' : 'Black'} to move - Find the best move!
+                </span>
               )}
+              {status === 'opponent-moving' && 'Opponent is thinking...'}
+              {status === 'correct' && (
+                <span className="flex items-center justify-center gap-2">
+                  <Check className="w-5 h-5" /> Correct! Keep going...
+                </span>
+              )}
+              {status === 'wrong' && (
+                <span className="flex items-center justify-center gap-2">
+                  <X className="w-5 h-5" /> Not quite. Try again!
+                </span>
+              )}
+              {status === 'complete' && (
+                <span className="flex items-center justify-center gap-2">
+                  <Trophy className="w-5 h-5" /> Puzzle Complete! +{earnedXP || puzzle.xpReward} XP
+                  {earnedXP > puzzle.xpReward && <span className="text-orange-400">🔥</span>}
+                </span>
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Board + EvalBar */}
+          <div className="flex items-stretch gap-2 lm-gpu">
+            <EvalBar game={game} size={boardSize} thickness={18} vertical />
+            <div className="lm-board-wrap">
+              <Chessboard
+                fen={game.fen()}
+                onMove={handleMove}
+                orientation={playerColor}
+                interactive={status === 'playing'}
+                size={boardSize}
+                highlightSquares={highlightSquares.length > 0 ? highlightSquares : (lastMove ? [lastMove.from, lastMove.to] : [])}
+                showHint={hintArrow}
+                isCheck={game.isCheck()}
+                boardStyle={settings.boardStyle}
+                pieceStyle={settings.pieceStyle}
+                allowArrowDrawing
+              />
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            <motion.button
-              onClick={handleShowHint}
-              disabled={status !== 'playing' || hintLevel >= 3}
-              className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground font-medium flex flex-col items-center justify-center gap-1 hover:bg-secondary/80 disabled:opacity-50 transition-all"
-            >
-              <div className="flex items-center gap-1.5">
-                <Lightbulb className="w-4 h-4" />
-                <span className="text-sm">{hintButtonLabel}</span>
+      {/* Right: puzzle info + actions */}
+      <div className="lm-right-panel p-5 space-y-4">
+        <button
+          onClick={() => {
+            playSound('click')
+            onBack()
+          }}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back to puzzles
+        </button>
+
+        {/* Puzzle info card */}
+        <div className="glass-card p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <PuzzleIcon className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-foreground">{puzzle.title}</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`px-2 py-0.5 rounded text-xs font-medium border ${getDifficultyBg(puzzle.difficulty)}`}>
+                  {puzzle.difficulty}
+                </span>
+                <span className="text-xs text-muted-foreground">Rating: {puzzle.rating}</span>
               </div>
-              {hintXPCost > 0 && <span className="text-[10px] text-orange-400">-{hintXPCost} XP</span>}
-            </motion.button>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">{puzzle.description}</p>
+        </div>
+
+        {/* Timer & XP card */}
+        <div className="glass-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-muted-foreground" />
+              <span className="text-2xl font-mono font-bold text-foreground">{formatTime(timer)}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-5 h-5 text-primary" />
+              <span className="text-lg font-bold text-primary">+{puzzle.xpReward} XP</span>
+            </div>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Move {Math.floor(moveIndex / 2) + 1} of {Math.ceil(puzzle.moves.length / 2)}
+          </div>
+        </div>
+
+        {/* Move history */}
+        <div className="glass-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Move History</h3>
+          <div className="space-y-1 max-h-40 overflow-y-auto">
+            {moveHistory.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">No moves yet</p>
+            ) : (
+              moveHistory.map((move, i) => (
+                <div key={i} className={`text-sm px-2 py-1 rounded ${
+                  i % 2 === 0 ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
+                }`}>
+                  {Math.floor(i / 2) + 1}{i % 2 === 0 ? '.' : '...'} {move}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Hint/Retry/Sound buttons */}
+        <div className="flex gap-3">
+          <motion.button
+            onClick={handleShowHint}
+            disabled={status !== 'playing' || hintLevel >= 3}
+            className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground font-medium flex flex-col items-center justify-center gap-1 hover:bg-secondary/80 disabled:opacity-50 transition-all"
+          >
+            <div className="flex items-center gap-1.5">
+              <Lightbulb className="w-4 h-4" />
+              <span className="text-sm">{hintButtonLabel}</span>
+            </div>
+            {hintXPCost > 0 && <span className="text-[10px] text-orange-400">-{hintXPCost} XP</span>}
+          </motion.button>
+          <motion.button
+            onClick={handleRetry}
+            className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground font-medium flex items-center justify-center gap-2 hover:bg-secondary/80 transition-all"
+          >
+            <RefreshCw className="w-5 h-5" />
+            Retry
+          </motion.button>
+          <button
+            onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
+            className="px-3 py-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 transition-all"
+            title={settings.soundEnabled ? 'Mute' : 'Unmute'}
+          >
+            {settings.soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </button>
+        </div>
+
+        {/* Wrong move hint */}
+        {status === 'wrong' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-3"
+          >
+            {wrongMoveHint && (
+              <p className="text-sm text-muted-foreground">Expected: <strong className="text-foreground">{wrongMoveHint}</strong></p>
+            )}
             <motion.button
               onClick={handleRetry}
-              className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground font-medium flex items-center justify-center gap-2 hover:bg-secondary/80 transition-all"
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold flex items-center justify-center gap-2"
             >
-              <RefreshCw className="w-5 h-5" />
-              Retry
+              <RefreshCw className="w-5 h-5" /> Try Again
             </motion.button>
-            <button
-              onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
-              className="px-3 py-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 transition-all"
-              title={settings.soundEnabled ? 'Mute' : 'Unmute'}
-            >
-              {settings.soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-            </button>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
-        {/* Center - Chessboard */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="col-span-2"
-        >
-          <div className="glass-card p-6">
-            {/* Status Bar */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={status}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className={`mb-4 p-4 rounded-xl text-center font-medium ${
-                  status === 'playing' || status === 'opponent-moving'
-                    ? 'bg-blue-500/10 text-blue-500'
-                    : status === 'correct'
-                    ? 'bg-amber-500/10 text-amber-500'
-                    : status === 'wrong'
-                    ? 'bg-red-500/10 text-red-500'
-                    : 'bg-amber-500/10 text-amber-500'
-                }`}
-              >
-                {status === 'playing' && (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className={`w-3 h-3 rounded-full ${playerColor === 'white' ? 'bg-white border border-gray-300' : 'bg-gray-800'}`} />
-                    {playerColor === 'white' ? 'White' : 'Black'} to move - Find the best move!
-                  </span>
-                )}
-                {status === 'opponent-moving' && 'Opponent is thinking...'}
-                {status === 'correct' && (
-                  <span className="flex items-center justify-center gap-2">
-                    <Check className="w-5 h-5" /> Correct! Keep going...
-                  </span>
-                )}
-                {status === 'wrong' && (
-                  <span className="flex items-center justify-center gap-2">
-                    <X className="w-5 h-5" /> Not quite. Try again!
-                  </span>
-                )}
-                {status === 'complete' && (
-                  <span className="flex items-center justify-center gap-2">
-                    <Trophy className="w-5 h-5" /> Puzzle Complete! +{earnedXP || puzzle.xpReward} XP
-                    {earnedXP > puzzle.xpReward && <span className="text-orange-400">🔥</span>}
-                  </span>
-                )}
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Chessboard with eval bar */}
-            <div className="flex justify-center items-stretch gap-3">
-              <EvalBar game={game} size={boardSize} thickness={20} vertical />
-              <div>
-                <Chessboard
-                  fen={game.fen()}
-                  onMove={handleMove}
-                  orientation={playerColor}
-                  interactive={status === 'playing'}
-                  size={boardSize}
-                  highlightSquares={highlightSquares.length > 0 ? highlightSquares : (lastMove ? [lastMove.from, lastMove.to] : [])}
-                  showHint={hintArrow}
-                  isCheck={game.isCheck()}
-                  boardStyle={settings.boardStyle}
-                  pieceStyle={settings.pieceStyle}
-                  allowArrowDrawing
-                />
+        {/* Complete actions */}
+        {status === 'complete' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            {/* Success celebration card */}
+            <div className="mb-4 p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-primary/5 to-transparent border border-primary/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
+              <div className="flex items-center gap-4 relative z-10">
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.3 }}
+                  className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-amber-500/30"
+                >
+                  <Trophy className="w-7 h-7 text-white" />
+                </motion.div>
+                <div className="flex-1">
+                  <motion.p
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-lg font-bold text-foreground"
+                  >
+                    Puzzle Complete! 🎉
+                  </motion.p>
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.5, type: 'spring' }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/15 text-primary font-bold text-xs border border-primary/20"
+                    >
+                      <Zap className="w-3.5 h-3.5" /> +{earnedXP || puzzle.xpReward} XP
+                    </motion.span>
+                    {earnedXP > puzzle.xpReward && (
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.6, type: 'spring' }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-400 font-bold text-xs border border-orange-500/20"
+                      >
+                        🔥 Combo Bonus!
+                      </motion.span>
+                    )}
+                    {!hadWrongMoveRef.current && (
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.7, type: 'spring' }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-violet-500/15 text-violet-400 font-bold text-xs border border-violet-500/20"
+                      >
+                        ✨ Perfect!
+                      </motion.span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Board size controls */}
-            <div className="flex items-center justify-center gap-2 mt-3">
-              <button onClick={() => updateBoardSize(-20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
-                <Minus className="w-3 h-3 text-muted-foreground" />
-              </button>
-              <span className="text-[11px] text-muted-foreground font-mono w-16 text-center">{boardSize}px</span>
-              <button onClick={() => updateBoardSize(20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
-                <Plus className="w-3 h-3 text-muted-foreground" />
-              </button>
+            <div className="flex gap-3">
+              <motion.button
+                onClick={() => {
+                  playSound('click')
+                  onBack()
+                }}
+                className="flex-1 py-3 rounded-xl bg-secondary text-foreground font-semibold flex items-center justify-center gap-2"
+              >
+                Back to Puzzles
+              </motion.button>
+              <motion.button
+                onClick={() => {
+                  playSound('click')
+                  onNext()
+                }}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+              >
+                Next <SkipForward className="w-4 h-4" />
+              </motion.button>
+              <ShareButtons
+                compact
+                title={`I solved "${puzzle.title}" on ChessGrind!`}
+                text={`🧩 I just solved "${puzzle.title}" (${puzzle.difficulty}) and earned ${earnedXP || puzzle.xpReward} XP on ChessGrind!`}
+              />
             </div>
-
-            {/* Complete Actions */}
-            {status === 'complete' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="mt-6"
-              >
-                {/* Success celebration card */}
-                <div className="mb-6 p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-primary/5 to-transparent border border-primary/20 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
-                  <div className="flex items-center gap-4 relative z-10">
-                    <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.3 }}
-                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-amber-500/30"
-                    >
-                      <Trophy className="w-8 h-8 text-white" />
-                    </motion.div>
-                    <div className="flex-1">
-                      <motion.p
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="text-xl font-bold text-foreground"
-                      >
-                        Puzzle Complete! 🎉
-                      </motion.p>
-                      <div className="flex items-center gap-3 mt-1.5">
-                        <motion.span
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.5, type: 'spring' }}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/15 text-primary font-bold text-sm border border-primary/20"
-                        >
-                          <Zap className="w-4 h-4" /> +{earnedXP || puzzle.xpReward} XP
-                        </motion.span>
-                        {earnedXP > puzzle.xpReward && (
-                          <motion.span
-                            initial={{ opacity: 0, scale: 0 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.6, type: 'spring' }}
-                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-500/15 text-orange-400 font-bold text-sm border border-orange-500/20"
-                          >
-                            🔥 Combo Bonus!
-                          </motion.span>
-                        )}
-                        {!hadWrongMoveRef.current && (
-                          <motion.span
-                            initial={{ opacity: 0, scale: 0 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.7, type: 'spring' }}
-                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-violet-500/15 text-violet-400 font-bold text-sm border border-violet-500/20"
-                          >
-                            ✨ Perfect!
-                          </motion.span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <motion.button
-                    onClick={() => {
-                      playSound('click')
-                      onBack()
-                    }}
-                    className="flex-1 py-4 rounded-xl bg-secondary text-foreground font-semibold flex items-center justify-center gap-2"
-                  >
-                    Back to Puzzles
-                  </motion.button>
-                  <motion.button
-                    onClick={() => {
-                      playSound('click')
-                      onNext()
-                    }}
-                    className="flex-1 py-4 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
-                  >
-                    Next Puzzle <SkipForward className="w-5 h-5" />
-                  </motion.button>
-                  <ShareButtons
-                    compact
-                    title={`I solved "${puzzle.title}" on ChessGrind!`}
-                    text={`🧩 I just solved "${puzzle.title}" (${puzzle.difficulty}) and earned ${earnedXP || puzzle.xpReward} XP on ChessGrind!`}
-                  />
-                </div>
-              </motion.div>
-            )}
-
-            {/* Wrong - Retry Button */}
-            {status === 'wrong' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-6 flex flex-col items-center gap-3"
-              >
-                {wrongMoveHint && (
-                  <p className="text-sm text-muted-foreground">Expected: <strong className="text-foreground">{wrongMoveHint}</strong></p>
-                )}
-                <motion.button
-                  onClick={handleRetry}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold flex items-center justify-center gap-2"
-                >
-                  <RefreshCw className="w-5 h-5" /> Try Again
-                </motion.button>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </div>
-    </motion.div>
+    </div>
   )
 }
 

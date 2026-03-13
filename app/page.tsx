@@ -3,6 +3,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { GameProvider } from '@/lib/game-context'
 import { SettingsProvider } from '@/lib/settings-context'
+import { LayoutProvider } from '@/components/shell/layout-provider'
 
 const AppShell = lazy(() => import('@/components/shell/app-shell').then(m => ({ default: m.AppShell })))
 const DesktopShell = lazy(() => import('@/components/shell/desktop-shell').then(m => ({ default: m.DesktopShell })))
@@ -27,18 +28,20 @@ export default function Page() {
   }
 
   return (
-    <SettingsProvider>
-      <GameProvider>
-        <Suspense fallback={<div className="min-h-screen bg-background" />}>
-          {isMobile ? (
-            <div className="max-w-lg mx-auto min-h-screen">
-              <AppShell />
-            </div>
-          ) : (
-            <DesktopShell />
-          )}
-        </Suspense>
-      </GameProvider>
-    </SettingsProvider>
+    <LayoutProvider>
+      <SettingsProvider>
+        <GameProvider>
+          <Suspense fallback={<div className="min-h-screen bg-background" />}>
+            {isMobile ? (
+              <div className="max-w-lg mx-auto min-h-screen">
+                <AppShell />
+              </div>
+            ) : (
+              <DesktopShell />
+            )}
+          </Suspense>
+        </GameProvider>
+      </SettingsProvider>
+    </LayoutProvider>
   )
 }

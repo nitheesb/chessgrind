@@ -24,8 +24,6 @@ import {
   Zap,
   Volume2,
   VolumeX,
-  Minus,
-  Plus,
   Eye,
   EyeOff,
   Copy,
@@ -83,10 +81,20 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const [whiteTime, setWhiteTime] = useState(0)
   const [blackTime, setBlackTime] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const [boardSize, setBoardSize] = useState(520)
-  const updateBoardSize = (delta: number) => {
-    setBoardSize(prev => Math.min(Math.max(prev + delta, 360), 600))
-  }
+  const [boardSize, setBoardSize] = useState(580)
+
+  useEffect(() => {
+    const update = () => {
+      const val = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--lm-board-size'), 10)
+      if (val > 0) setBoardSize(val)
+    }
+    update()
+    // ResizeObserver on root to catch layout manager updates
+    const ro = new ResizeObserver(update)
+    ro.observe(document.documentElement)
+    return () => ro.disconnect()
+  }, [])
+
   const [premove, setPremove] = useState<{ from: string; to: string; promotion?: string } | null>(null)
   const [notationView, setNotationView] = useState<'list' | 'condensed'>('list')
   const [copiedPGN, setCopiedPGN] = useState(false)
@@ -394,593 +402,586 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
   if (!gameStarted) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="p-8 max-w-4xl mx-auto"
-      >
-        <div className="text-center mb-12">
-          <div className="w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-6" style={{ background: '#312e2b', border: '1px solid #3d3a37' }}>
-            <Swords className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-foreground mb-3">Play vs Computer</h1>
-          <p className="text-lg text-muted-foreground">Choose your settings and start playing</p>
-        </div>
-
-        {/* Difficulty Selection */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Select Difficulty</h2>
-          <div className="grid grid-cols-4 gap-4">
-            {(Object.entries(DIFFICULTY_CONFIG) as [Difficulty, typeof DIFFICULTY_CONFIG[Difficulty]][]).map(([key, config]) => (
-              <motion.button
-                key={key}
-                onClick={() => {
-                  playSound('click')
-                  setDifficulty(key)
-                }}
-                className={`p-6 rounded-2xl border transition-all duration-300 relative overflow-hidden group ${difficulty === key
-                  ? `${COLOR_CLASSES[config.color].border} ${COLOR_CLASSES[config.color].bg} ${COLOR_CLASSES[config.color].activeStyle}`
-                  : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
-                  }`}
-              >
-                {/* Subtle gradient hover block */}
-                {difficulty !== key && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
-                )}
-                <Cpu className={`w-8 h-8 mb-4 mx-auto relative z-10 transition-colors ${difficulty === key ? COLOR_CLASSES[config.color].text : 'text-muted-foreground group-hover:text-foreground'}`} />
-                <h3 className="font-semibold text-foreground mb-1.5 relative z-10 tracking-wide">{config.name}</h3>
-                <p className="text-xs text-muted-foreground relative z-10">{config.description}</p>
-              </motion.button>
-            ))}
+      <div className="flex h-full overflow-hidden lm-gpu">
+        {/* Left: static board preview */}
+        <div className="lm-board-panel flex items-center justify-center bg-black/20 border-r border-white/[0.06]">
+          <div className="lm-board-wrap flex items-center justify-center">
+            <Chessboard
+              fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+              interactive={false}
+              size={boardSize}
+              boardStyle={settings.boardStyle}
+              pieceStyle={settings.pieceStyle}
+            />
           </div>
         </div>
-
-        {/* Color Selection */}
-        <div className="mb-10">
-          <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Choose Your Side</h2>
-          <div className="flex justify-center gap-4">
-            {(['white', 'black', 'random'] as const).map((color) => (
-              <motion.button
-                key={color}
-                onClick={() => {
-                  playSound('click')
-                  setPlayerColor(color === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : color)
-                }}
-                className={`px-8 py-4 rounded-2xl border transition-all duration-300 flex items-center gap-3 relative overflow-hidden group ${playerColor === color || (color !== 'random' && playerColor === color)
-                  ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/50'
-                  : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
-                  }`}
-              >
-                {/* Subtle gradient hover block */}
-                {!(playerColor === color || (color !== 'random' && playerColor === color)) && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
-                )}
-                <span className={`w-6 h-6 rounded-full relative z-10 shadow-inner ${color === 'white' ? 'bg-white border text-black' :
-                  color === 'black' ? 'bg-zinc-900 border border-white/20' :
-                    'bg-gradient-to-br from-white to-zinc-900 border border-white/20'
-                  }`} />
-                <span className="font-semibold text-foreground capitalize relative z-10 tracking-wide">{color}</span>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-
-        {/* Time Control */}
-        <div className="mb-10">
-          <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Time Control</h2>
-          <div className="flex flex-wrap justify-center gap-3">
-            {TIME_CONTROLS.map((tc) => (
-              <motion.button
-                key={tc.label}
-                onClick={() => { playSound('click'); setTimeControl(tc) }}
-                className={`px-5 py-3 rounded-xl border transition-all duration-300 relative overflow-hidden group ${timeControl.label === tc.label
-                  ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/50 text-primary font-semibold'
-                  : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20 text-muted-foreground'
-                  }`}
-              >
-                <Clock className="w-4 h-4 inline mr-1.5" />
-                {tc.label}
-              </motion.button>
-            ))}
-          </div>
-        </div>
-
-        {/* Start Button */}
-        <div className="text-center mt-6">
-          <motion.button
-            onClick={startGame}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="px-16 py-4 rounded-lg font-bold text-lg text-white transition-all duration-200 relative overflow-hidden"
-            style={{
-              background: '#81b64c',
-              borderBottom: '4px solid #5d8c34',
-              boxShadow: '0 4px 12px rgba(129, 182, 76, 0.3)',
-            }}
-          >
-            <span className="relative z-10 flex items-center justify-center gap-2">Play <ChevronRight className="w-5 h-5" /></span>
-          </motion.button>
-        </div>
-      </motion.div>
-    )
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="p-8 max-w-7xl mx-auto"
-    >
-      <div className="grid grid-cols-[280px_1fr_300px] gap-6">
-        {/* Left Panel */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-5"
-        >
-          <button
-            onClick={resetGame}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            New Game
-          </button>
-
-          {/* Players */}
-          <div className="glass-card p-5 space-y-4">
-            <div className={`flex items-center gap-3 p-3 rounded-xl ${game.turn() === (playerColor === 'white' ? 'b' : 'w') ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/50'
-              }`}>
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
-                <Cpu className="w-5 h-5 text-white" />
+        {/* Right: setup options */}
+        <div className="lm-right-panel">
+          <div className="p-8 max-w-xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-6" style={{ background: '#312e2b', border: '1px solid #3d3a37' }}>
+                <Swords className="w-10 h-10 text-white" />
               </div>
-              <div className="flex-1">
-                <p className="font-semibold text-foreground">{DIFFICULTY_CONFIG[difficulty].name} AI</p>
-                <CapturedPieces fen={game.fen()} color={playerColor === 'white' ? 'b' : 'w'} pieceSize={14} />
-              </div>
-              {thinking && (
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              )}
+              <h1 className="text-4xl font-bold text-foreground mb-3">Play vs Computer</h1>
+              <p className="text-lg text-muted-foreground">Choose your settings and start playing</p>
             </div>
 
-            <div className={`flex items-center gap-3 p-3 rounded-xl ${game.turn() === (playerColor === 'white' ? 'w' : 'b') ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/50'
-              }`}>
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-foreground">You</p>
-                <CapturedPieces fen={game.fen()} color={playerColor === 'white' ? 'w' : 'b'} pieceSize={14} />
-              </div>
-            </div>
-          </div>
-
-          {/* Timer */}
-          <div className="glass-card p-5">
-            {timeControl.minutes === 0 ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Time</span>
-                </div>
-                <span className="text-2xl font-mono font-bold text-foreground">{formatTime(timer)}</span>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${game.turn() === 'w' ? 'bg-white/10' : ''}`}>
-                  <span className="text-sm font-medium text-foreground flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-white border border-white/40" />
-                    {playerColor === 'white' ? 'You' : 'AI'}
-                  </span>
-                  <span className={`font-mono font-bold ${whiteTime < 30 ? 'text-red-400' : 'text-foreground'}`}>{formatTime(whiteTime)}</span>
-                </div>
-                <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${game.turn() === 'b' ? 'bg-white/10' : ''}`}>
-                  <span className="text-sm font-medium text-foreground flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-zinc-800 border border-white/20" />
-                    {playerColor === 'black' ? 'You' : 'AI'}
-                  </span>
-                  <span className={`font-mono font-bold ${blackTime < 30 ? 'text-red-400' : 'text-foreground'}`}>{formatTime(blackTime)}</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Keyboard Move Input */}
-          {gameStatus === 'playing' && (
-            <div className="glass-card p-4">
-              <label className="text-xs text-muted-foreground mb-1.5 block">Keyboard Move</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={keyboardInput}
-                  onChange={(e) => setKeyboardInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && keyboardInput.trim()) {
-                      handleKeyboardMove(keyboardInput)
-                    }
-                  }}
-                  placeholder="e.g. Nf3 or e2e4"
-                  className={`flex-1 bg-secondary/50 border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors ${keyboardError ? 'border-red-500 shake' : 'border-white/10'}`}
-                />
-                <button
-                  onClick={() => keyboardInput.trim() && handleKeyboardMove(keyboardInput)}
-                  className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
-                >
-                  ↵
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Move History */}
-          <div className="glass-card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-foreground">Move History</h3>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setNotationView('list')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${notationView === 'list' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  List
-                </button>
-                <button
-                  onClick={() => setNotationView('condensed')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${notationView === 'condensed' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  Compact
-                </button>
-              </div>
-            </div>
-            <div ref={notationRef} className="max-h-48 overflow-y-auto scrollbar-hide">
-              {moveHistory.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">No moves yet</p>
-              ) : notationView === 'list' ? (
-                <div className="space-y-0.5 font-mono text-sm">
-                  {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => {
-                    const isLastPair = i === Math.ceil(moveHistory.length / 2) - 1
-                    const wq = moveQualities[i * 2] || ''
-                    const bq = moveQualities[i * 2 + 1] || ''
-                    return (
-                      <div key={i} className={`flex gap-2 px-2 py-0.5 rounded ${isLastPair ? 'bg-primary/10' : i % 2 === 0 ? 'bg-secondary/30' : ''}`}>
-                        <span className="text-muted-foreground w-6 text-right">{i + 1}.</span>
-                        <span className={`w-20 ${isLastPair && moveHistory.length % 2 !== 0 ? 'text-primary font-bold' : 'text-foreground'}`}>
-                          {moveHistory[i * 2]}{wq && <span className={`ml-0.5 ${getQualityColor(wq)}`}>{wq}</span>}
-                        </span>
-                        <span className={`w-20 ${isLastPair && moveHistory.length % 2 === 0 ? 'text-primary font-bold' : 'text-foreground/70'}`}>
-                          {moveHistory[i * 2 + 1] || ''}{bq && <span className={`ml-0.5 ${getQualityColor(bq)}`}>{bq}</span>}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-x-1 gap-y-0.5 font-mono text-sm">
-                  {moveHistory.map((move, idx) => {
-                    const isLast = idx === moveHistory.length - 1
-                    return (
-                      <span key={idx} className="inline-flex items-center gap-0.5">
-                        {idx % 2 === 0 && (
-                          <span className="text-muted-foreground">{Math.floor(idx / 2) + 1}.</span>
-                        )}
-                        <span className={isLast ? 'text-primary font-bold' : 'text-foreground'}>{move}</span>
-                      </span>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={resetGame}
-              className="flex-1 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 text-white/80 transition-all duration-200"
-              style={{ background: '#454341', borderBottom: '3px solid #2b2927' }}
-            >
-              <RotateCcw className="w-5 h-5" />
-              New Game
-            </button>
-            <button
-              onClick={() => {
-                if (!window.confirm('Are you sure you want to resign?')) return
-                playSound('click')
-                setGameStatus('lost')
-                if (timerRef.current) clearInterval(timerRef.current)
-              }}
-              className="flex-1 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 text-white/80 transition-all duration-200"
-              style={{ background: '#c33', borderBottom: '3px solid #992222' }}
-            >
-              <Flag className="w-5 h-5" />
-              Resign
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Center - Board */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          <div className="glass-card p-6">
-            {/* Game Status */}
-            {gameStatus !== 'playing' && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`mb-4 p-4 rounded-xl text-center font-semibold ${gameStatus === 'won'
-                  ? 'bg-amber-500/10 text-amber-500'
-                  : gameStatus === 'lost'
-                    ? 'bg-red-500/10 text-red-500'
-                    : 'bg-amber-500/10 text-amber-500'
-                  }`}
-              >
-                {gameStatus === 'won' && (
-                  <span className="flex items-center justify-center gap-2">
-                    <Trophy className="w-5 h-5" /> Victory! You won the game!
-                  </span>
-                )}
-                {gameStatus === 'lost' && 'Game Over - AI Wins'}
-                {gameStatus === 'draw' && 'Game Drawn'}
-              </motion.div>
-            )}
-
-            {/* Board with EvalBar */}
-            <div className="flex justify-center items-stretch gap-3">
-              <EvalBar game={game} size={boardSize} thickness={20} vertical />
-              <div>
-                <Chessboard
-                  fen={game.fen()}
-                  onMove={handleMove}
-                  orientation={playerColor}
-                  interactive={gameStatus === 'playing' && !thinking}
-                  size={boardSize}
-                  highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
-                  arrows={premove ? [{ from: premove.from, to: premove.to, color: 'orange' }] : []}
-                  isCheck={game.isCheck()}
-                  boardStyle={settings.boardStyle}
-                  pieceStyle={settings.pieceStyle}
-                  allowArrowDrawing
-                  blindfoldMode={settings.blindfoldMode}
-                />
-              </div>
-            </div>
-
-            {/* Opening name display */}
-            {currentOpening && moveHistory.length <= 20 && (
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <BookOpen className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs text-primary font-medium">{currentOpening.eco}: {currentOpening.name}</span>
-              </div>
-            )}
-
-            {/* Board controls */}
-            <div className="flex items-center justify-center gap-2 mt-3">
-              <button
-                onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
-                className="px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground hover:bg-secondary/80 transition-colors text-xs flex items-center gap-1.5"
-                title={settings.soundEnabled ? 'Mute' : 'Unmute'}
-              >
-                {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              </button>
-              <button onClick={() => updateBoardSize(-20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
-                <Minus className="w-3 h-3 text-muted-foreground" />
-              </button>
-              <span className="text-[11px] text-muted-foreground font-mono w-16 text-center">{boardSize}px</span>
-              <button onClick={() => updateBoardSize(20)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
-                <Plus className="w-3 h-3 text-muted-foreground" />
-              </button>
-              <div className="w-px h-5 bg-border mx-1" />
-              <button
-                onClick={() => updateSetting('blindfoldMode', !settings.blindfoldMode)}
-                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${settings.blindfoldMode ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground hover:bg-secondary/80'}`}
-                title={settings.blindfoldMode ? 'Show pieces' : 'Blindfold mode'}
-              >
-                {settings.blindfoldMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(game.fen())
-                  setCopiedFEN(true)
-                  setTimeout(() => setCopiedFEN(false), 1500)
-                }}
-                className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:bg-secondary/80 transition-colors"
-                title="Copy FEN"
-              >
-                {copiedFEN ? <span className="text-[10px] text-primary">✓</span> : <Copy className="w-3 h-3" />}
-              </button>
-              {premove && (
-                <span className="text-[11px] text-orange-400 font-medium ml-2">Premove set</span>
-              )}
-            </div>
-
-            {/* Reward info */}
-            {gameStatus === 'won' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-6 text-center"
-              >
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary font-semibold">
-                  <Zap className="w-5 h-5" />
-                  +{50 * (Object.keys(DIFFICULTY_CONFIG).indexOf(difficulty) + 1)} XP earned!
-                </div>
-              </motion.div>
-            )}
-
-            {gameStatus !== 'playing' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-6 flex flex-col items-center gap-3"
-              >
-                <div className="flex gap-4 justify-center">
+            {/* Difficulty Selection */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Select Difficulty</h2>
+              <div className="grid grid-cols-4 gap-4">
+                {(Object.entries(DIFFICULTY_CONFIG) as [Difficulty, typeof DIFFICULTY_CONFIG[Difficulty]][]).map(([key, config]) => (
                   <motion.button
-                    onClick={resetGame}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-10 py-3 rounded-lg font-bold text-white transition-all duration-200"
-                    style={{ background: '#81b64c', borderBottom: '4px solid #5d8c34' }}
+                    key={key}
+                    onClick={() => {
+                      playSound('click')
+                      setDifficulty(key)
+                    }}
+                    className={`p-6 rounded-2xl border transition-all duration-300 relative overflow-hidden group ${difficulty === key
+                      ? `${COLOR_CLASSES[config.color].border} ${COLOR_CLASSES[config.color].bg} ${COLOR_CLASSES[config.color].activeStyle}`
+                      : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
+                      }`}
                   >
-                    Play Again
+                    {/* Subtle gradient hover block */}
+                    {difficulty !== key && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                    )}
+                    <Cpu className={`w-8 h-8 mb-4 mx-auto relative z-10 transition-colors ${difficulty === key ? COLOR_CLASSES[config.color].text : 'text-muted-foreground group-hover:text-foreground'}`} />
+                    <h3 className="font-semibold text-foreground mb-1.5 relative z-10 tracking-wide">{config.name}</h3>
+                    <p className="text-xs text-muted-foreground relative z-10">{config.description}</p>
                   </motion.button>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      const pgn = generatePGN()
-                      const blob = new Blob([pgn], { type: 'text/plain' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a')
-                      a.href = url
-                      a.download = `chessgrind-game-${Date.now()}.pgn`
-                      a.click()
-                      URL.revokeObjectURL(url)
-                    }}
-                    className="px-4 py-2 rounded-lg bg-secondary text-muted-foreground text-sm font-medium hover:text-foreground transition-colors"
-                  >
-                    ↓ Download PGN
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatePGN()).then(() => {
-                        setCopiedPGN(true)
-                        setTimeout(() => setCopiedPGN(false), 2000)
-                      })
-                    }}
-                    className="px-4 py-2 rounded-lg bg-secondary text-muted-foreground text-sm font-medium hover:text-foreground transition-colors"
-                  >
-                    {copiedPGN ? '✓ Copied!' : '⎘ Copy PGN'}
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Right Panel — Live Analysis */}
-        <div className="space-y-5">
-          {/* Evaluation */}
-          <div className="glass-card p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" />
-              Engine Analysis
-            </h3>
-            {analysis ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Evaluation</span>
-                  <span className={`text-xl font-bold font-mono ${
-                    analysis.isMate
-                      ? 'text-red-400'
-                      : analysis.eval > 0.5
-                        ? 'text-white'
-                        : analysis.eval < -0.5
-                          ? 'text-zinc-500'
-                          : 'text-muted-foreground'
-                  }`}>
-                    {analysis.isMate
-                      ? `M${analysis.mateIn}`
-                      : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`
-                    }
-                  </span>
-                </div>
-                {/* Eval bar mini */}
-                <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500 ease-out"
-                    style={{
-                      width: `${Math.max(5, Math.min(95, 50 + analysis.eval * 10))}%`,
-                      background: analysis.eval >= 0
-                        ? 'linear-gradient(90deg, #f0f0f0, #e0e0e0)'
-                        : 'linear-gradient(90deg, #3a3a3a, #4a4a4a)',
-                    }}
-                  />
-                </div>
-                {analysis.bestLine.length > 0 && (
-                  <div>
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Best line</span>
-                    <p className="text-sm font-mono text-foreground/80 mt-0.5">
-                      {analysis.bestLine.join(' ')}
-                    </p>
-                  </div>
-                )}
+                ))}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">Make a move to start analysis</p>
-            )}
-          </div>
-
-          {/* Opening */}
-          {currentOpening && (
-            <div className="glass-card p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <BookOpen className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Opening</span>
-              </div>
-              <p className="text-sm font-medium text-foreground">{currentOpening.name}</p>
-              <p className="text-xs text-muted-foreground">{currentOpening.eco}</p>
             </div>
-          )}
 
-          {/* Live Commentary */}
-          <div className="glass-card p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Move-by-Move Analysis</h3>
-            <div ref={analysisLogRef} className="max-h-[320px] overflow-y-auto scrollbar-hide space-y-1.5">
-              {analysisLog.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">Analysis will appear here as you play...</p>
-              ) : (
-                analysisLog.map((entry, i) => (
-                  <div key={i} className={`flex items-start gap-2 px-2 py-1.5 rounded-lg text-sm ${
-                    i === analysisLog.length - 1 ? 'bg-primary/10' : i % 2 === 0 ? 'bg-secondary/30' : ''
-                  }`}>
-                    <span className="text-muted-foreground font-mono text-xs min-w-[2.5rem] pt-0.5">
-                      {Math.ceil(entry.moveNum / 2)}{entry.moveNum % 2 === 1 ? '.' : '...'}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-medium text-foreground">{entry.move}</span>
-                        <span className={`font-mono text-xs ${
-                          entry.eval > 1 ? 'text-white' : entry.eval < -1 ? 'text-zinc-500' : 'text-muted-foreground'
-                        }`}>
-                          {entry.eval > 0 ? '+' : ''}{entry.eval.toFixed(1)}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{entry.comment}</p>
-                    </div>
-                  </div>
-                ))
-              )}
+            {/* Color Selection */}
+            <div className="mb-10">
+              <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Choose Your Side</h2>
+              <div className="flex justify-center gap-4">
+                {(['white', 'black', 'random'] as const).map((color) => (
+                  <motion.button
+                    key={color}
+                    onClick={() => {
+                      playSound('click')
+                      setPlayerColor(color === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : color)
+                    }}
+                    className={`px-8 py-4 rounded-2xl border transition-all duration-300 flex items-center gap-3 relative overflow-hidden group ${playerColor === color || (color !== 'random' && playerColor === color)
+                      ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/50'
+                      : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
+                      }`}
+                  >
+                    {/* Subtle gradient hover block */}
+                    {!(playerColor === color || (color !== 'random' && playerColor === color)) && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                    )}
+                    <span className={`w-6 h-6 rounded-full relative z-10 shadow-inner ${color === 'white' ? 'bg-white border text-black' :
+                      color === 'black' ? 'bg-zinc-900 border border-white/20' :
+                        'bg-gradient-to-br from-white to-zinc-900 border border-white/20'
+                      }`} />
+                    <span className="font-semibold text-foreground capitalize relative z-10 tracking-wide">{color}</span>
+                  </motion.button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Material Count */}
-          <div className="glass-card p-4">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Material</span>
-            <div className="flex justify-between mt-2">
-              <div className="text-center">
-                <div className="text-sm font-mono text-foreground">
-                  {(() => {
-                    const fen = game.fen().split(' ')[0]
-                    const w = { q: (fen.match(/Q/g) || []).length, r: (fen.match(/R/g) || []).length, b: (fen.match(/B/g) || []).length, n: (fen.match(/N/g) || []).length, p: (fen.match(/P/g) || []).length }
-                    return `♕${w.q} ♖${w.r} ♗${w.b} ♘${w.n} ♙${w.p}`
-                  })()}
-                </div>
-                <span className="text-[10px] text-muted-foreground">White</span>
+            {/* Time Control */}
+            <div className="mb-10">
+              <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Time Control</h2>
+              <div className="flex flex-wrap justify-center gap-3">
+                {TIME_CONTROLS.map((tc) => (
+                  <motion.button
+                    key={tc.label}
+                    onClick={() => { playSound('click'); setTimeControl(tc) }}
+                    className={`px-5 py-3 rounded-xl border transition-all duration-300 relative overflow-hidden group ${timeControl.label === tc.label
+                      ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/50 text-primary font-semibold'
+                      : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20 text-muted-foreground'
+                      }`}
+                  >
+                    <Clock className="w-4 h-4 inline mr-1.5" />
+                    {tc.label}
+                  </motion.button>
+                ))}
               </div>
-              <div className="text-center">
-                <div className="text-sm font-mono text-foreground">
-                  {(() => {
-                    const fen = game.fen().split(' ')[0]
-                    const b = { q: (fen.match(/q/g) || []).length, r: (fen.match(/r/g) || []).length, b: (fen.match(/b/g) || []).length, n: (fen.match(/n/g) || []).length, p: (fen.match(/p/g) || []).length }
-                    return `♛${b.q} ♜${b.r} ♝${b.b} ♞${b.n} ♟${b.p}`
-                  })()}
-                </div>
-                <span className="text-[10px] text-muted-foreground">Black</span>
-              </div>
+            </div>
+
+            {/* Start Button */}
+            <div className="text-center mt-6">
+              <motion.button
+                onClick={startGame}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-16 py-4 rounded-lg font-bold text-lg text-white transition-all duration-200 relative overflow-hidden"
+                style={{
+                  background: '#81b64c',
+                  borderBottom: '4px solid #5d8c34',
+                  boxShadow: '0 4px 12px rgba(129, 182, 76, 0.3)',
+                }}
+              >
+                <span className="relative z-10 flex items-center justify-center gap-2">Play <ChevronRight className="w-5 h-5" /></span>
+              </motion.button>
             </div>
           </div>
         </div>
       </div>
-    </motion.div>
+    )
+  }
+
+  return (
+    <div className="flex h-full overflow-hidden lm-gpu">
+      {/* Left: board + eval bar */}
+      <div className="lm-board-panel flex items-center justify-center bg-black/20 border-r border-white/[0.06]">
+        <div className="flex flex-col items-center gap-3 py-4">
+          {/* Game Status Banner */}
+          {gameStatus !== 'playing' && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`px-5 py-3 rounded-xl text-center font-semibold ${gameStatus === 'won'
+                ? 'bg-amber-500/10 text-amber-500'
+                : gameStatus === 'lost'
+                  ? 'bg-red-500/10 text-red-500'
+                  : 'bg-amber-500/10 text-amber-500'
+                }`}
+            >
+              {gameStatus === 'won' && (
+                <span className="flex items-center justify-center gap-2">
+                  <Trophy className="w-5 h-5" /> Victory! You won the game!
+                </span>
+              )}
+              {gameStatus === 'lost' && 'Game Over - AI Wins'}
+              {gameStatus === 'draw' && 'Game Drawn'}
+            </motion.div>
+          )}
+
+          {/* Opening name */}
+          {currentOpening && moveHistory.length <= 20 && (
+            <div className="flex items-center justify-center gap-2">
+              <BookOpen className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs text-primary font-medium">{currentOpening.eco}: {currentOpening.name}</span>
+            </div>
+          )}
+
+          {/* Board + EvalBar */}
+          <div className="flex items-stretch gap-2 lm-gpu">
+            <EvalBar game={game} size={boardSize} thickness={18} vertical />
+            <div className="lm-board-wrap">
+              <Chessboard
+                fen={game.fen()}
+                onMove={handleMove}
+                orientation={playerColor}
+                interactive={gameStatus === 'playing' && !thinking}
+                size={boardSize}
+                highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
+                arrows={premove ? [{ from: premove.from, to: premove.to, color: 'orange' }] : []}
+                isCheck={game.isCheck()}
+                boardStyle={settings.boardStyle}
+                pieceStyle={settings.pieceStyle}
+                allowArrowDrawing
+                blindfoldMode={settings.blindfoldMode}
+              />
+            </div>
+          </div>
+
+          {/* Board controls: sound, blindfold, copy FEN, premove indicator */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
+              className="px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground hover:bg-secondary/80 transition-colors text-xs flex items-center gap-1.5"
+              title={settings.soundEnabled ? 'Mute' : 'Unmute'}
+            >
+              {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+            <div className="w-px h-5 bg-border mx-1" />
+            <button
+              onClick={() => updateSetting('blindfoldMode', !settings.blindfoldMode)}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${settings.blindfoldMode ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground hover:bg-secondary/80'}`}
+              title={settings.blindfoldMode ? 'Show pieces' : 'Blindfold mode'}
+            >
+              {settings.blindfoldMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(game.fen())
+                setCopiedFEN(true)
+                setTimeout(() => setCopiedFEN(false), 1500)
+              }}
+              className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:bg-secondary/80 transition-colors"
+              title="Copy FEN"
+            >
+              {copiedFEN ? <span className="text-[10px] text-primary">✓</span> : <Copy className="w-3 h-3" />}
+            </button>
+            {premove && (
+              <span className="text-[11px] text-orange-400 font-medium ml-2">Premove set</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Right: all game controls */}
+      <div className="lm-right-panel p-5 space-y-4">
+        {/* New Game link */}
+        <button
+          onClick={resetGame}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          New Game
+        </button>
+
+        {/* Players card */}
+        <div className="glass-card p-5 space-y-4">
+          <div className={`flex items-center gap-3 p-3 rounded-xl ${game.turn() === (playerColor === 'white' ? 'b' : 'w') ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/50'
+            }`}>
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+              <Cpu className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground">{DIFFICULTY_CONFIG[difficulty].name} AI</p>
+              <CapturedPieces fen={game.fen()} color={playerColor === 'white' ? 'b' : 'w'} pieceSize={14} />
+            </div>
+            {thinking && (
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            )}
+          </div>
+
+          <div className={`flex items-center gap-3 p-3 rounded-xl ${game.turn() === (playerColor === 'white' ? 'w' : 'b') ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/50'
+            }`}>
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground">You</p>
+              <CapturedPieces fen={game.fen()} color={playerColor === 'white' ? 'w' : 'b'} pieceSize={14} />
+            </div>
+          </div>
+        </div>
+
+        {/* Timer card */}
+        <div className="glass-card p-5">
+          {timeControl.minutes === 0 ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Time</span>
+              </div>
+              <span className="text-2xl font-mono font-bold text-foreground">{formatTime(timer)}</span>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${game.turn() === 'w' ? 'bg-white/10' : ''}`}>
+                <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-white border border-white/40" />
+                  {playerColor === 'white' ? 'You' : 'AI'}
+                </span>
+                <span className={`font-mono font-bold ${whiteTime < 30 ? 'text-red-400' : 'text-foreground'}`}>{formatTime(whiteTime)}</span>
+              </div>
+              <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${game.turn() === 'b' ? 'bg-white/10' : ''}`}>
+                <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-zinc-800 border border-white/20" />
+                  {playerColor === 'black' ? 'You' : 'AI'}
+                </span>
+                <span className={`font-mono font-bold ${blackTime < 30 ? 'text-red-400' : 'text-foreground'}`}>{formatTime(blackTime)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Keyboard move input (when playing) */}
+        {gameStatus === 'playing' && (
+          <div className="glass-card p-4">
+            <label className="text-xs text-muted-foreground mb-1.5 block">Keyboard Move</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={keyboardInput}
+                onChange={(e) => setKeyboardInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && keyboardInput.trim()) {
+                    handleKeyboardMove(keyboardInput)
+                  }
+                }}
+                placeholder="e.g. Nf3 or e2e4"
+                className={`flex-1 bg-secondary/50 border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors ${keyboardError ? 'border-red-500 shake' : 'border-white/10'}`}
+              />
+              <button
+                onClick={() => keyboardInput.trim() && handleKeyboardMove(keyboardInput)}
+                className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+              >
+                ↵
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Move history */}
+        <div className="glass-card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-foreground">Move History</h3>
+            {/* Notation view toggle */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setNotationView('list')}
+                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${notationView === 'list' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                List
+              </button>
+              <button
+                onClick={() => setNotationView('condensed')}
+                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${notationView === 'condensed' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Compact
+              </button>
+            </div>
+          </div>
+          <div ref={notationRef} className="max-h-48 overflow-y-auto scrollbar-hide">
+            {moveHistory.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">No moves yet</p>
+            ) : notationView === 'list' ? (
+              <div className="space-y-0.5 font-mono text-sm">
+                {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => {
+                  const isLastPair = i === Math.ceil(moveHistory.length / 2) - 1
+                  const wq = moveQualities[i * 2] || ''
+                  const bq = moveQualities[i * 2 + 1] || ''
+                  return (
+                    <div key={i} className={`flex gap-2 px-2 py-0.5 rounded ${isLastPair ? 'bg-primary/10' : i % 2 === 0 ? 'bg-secondary/30' : ''}`}>
+                      <span className="text-muted-foreground w-6 text-right">{i + 1}.</span>
+                      <span className={`w-20 ${isLastPair && moveHistory.length % 2 !== 0 ? 'text-primary font-bold' : 'text-foreground'}`}>
+                        {moveHistory[i * 2]}{wq && <span className={`ml-0.5 ${getQualityColor(wq)}`}>{wq}</span>}
+                      </span>
+                      <span className={`w-20 ${isLastPair && moveHistory.length % 2 === 0 ? 'text-primary font-bold' : 'text-foreground/70'}`}>
+                        {moveHistory[i * 2 + 1] || ''}{bq && <span className={`ml-0.5 ${getQualityColor(bq)}`}>{bq}</span>}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-x-1 gap-y-0.5 font-mono text-sm">
+                {moveHistory.map((move, idx) => {
+                  const isLast = idx === moveHistory.length - 1
+                  return (
+                    <span key={idx} className="inline-flex items-center gap-0.5">
+                      {idx % 2 === 0 && (
+                        <span className="text-muted-foreground">{Math.floor(idx / 2) + 1}.</span>
+                      )}
+                      <span className={isLast ? 'text-primary font-bold' : 'text-foreground'}>{move}</span>
+                    </span>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Resign / New Game buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={resetGame}
+            className="flex-1 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 text-white/80 transition-all duration-200"
+            style={{ background: '#454341', borderBottom: '3px solid #2b2927' }}
+          >
+            <RotateCcw className="w-5 h-5" />
+            New Game
+          </button>
+          <button
+            onClick={() => {
+              if (!window.confirm('Are you sure you want to resign?')) return
+              playSound('click')
+              setGameStatus('lost')
+              if (timerRef.current) clearInterval(timerRef.current)
+            }}
+            className="flex-1 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 text-white/80 transition-all duration-200"
+            style={{ background: '#c33', borderBottom: '3px solid #992222' }}
+          >
+            <Flag className="w-5 h-5" />
+            Resign
+          </button>
+        </div>
+
+        {/* Reward info (when won) */}
+        {gameStatus === 'won' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary font-semibold">
+              <Zap className="w-5 h-5" />
+              +{50 * (Object.keys(DIFFICULTY_CONFIG).indexOf(difficulty) + 1)} XP earned!
+            </div>
+          </motion.div>
+        )}
+
+        {/* Post-game PGN/download (when not playing) */}
+        {gameStatus !== 'playing' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="flex gap-4 justify-center">
+              <motion.button
+                onClick={resetGame}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-10 py-3 rounded-lg font-bold text-white transition-all duration-200"
+                style={{ background: '#81b64c', borderBottom: '4px solid #5d8c34' }}
+              >
+                Play Again
+              </motion.button>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  const pgn = generatePGN()
+                  const blob = new Blob([pgn], { type: 'text/plain' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `chessgrind-game-${Date.now()}.pgn`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                }}
+                className="px-4 py-2 rounded-lg bg-secondary text-muted-foreground text-sm font-medium hover:text-foreground transition-colors"
+              >
+                ↓ Download PGN
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(generatePGN()).then(() => {
+                    setCopiedPGN(true)
+                    setTimeout(() => setCopiedPGN(false), 2000)
+                  })
+                }}
+                className="px-4 py-2 rounded-lg bg-secondary text-muted-foreground text-sm font-medium hover:text-foreground transition-colors"
+              >
+                {copiedPGN ? '✓ Copied!' : '⎘ Copy PGN'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Analysis panel */}
+        <div className="glass-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-primary" />
+            Engine Analysis
+          </h3>
+          {analysis ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Evaluation</span>
+                <span className={`text-xl font-bold font-mono ${
+                  analysis.isMate
+                    ? 'text-red-400'
+                    : analysis.eval > 0.5
+                      ? 'text-white'
+                      : analysis.eval < -0.5
+                        ? 'text-zinc-500'
+                        : 'text-muted-foreground'
+                }`}>
+                  {analysis.isMate
+                    ? `M${analysis.mateIn}`
+                    : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`
+                  }
+                </span>
+              </div>
+              {/* Eval bar mini */}
+              <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    width: `${Math.max(5, Math.min(95, 50 + analysis.eval * 10))}%`,
+                    background: analysis.eval >= 0
+                      ? 'linear-gradient(90deg, #f0f0f0, #e0e0e0)'
+                      : 'linear-gradient(90deg, #3a3a3a, #4a4a4a)',
+                  }}
+                />
+              </div>
+              {analysis.bestLine.length > 0 && (
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Best line</span>
+                  <p className="text-sm font-mono text-foreground/80 mt-0.5">
+                    {analysis.bestLine.join(' ')}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">Make a move to start analysis</p>
+          )}
+        </div>
+
+        {/* Opening */}
+        {currentOpening && (
+          <div className="glass-card p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <BookOpen className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Opening</span>
+            </div>
+            <p className="text-sm font-medium text-foreground">{currentOpening.name}</p>
+            <p className="text-xs text-muted-foreground">{currentOpening.eco}</p>
+          </div>
+        )}
+
+        {/* Live Commentary */}
+        <div className="glass-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Move-by-Move Analysis</h3>
+          <div ref={analysisLogRef} className="max-h-[320px] overflow-y-auto scrollbar-hide space-y-1.5">
+            {analysisLog.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">Analysis will appear here as you play...</p>
+            ) : (
+              analysisLog.map((entry, i) => (
+                <div key={i} className={`flex items-start gap-2 px-2 py-1.5 rounded-lg text-sm ${
+                  i === analysisLog.length - 1 ? 'bg-primary/10' : i % 2 === 0 ? 'bg-secondary/30' : ''
+                }`}>
+                  <span className="text-muted-foreground font-mono text-xs min-w-[2.5rem] pt-0.5">
+                    {Math.ceil(entry.moveNum / 2)}{entry.moveNum % 2 === 1 ? '.' : '...'}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-medium text-foreground">{entry.move}</span>
+                      <span className={`font-mono text-xs ${
+                        entry.eval > 1 ? 'text-white' : entry.eval < -1 ? 'text-zinc-500' : 'text-muted-foreground'
+                      }`}>
+                        {entry.eval > 0 ? '+' : ''}{entry.eval.toFixed(1)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{entry.comment}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Material Count */}
+        <div className="glass-card p-4">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Material</span>
+          <div className="flex justify-between mt-2">
+            <div className="text-center">
+              <div className="text-sm font-mono text-foreground">
+                {(() => {
+                  const fen = game.fen().split(' ')[0]
+                  const w = { q: (fen.match(/Q/g) || []).length, r: (fen.match(/R/g) || []).length, b: (fen.match(/B/g) || []).length, n: (fen.match(/N/g) || []).length, p: (fen.match(/P/g) || []).length }
+                  return `♕${w.q} ♖${w.r} ♗${w.b} ♘${w.n} ♙${w.p}`
+                })()}
+              </div>
+              <span className="text-[10px] text-muted-foreground">White</span>
+            </div>
+            <div className="text-center">
+              <div className="text-sm font-mono text-foreground">
+                {(() => {
+                  const fen = game.fen().split(' ')[0]
+                  const b = { q: (fen.match(/q/g) || []).length, r: (fen.match(/r/g) || []).length, b: (fen.match(/b/g) || []).length, n: (fen.match(/n/g) || []).length, p: (fen.match(/p/g) || []).length }
+                  return `♛${b.q} ♜${b.r} ♝${b.b} ♞${b.n} ♟${b.p}`
+                })()}
+              </div>
+              <span className="text-[10px] text-muted-foreground">Black</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef, useTransition, lazy, Suspense } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { getLevelInfo } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
@@ -22,13 +22,13 @@ import {
   Flame,
   Zap,
 } from 'lucide-react'
-import { CommandPalette, CommandPaletteTrigger } from '@/components/ui/command-palette'
+import { CommandPalette } from '@/components/ui/command-palette'
 
 // Desktop pages
 import { DesktopDashboard } from '@/components/desktop/dashboard'
 import { DesktopLogin } from '@/components/desktop/login'
 
-// Lazy load all non-dashboard pages for faster initial render
+// Lazy load all non-primary pages
 const DesktopOpenings = lazy(() => import('@/components/desktop/openings').then(m => ({ default: m.DesktopOpenings })))
 const DesktopTraps = lazy(() => import('@/components/desktop/traps').then(m => ({ default: m.DesktopTraps })))
 const DesktopProfile = lazy(() => import('@/components/desktop/profile').then(m => ({ default: m.DesktopProfile })))
@@ -49,6 +49,7 @@ const PGNViewerPage = lazy(() => import('@/components/chess/pgn-viewer').then(m 
 const DailyCalendarPage = lazy(() => import('@/components/chess/daily-calendar').then(m => ({ default: m.DailyCalendar })))
 
 type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'coords' | 'endgame' | 'puzzle-rush' | 'board-vision' | 'checkmate-patterns' | 'piece-quiz' | 'notation-trainer' | 'pawn-structures' | 'blunder-spotter' | 'move-calculator' | 'pgn-viewer' | 'daily-calendar'
+
 
 function DesktopPageSkeleton() {
   return (
