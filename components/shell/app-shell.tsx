@@ -75,7 +75,7 @@ export function AppShell() {
     checkAndUpdateStreak,
   } = useGame()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard')
+  const [currentPage, setCurrentPage] = useState<Page>('play')
   const [showSplash, setShowSplash] = useState(true)
   const [, startTransition] = useTransition()
 
@@ -115,7 +115,8 @@ export function AppShell() {
     return <SplashScreen onComplete={handleSplashComplete} />
   }
 
-  if (!isLoggedIn) {
+  // Allow Play AI without login; gate other pages
+  if (!isLoggedIn && currentPage !== 'play') {
     return <LoginPage />
   }
 

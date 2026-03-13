@@ -96,7 +96,7 @@ export function DesktopShell() {
     checkAndUpdateStreak,
   } = useGame()
   const { playSound } = useSoundAndHaptics()
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard')
+  const [currentPage, setCurrentPage] = useState<Page>('play')
   const [showSplash, setShowSplash] = useState(true)
   const [, startTransition] = useTransition()
   const { currentLevel, progress } = getLevelInfo(profile.xp)
@@ -158,7 +158,8 @@ export function DesktopShell() {
     return <SplashScreen onComplete={handleSplashComplete} />
   }
 
-  if (!isLoggedIn) {
+  // Allow Play AI without login; gate other pages
+  if (!isLoggedIn && currentPage !== 'play') {
     return <DesktopLogin />
   }
 
@@ -213,31 +214,43 @@ export function DesktopShell() {
 
         {/* User info */}
         <div className="px-4 py-3 border-b border-white/[0.06]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-primary/12 flex items-center justify-center border border-primary/15">
-              <span className="text-xs font-semibold text-primary">{profile?.level || 1}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{profile?.username || 'Player'}</p>
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
-                <span className="flex items-center gap-0.5">
-                  <Flame className="w-3 h-3 text-orange-400" />
-                  {profile?.streak || 0}
-                </span>
-                <span className="flex items-center gap-0.5">
-                  <Zap className="w-3 h-3 text-amber-400" />
-                  {profile?.xp || 0}
-                </span>
+          {isLoggedIn ? (
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-primary/12 flex items-center justify-center border border-primary/15">
+                <span className="text-xs font-semibold text-primary">{profile?.level || 1}</span>
               </div>
-              {/* XP bar */}
-              <div className="mt-1.5 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
-                <div
-                  className="h-full rounded-full xp-bar-fill relative transition-all duration-700 ease-out"
-                  style={{ width: `${Math.min(progress, 100)}%` }}
-                />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{profile?.username || 'Player'}</p>
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+                  <span className="flex items-center gap-0.5">
+                    <Flame className="w-3 h-3 text-orange-400" />
+                    {profile?.streak || 0}
+                  </span>
+                  <span className="flex items-center gap-0.5">
+                    <Zap className="w-3 h-3 text-amber-400" />
+                    {profile?.xp || 0}
+                  </span>
+                </div>
+                {/* XP bar */}
+                <div className="mt-1.5 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
+                  <div
+                    className="h-full rounded-full xp-bar-fill relative transition-all duration-700 ease-out"
+                    style={{ width: `${Math.min(progress, 100)}%` }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
+                <User className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">Guest</p>
+                <p className="text-[11px] text-muted-foreground">Sign in to save progress</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Main Navigation */}
@@ -304,14 +317,24 @@ export function DesktopShell() {
             )
           })}
 
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-150"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-[13px] font-medium">Logout</span>
-          </button>
+          {/* Logout / Sign In */}
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-150"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-[13px] font-medium">Logout</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => handleNavigate('dashboard')}
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-primary hover:bg-primary/10 transition-all duration-150"
+            >
+              <User className="w-5 h-5" />
+              <span className="text-[13px] font-medium">Sign In</span>
+            </button>
+          )}
         </div>
       </aside>
 

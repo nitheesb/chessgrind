@@ -8,7 +8,7 @@ import { EvalBar } from '@/components/chess/eval-bar'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
-import { getBestMove, getEngineConfig } from '@/lib/chess-engine'
+import { getBestMove, getEngineConfig, analyzePosition } from '@/lib/chess-engine'
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
 import {
@@ -98,6 +98,58 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
   // Opening detection
   const currentOpening = useMemo(() => detectOpening(moveHistory), [moveHistory])
+
+  // Real-time analysis
+  const [analysis, setAnalysis] = useState<{ eval: number; bestLine: string[]; isMate: boolean; mateIn: number | null } | null>(null)
+  const [analysisLog, setAnalysisLog] = useState<Array<{ moveNum: number; eval: number; comment: string; move: string }>>([])
+  const analysisLogRef = useRef<HTMLDivElement>(null)
+
+  // Run analysis after each move
+  useEffect(() => {
+    if (!gameStarted || gameStatus !== 'playing' || moveHistory.length === 0) {
+      setAnalysis(null)
+      return
+    }
+    const result = analyzePosition(game, 4)
+    setAnalysis(result)
+
+    const evalFromPlayer = playerColor === 'white' ? result.eval : -result.eval
+    let comment = ''
+    if (result.isMate) {
+      comment = result.mateIn !== null && result.mateIn > 0
+        ? (game.turn() === (playerColor === 'white' ? 'w' : 'b') ? `Mate in ${result.mateIn} for opponent` : `Mate in ${result.mateIn}!`)
+        : 'Checkmate'
+    } else if (evalFromPlayer > 3) {
+      comment = 'Winning position — major advantage'
+    } else if (evalFromPlayer > 1.5) {
+      comment = 'Clear advantage'
+    } else if (evalFromPlayer > 0.5) {
+      comment = 'Slight edge'
+    } else if (evalFromPlayer > -0.5) {
+      comment = 'Equal position'
+    } else if (evalFromPlayer > -1.5) {
+      comment = 'Slight disadvantage'
+    } else if (evalFromPlayer > -3) {
+      comment = 'Opponent has clear advantage'
+    } else {
+      comment = 'Losing position — find counterplay'
+    }
+
+    setAnalysisLog(prev => [...prev, {
+      moveNum: moveHistory.length,
+      eval: evalFromPlayer,
+      comment,
+      move: moveHistory[moveHistory.length - 1],
+    }])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moveHistory.length, gameStarted, gameStatus])
+
+  // Auto-scroll analysis log
+  useEffect(() => {
+    if (analysisLogRef.current) {
+      analysisLogRef.current.scrollTop = analysisLogRef.current.scrollHeight
+    }
+  }, [analysisLog.length])
 
   // Move quality annotations
   const moveQualities = useMemo(() => {
@@ -239,6 +291,8 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     setWhiteTime(timeControl.minutes * 60)
     setBlackTime(timeControl.minutes * 60)
     setKeyboardInput('')
+    setAnalysis(null)
+    setAnalysisLog([])
 
     if (playerColor === 'black') {
       setTimeout(() => makeAIMove(new Chess()), 500)
@@ -258,6 +312,8 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     setThinking(false)
     setPremove(null)
     setKeyboardInput('')
+    setAnalysis(null)
+    setAnalysisLog([])
     if (timerRef.current) clearInterval(timerRef.current)
   }, [playSound])
 
@@ -344,11 +400,11 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         className="p-8 max-w-4xl mx-auto"
       >
         <div className="text-center mb-12">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-6" style={{ background: '#312e2b', border: '1px solid #3d3a37' }}>
             <Swords className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-foreground mb-3">Play vs AI</h1>
-          <p className="text-lg text-muted-foreground">Test your skills against the computer</p>
+          <h1 className="text-4xl font-bold text-foreground mb-3">Play vs Computer</h1>
+          <p className="text-lg text-muted-foreground">Choose your settings and start playing</p>
         </div>
 
         {/* Difficulty Selection */}
@@ -433,10 +489,16 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         <div className="text-center mt-6">
           <motion.button
             onClick={startGame}
-            className="px-14 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="px-16 py-4 rounded-lg font-bold text-lg text-white transition-all duration-200 relative overflow-hidden"
+            style={{
+              background: '#81b64c',
+              borderBottom: '4px solid #5d8c34',
+              boxShadow: '0 4px 12px rgba(129, 182, 76, 0.3)',
+            }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            <span className="relative z-10 flex items-center justify-center gap-2">Start Game <ChevronRight className="w-5 h-5" /></span>
+            <span className="relative z-10 flex items-center justify-center gap-2">Play <ChevronRight className="w-5 h-5" /></span>
           </motion.button>
         </div>
       </motion.div>
@@ -449,12 +511,12 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
       animate={{ opacity: 1 }}
       className="p-8 max-w-7xl mx-auto"
     >
-      <div className="grid grid-cols-3 gap-8">
+      <div className="grid grid-cols-[280px_1fr_300px] gap-6">
         {/* Left Panel */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
+          className="space-y-5"
         >
           <button
             onClick={resetGame}
@@ -610,25 +672,27 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
           {/* Actions */}
           <div className="flex gap-3">
-            <motion.button
+            <button
               onClick={resetGame}
-              className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground font-medium flex items-center justify-center gap-2 hover:bg-secondary/80"
+              className="flex-1 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 text-white/80 transition-all duration-200"
+              style={{ background: '#454341', borderBottom: '3px solid #2b2927' }}
             >
               <RotateCcw className="w-5 h-5" />
-              Reset
-            </motion.button>
-            <motion.button
+              New Game
+            </button>
+            <button
               onClick={() => {
                 if (!window.confirm('Are you sure you want to resign?')) return
                 playSound('click')
                 setGameStatus('lost')
                 if (timerRef.current) clearInterval(timerRef.current)
               }}
-              className="flex-1 py-3 rounded-xl bg-red-500/10 text-red-500 font-medium flex items-center justify-center gap-2 hover:bg-red-500/20"
+              className="flex-1 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 text-white/80 transition-all duration-200"
+              style={{ background: '#c33', borderBottom: '3px solid #992222' }}
             >
               <Flag className="w-5 h-5" />
               Resign
-            </motion.button>
+            </button>
           </div>
         </motion.div>
 
@@ -636,7 +700,6 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="col-span-2"
         >
           <div className="glass-card p-6">
             {/* Game Status */}
@@ -753,7 +816,10 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 <div className="flex gap-4 justify-center">
                   <motion.button
                     onClick={resetGame}
-                    className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-10 py-3 rounded-lg font-bold text-white transition-all duration-200"
+                    style={{ background: '#81b64c', borderBottom: '4px solid #5d8c34' }}
                   >
                     Play Again
                   </motion.button>
@@ -789,7 +855,131 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               </motion.div>
             )}
           </div>
-        </motion.div>
+        </div>
+
+        {/* Right Panel — Live Analysis */}
+        <div className="space-y-5">
+          {/* Evaluation */}
+          <div className="glass-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" />
+              Engine Analysis
+            </h3>
+            {analysis ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Evaluation</span>
+                  <span className={`text-xl font-bold font-mono ${
+                    analysis.isMate
+                      ? 'text-red-400'
+                      : analysis.eval > 0.5
+                        ? 'text-white'
+                        : analysis.eval < -0.5
+                          ? 'text-zinc-500'
+                          : 'text-muted-foreground'
+                  }`}>
+                    {analysis.isMate
+                      ? `M${analysis.mateIn}`
+                      : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`
+                    }
+                  </span>
+                </div>
+                {/* Eval bar mini */}
+                <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${Math.max(5, Math.min(95, 50 + analysis.eval * 10))}%`,
+                      background: analysis.eval >= 0
+                        ? 'linear-gradient(90deg, #f0f0f0, #e0e0e0)'
+                        : 'linear-gradient(90deg, #3a3a3a, #4a4a4a)',
+                    }}
+                  />
+                </div>
+                {analysis.bestLine.length > 0 && (
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Best line</span>
+                    <p className="text-sm font-mono text-foreground/80 mt-0.5">
+                      {analysis.bestLine.join(' ')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">Make a move to start analysis</p>
+            )}
+          </div>
+
+          {/* Opening */}
+          {currentOpening && (
+            <div className="glass-card p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Opening</span>
+              </div>
+              <p className="text-sm font-medium text-foreground">{currentOpening.name}</p>
+              <p className="text-xs text-muted-foreground">{currentOpening.eco}</p>
+            </div>
+          )}
+
+          {/* Live Commentary */}
+          <div className="glass-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Move-by-Move Analysis</h3>
+            <div ref={analysisLogRef} className="max-h-[320px] overflow-y-auto scrollbar-hide space-y-1.5">
+              {analysisLog.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">Analysis will appear here as you play...</p>
+              ) : (
+                analysisLog.map((entry, i) => (
+                  <div key={i} className={`flex items-start gap-2 px-2 py-1.5 rounded-lg text-sm ${
+                    i === analysisLog.length - 1 ? 'bg-primary/10' : i % 2 === 0 ? 'bg-secondary/30' : ''
+                  }`}>
+                    <span className="text-muted-foreground font-mono text-xs min-w-[2.5rem] pt-0.5">
+                      {Math.ceil(entry.moveNum / 2)}{entry.moveNum % 2 === 1 ? '.' : '...'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-medium text-foreground">{entry.move}</span>
+                        <span className={`font-mono text-xs ${
+                          entry.eval > 1 ? 'text-white' : entry.eval < -1 ? 'text-zinc-500' : 'text-muted-foreground'
+                        }`}>
+                          {entry.eval > 0 ? '+' : ''}{entry.eval.toFixed(1)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{entry.comment}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Material Count */}
+          <div className="glass-card p-4">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Material</span>
+            <div className="flex justify-between mt-2">
+              <div className="text-center">
+                <div className="text-sm font-mono text-foreground">
+                  {(() => {
+                    const fen = game.fen().split(' ')[0]
+                    const w = { q: (fen.match(/Q/g) || []).length, r: (fen.match(/R/g) || []).length, b: (fen.match(/B/g) || []).length, n: (fen.match(/N/g) || []).length, p: (fen.match(/P/g) || []).length }
+                    return `♕${w.q} ♖${w.r} ♗${w.b} ♘${w.n} ♙${w.p}`
+                  })()}
+                </div>
+                <span className="text-[10px] text-muted-foreground">White</span>
+              </div>
+              <div className="text-center">
+                <div className="text-sm font-mono text-foreground">
+                  {(() => {
+                    const fen = game.fen().split(' ')[0]
+                    const b = { q: (fen.match(/q/g) || []).length, r: (fen.match(/r/g) || []).length, b: (fen.match(/b/g) || []).length, n: (fen.match(/n/g) || []).length, p: (fen.match(/p/g) || []).length }
+                    return `♛${b.q} ♜${b.r} ♝${b.b} ♞${b.n} ♟${b.p}`
+                  })()}
+                </div>
+                <span className="text-[10px] text-muted-foreground">Black</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </motion.div>
   )

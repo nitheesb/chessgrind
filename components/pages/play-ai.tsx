@@ -8,7 +8,7 @@ import { EvalBar } from '@/components/chess/eval-bar'
 import { AI_LEVELS } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
-import { getBestMove, getEngineConfig } from '@/lib/chess-engine'
+import { getBestMove, getEngineConfig, analyzePosition } from '@/lib/chess-engine'
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
 import { staggerContainer, staggerItem } from '@/components/ui/animated-components'
@@ -121,7 +121,7 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div>
-          <h1 className="text-xl font-display font-bold text-foreground shimmer-text">Play vs AI</h1>
+          <h1 className="text-xl font-display font-bold text-foreground shimmer-text">Play vs Computer</h1>
           <p className="text-xs text-muted-foreground shimmer-text">Choose your opponent</p>
         </div>
       </motion.div>
@@ -302,6 +302,20 @@ function GameSession({
 
   // Opening detection
   const currentOpening = useMemo(() => detectOpening(moveHistory), [moveHistory])
+
+  // Real-time analysis
+  const [analysis, setAnalysis] = useState<{ eval: number; bestLine: string[]; isMate: boolean; mateIn: number | null } | null>(null)
+  const [showAnalysis, setShowAnalysis] = useState(true)
+
+  useEffect(() => {
+    if (gameOver || moveHistory.length === 0) {
+      setAnalysis(null)
+      return
+    }
+    const result = analyzePosition(game, 4)
+    setAnalysis(result)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moveHistory.length, gameOver])
 
   // Move quality annotations (computed after game ends)
   const moveQualities = useMemo(() => {
@@ -684,6 +698,58 @@ function GameSession({
         </button>
       </div>
 
+      {/* Live Analysis Panel */}
+      {!gameOver && analysis && (
+        <div className="glass-card p-3">
+          <button
+            onClick={() => setShowAnalysis(!showAnalysis)}
+            className="flex items-center justify-between w-full"
+          >
+            <div className="flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold text-foreground">Engine Analysis</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-bold font-mono ${
+                analysis.isMate ? 'text-red-400' : analysis.eval > 0 ? 'text-white' : analysis.eval < 0 ? 'text-zinc-500' : 'text-muted-foreground'
+              }`}>
+                {analysis.isMate ? `M${analysis.mateIn}` : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`}
+              </span>
+              {showAnalysis ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
+            </div>
+          </button>
+          {showAnalysis && (
+            <div className="mt-2 pt-2 border-t border-white/[0.06] space-y-2">
+              <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    width: `${Math.max(5, Math.min(95, 50 + analysis.eval * 10))}%`,
+                    background: analysis.eval >= 0 ? '#e0e0e0' : '#4a4a4a',
+                  }}
+                />
+              </div>
+              {analysis.bestLine.length > 0 && (
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Best line</span>
+                  <p className="text-xs font-mono text-foreground/80">{analysis.bestLine.join(' ')}</p>
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground">
+                {analysis.isMate ? 'Forced mate detected' :
+                  analysis.eval > 3 ? 'Winning position' :
+                  analysis.eval > 1.5 ? 'Clear advantage' :
+                  analysis.eval > 0.5 ? 'Slight edge' :
+                  analysis.eval > -0.5 ? 'Equal position' :
+                  analysis.eval > -1.5 ? 'Slight disadvantage' :
+                  analysis.eval > -3 ? 'Opponent has advantage' :
+                  'Losing position'}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Keyboard move input */}
       {!gameOver && (
         <div className="flex items-center gap-2 px-1">
@@ -863,13 +929,15 @@ function GameSession({
             <div className="flex items-center gap-3 w-full">
               <button
                 onClick={onBack}
-                className="flex-1 py-3 rounded-lg bg-secondary text-foreground font-semibold text-sm"
+                className="flex-1 py-3 rounded-lg font-semibold text-sm text-white/80"
+                style={{ background: '#454341', borderBottom: '3px solid #2b2927' }}
               >
                 Back
               </button>
               <button
                 onClick={handleNewGame}
-                className="flex-1 py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-lg font-bold text-sm text-white flex items-center justify-center gap-2"
+                style={{ background: '#81b64c', borderBottom: '3px solid #5d8c34' }}
               >
                 <RotateCcw className="w-4 h-4" />
                 Rematch

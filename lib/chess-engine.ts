@@ -383,3 +383,65 @@ export function getEngineConfig(depth: number): EngineConfig {
     useOpeningBook: preset.useOpeningBook ?? true,
   }
 }
+
+/**
+ * Analyze a position and return evaluation + best line.
+ * Used for the real-time analysis panel.
+ */
+export function analyzePosition(game: Chess, depth: number = 4): {
+  eval: number
+  bestLine: string[]
+  isMate: boolean
+  mateIn: number | null
+} {
+  if (game.isGameOver()) {
+    if (game.isCheckmate()) {
+      return { eval: game.turn() === 'w' ? -9999 : 9999, bestLine: [], isMate: true, mateIn: 0 }
+    }
+    return { eval: 0, bestLine: [], isMate: false, mateIn: null }
+  }
+
+  const searchGame = new Chess(game.fen())
+  const orderedMoves = orderMoves(searchGame)
+  let bestScore = -Infinity
+  let bestMove = orderedMoves[0]
+
+  for (const move of orderedMoves) {
+    searchGame.move(move)
+    const score = -negamax(searchGame, Math.min(depth, 4) - 1, -Infinity, Infinity, true)
+    searchGame.undo()
+    if (score > bestScore) {
+      bestScore = score
+      bestMove = move
+    }
+  }
+
+  // Build best line (up to 3 moves deep)
+  const line: string[] = [bestMove]
+  const lineGame = new Chess(game.fen())
+  lineGame.move(bestMove)
+  for (let i = 0; i < 2; i++) {
+    if (lineGame.isGameOver()) break
+    const lineMoves = orderMoves(lineGame)
+    if (lineMoves.length === 0) break
+    let linebestScore = -Infinity
+    let lineBest = lineMoves[0]
+    for (const m of lineMoves.slice(0, 8)) {
+      lineGame.move(m)
+      const s = -negamax(lineGame, 1, -Infinity, Infinity, false)
+      lineGame.undo()
+      if (s > linebestScore) { linebestScore = s; lineBest = m }
+    }
+    line.push(lineBest)
+    lineGame.move(lineBest)
+  }
+
+  // Normalize score: positive = white advantage
+  const normalizedEval = game.turn() === 'w' ? bestScore : -bestScore
+  const evalInPawns = normalizedEval / 100
+
+  const isMate = Math.abs(bestScore) > 90000
+  const mateIn = isMate ? Math.ceil((99999 - Math.abs(bestScore)) / 2) : null
+
+  return { eval: evalInPawns, bestLine: line, isMate, mateIn }
+}
