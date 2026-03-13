@@ -855,7 +855,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               </motion.div>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Right Panel — Live Analysis */}
         <div className="space-y-5">
