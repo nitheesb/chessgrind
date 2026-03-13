@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { CursorEffects } from '@/components/ui/cursor-effects'
 
 import './globals.css'
 
@@ -21,7 +22,6 @@ export const metadata: Metadata = {
   },
   description: DESCRIPTION,
   applicationName: SITE_NAME,
-  generator: 'Next.js',
   manifest: '/manifest.json',
   keywords: [
     'chess',
@@ -222,13 +222,14 @@ export default function RootLayout({
         <JsonLd />
         <link rel="canonical" href={BASE_URL} />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased overflow-x-hidden`}>
         {children}
+        <CursorEffects />
         <Analytics />
       </body>
     </html>
