@@ -411,7 +411,8 @@ function GameSession({
     if (currentGame.isGameOver()) return
 
     setIsThinking(true)
-    const delay = 300 + Math.random() * 400
+    // Scale artificial delay with difficulty - easy levels respond faster
+    const delay = aiConfig.depth <= 2 ? 100 + Math.random() * 200 : 300 + Math.random() * 400
     const config = getEngineConfig(aiConfig.depth)
     const fen = currentGame.fen()
 

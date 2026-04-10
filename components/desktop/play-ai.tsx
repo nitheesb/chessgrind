@@ -211,8 +211,10 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
     setThinking(true)
 
-    const delay = 300 + Math.random() * 400
-    const config = getEngineConfig(DIFFICULTY_CONFIG[difficulty].depth)
+    // Scale artificial delay with difficulty - easy levels respond faster
+    const depthVal = DIFFICULTY_CONFIG[difficulty].depth
+    const delay = depthVal <= 2 ? 100 + Math.random() * 200 : 300 + Math.random() * 400
+    const config = getEngineConfig(depthVal)
     const fen = currentGame.fen()
 
     setTimeout(() => {

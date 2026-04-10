@@ -5,6 +5,20 @@
  */
 import { Chess } from 'chess.js'
 
+// --- Search Time Budget ---
+let searchDeadline = 0 // timestamp (ms) when search must stop
+let searchAborted = false
+
+function isSearchTimedOut(): boolean {
+  if (searchDeadline === 0) return false
+  if (searchAborted) return true
+  if (Date.now() >= searchDeadline) {
+    searchAborted = true
+    return true
+  }
+  return false
+}
+
 // --- Piece Values (centipawns) ---
 const PIECE_VALUE: Record<string, number> = {
   p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000,
@@ -177,6 +191,7 @@ function orderMoves(game: Chess): string[] {
 
 // --- Quiescence Search ---
 function quiescence(game: Chess, alpha: number, beta: number, depth: number): number {
+  if (isSearchTimedOut()) return evaluate(game)
   const standPat = evaluate(game)
   if (depth <= 0) return standPat
   if (standPat >= beta) return beta
@@ -213,19 +228,21 @@ function negamax(
   alpha: number,
   beta: number,
   useQuiescence: boolean,
+  maxQDepth: number = 6,
 ): number {
   if (game.isGameOver()) {
     if (game.isCheckmate()) return -99999 - depth
     return 0
   }
   if (depth === 0) {
-    return useQuiescence ? quiescence(game, alpha, beta, 6) : evaluate(game)
+    return useQuiescence ? quiescence(game, alpha, beta, maxQDepth) : evaluate(game)
   }
+  if (isSearchTimedOut()) return evaluate(game)
 
   const moves = orderMoves(game)
   for (const move of moves) {
     game.move(move)
-    const score = -negamax(game, depth - 1, -beta, -alpha, useQuiescence)
+    const score = -negamax(game, depth - 1, -beta, -alpha, useQuiescence, maxQDepth)
     game.undo()
     if (score >= beta) return beta
     if (score > alpha) alpha = score
@@ -303,16 +320,17 @@ export interface EngineConfig {
   randomness: number // centipawns of noise (0 = deterministic)
   useQuiescence: boolean
   useOpeningBook: boolean
+  timeBudgetMs: number // max time in ms for the search (0 = unlimited)
 }
 
 // Preset configs mapped to depth values for backward compatibility
 const DEPTH_PRESETS: Record<number, Partial<EngineConfig>> = {
-  1: { randomness: 300, useQuiescence: false, useOpeningBook: false },
-  2: { randomness: 150, useQuiescence: false, useOpeningBook: false },
-  3: { randomness: 80, useQuiescence: true, useOpeningBook: true },
-  4: { randomness: 40, useQuiescence: true, useOpeningBook: true },
-  5: { randomness: 15, useQuiescence: true, useOpeningBook: true },
-  6: { randomness: 0, useQuiescence: true, useOpeningBook: true },
+  1: { randomness: 300, useQuiescence: false, useOpeningBook: false, timeBudgetMs: 200 },
+  2: { randomness: 150, useQuiescence: false, useOpeningBook: false, timeBudgetMs: 400 },
+  3: { randomness: 80, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 800 },
+  4: { randomness: 40, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 1500 },
+  5: { randomness: 15, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 3000 },
+  6: { randomness: 0, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 5000 },
 }
 
 /**
@@ -349,13 +367,20 @@ export function getBestMove(game: Chess, config: EngineConfig): string | null {
   const searchGame = new Chess(game.fen())
   const orderedMoves = orderMoves(searchGame)
 
+  // Set time budget
+  searchAborted = false
+  searchDeadline = config.timeBudgetMs > 0 ? Date.now() + config.timeBudgetMs : 0
+
   let bestScore = -Infinity
   let bestMoves: string[] = []
+
+  // Scale quiescence depth with main search depth (depth 3 → qDepth 3, depth 6 → qDepth 6)
+  const qDepth = Math.min(config.depth, 6)
 
   for (const move of orderedMoves) {
     searchGame.move(move)
     const score =
-      -negamax(searchGame, config.depth - 1, -Infinity, Infinity, config.useQuiescence) +
+      -negamax(searchGame, config.depth - 1, -Infinity, Infinity, config.useQuiescence, qDepth) +
       (config.randomness > 0 ? (Math.random() - 0.5) * 2 * config.randomness : 0)
     searchGame.undo()
 
@@ -365,6 +390,9 @@ export function getBestMove(game: Chess, config: EngineConfig): string | null {
     } else if (config.randomness > 0 && Math.abs(score - bestScore) < config.randomness * 0.5) {
       bestMoves.push(move)
     }
+
+    // Stop evaluating remaining moves if time is up (we already have a best move)
+    if (isSearchTimedOut() && bestMoves.length > 0) break
   }
 
   return bestMoves[Math.floor(Math.random() * bestMoves.length)] || orderedMoves[0]
@@ -381,6 +409,7 @@ export function getEngineConfig(depth: number): EngineConfig {
     randomness: preset.randomness ?? 0,
     useQuiescence: preset.useQuiescence ?? true,
     useOpeningBook: preset.useOpeningBook ?? true,
+    timeBudgetMs: preset.timeBudgetMs ?? 5000,
   }
 }
 
@@ -406,14 +435,19 @@ export function analyzePosition(game: Chess, depth: number = 4): {
   let bestScore = -Infinity
   let bestMove = orderedMoves[0]
 
+  // Time-limit analysis to 1 second
+  searchAborted = false
+  searchDeadline = Date.now() + 1000
+
   for (const move of orderedMoves) {
     searchGame.move(move)
-    const score = -negamax(searchGame, Math.min(depth, 4) - 1, -Infinity, Infinity, true)
+    const score = -negamax(searchGame, Math.min(depth, 4) - 1, -Infinity, Infinity, true, 4)
     searchGame.undo()
     if (score > bestScore) {
       bestScore = score
       bestMove = move
     }
+    if (isSearchTimedOut()) break
   }
 
   // Build best line (up to 3 moves deep)
