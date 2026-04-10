@@ -10,7 +10,7 @@ export interface AppSettings {
   autoQueen: boolean
   showHints: boolean
   theme: 'dark' | 'light' | 'system'
-  pieceStyle: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+  pieceStyle: 'neo' | 'classic'
   boardStyle: 'green' | 'brown' | 'blue' | 'purple' | 'pink' | 'tournament' | 'ocean'
   reducedMotion: boolean
   blindfoldMode: boolean

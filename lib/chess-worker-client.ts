@@ -53,14 +53,19 @@ function stockfishOptionsFromConfig(config: EngineConfig): StockfishSearchOption
   }
 }
 
-export function getBestMoveAsync(
+export async function getBestMoveAsync(
   fen: string,
   config: EngineConfig,
 ): Promise<string | null> {
   // Use Stockfish for depth >= 4 (levels 5+)
   if (config.useStockfish) {
     const opts = stockfishOptionsFromConfig(config)
-    return getStockfishMove(fen, opts)
+    try {
+      return await getStockfishMove(fen, opts)
+    } catch (e) {
+      console.error('[chess-worker] Stockfish call failed:', e)
+      return null
+    }
   }
 
   // Use custom engine for low levels

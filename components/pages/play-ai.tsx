@@ -8,7 +8,7 @@ import { EvalBar } from '@/components/chess/eval-bar'
 import { AI_LEVELS } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
-import { getBestMove, getEngineConfig, analyzePosition } from '@/lib/chess-engine'
+import { getEngineConfig } from '@/lib/chess-engine'
 import { getBestMoveAsync, analyzePositionAsync } from '@/lib/chess-worker-client'
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
@@ -25,13 +25,10 @@ import {
   ChevronRight,
   Crown,
   Shield,
-  Timer,
   ChevronDown,
   ChevronUp,
   Volume2,
   VolumeX,
-  Minus,
-  Plus,
   Eye,
   EyeOff,
   Copy,
@@ -351,25 +348,14 @@ function GameSession({
     return analyzeMoveQualities(moveHistory)
   }, [gameOver, moveHistory])
 
-  // Board size state (Feature 5)
-  const [boardSize, setBoardSize] = useState(() => {
+  const [lastMoveIsPlayer, setLastMoveIsPlayer] = useState(false)
+
+  // Board size — responsive, no manual controls
+  const [boardSize] = useState(() => {
     if (typeof window === 'undefined') return 360
-    const stored = localStorage.getItem('chessgrind_board_size')
-    if (stored) return Math.min(Math.max(parseInt(stored), 280), 600)
     return Math.min(480, window.innerWidth - 48)
   })
-  const updateBoardSize = (delta: number) => {
-    setBoardSize(prev => {
-      const maxSize = typeof window !== 'undefined' ? Math.min(600, window.innerWidth - 48) : 600
-      const next = Math.min(Math.max(prev + delta, 280), maxSize)
-      localStorage.setItem('chessgrind_board_size', String(next))
-      return next
-    })
-  }
 
-  // Keyboard move input
-  const [keyboardInput, setKeyboardInput] = useState('')
-  const [keyboardError, setKeyboardError] = useState(false)
 
   // Timer state
   const [whiteTime, setWhiteTime] = useState(timeControl.minutes * 60)
@@ -434,6 +420,8 @@ function GameSession({
     })
   }, [addXP, incrementGamesPlayed, aiLevel, addRecentGame, aiConfig.name, moveHistory.length])
 
+  const [fallbackNotice, setFallbackNotice] = useState(false)
+
   // AI move using shared chess engine (off main thread via Web Worker)
   const makeAIMove = useCallback((currentGame: Chess) => {
     if (currentGame.isGameOver()) return
@@ -444,39 +432,55 @@ function GameSession({
     const config = getEngineConfig(aiConfig.depth, aiConfig.useStockfish)
     const fen = currentGame.fen()
 
-    setTimeout(() => {
-      getBestMoveAsync(fen, config).then(bestMoveSan => {
-        if (bestMoveSan) {
-          try {
-            const gameCopy = new Chess(fen)
-            const move = gameCopy.move(bestMoveSan)
-            if (move) {
-              setGame(gameCopy)
-              setLastMove({ from: move.from, to: move.to })
-              setMoveHistory(prev => [...prev, move.san])
+    setTimeout(async () => {
+      let bestMoveSan = await getBestMoveAsync(fen, config)
 
-              if (timeControl.increment > 0) {
-                if (currentGame.turn() === 'w') {
-                  setWhiteTime(prev => prev + timeControl.increment)
-                } else {
-                  setBlackTime(prev => prev + timeControl.increment)
-                }
-              }
+      // Retry once if Stockfish returned null
+      if (!bestMoveSan && config.useStockfish) {
+        console.warn('[play-ai] Stockfish returned null, retrying...')
+        bestMoveSan = await getBestMoveAsync(fen, config)
+      }
 
-              if (gameCopy.isCheckmate()) {
-                handleGameEnd('Checkmate', gameCopy.turn() === playerColor ? false : true)
-              } else if (gameCopy.isDraw()) {
-                handleGameEnd('Draw', false)
-              } else if (gameCopy.isStalemate()) {
-                handleGameEnd('Stalemate', false)
+      // Fallback to custom engine if still null
+      if (!bestMoveSan && config.useStockfish) {
+        console.warn('[play-ai] Stockfish retry failed, falling back to custom engine')
+        const fallbackConfig = getEngineConfig(3, false)
+        bestMoveSan = await getBestMoveAsync(fen, fallbackConfig)
+        setFallbackNotice(true)
+        setTimeout(() => setFallbackNotice(false), 3000)
+      }
+
+      if (bestMoveSan) {
+        try {
+          const gameCopy = new Chess(fen)
+          const move = gameCopy.move(bestMoveSan)
+          if (move) {
+            setLastMoveIsPlayer(false)
+            setGame(gameCopy)
+            setLastMove({ from: move.from, to: move.to })
+            setMoveHistory(prev => [...prev, move.san])
+
+            if (timeControl.increment > 0) {
+              if (currentGame.turn() === 'w') {
+                setWhiteTime(prev => prev + timeControl.increment)
+              } else {
+                setBlackTime(prev => prev + timeControl.increment)
               }
             }
-          } catch { }
-        }
-        setIsThinking(false)
-      })
+
+            if (gameCopy.isCheckmate()) {
+              handleGameEnd('Checkmate', gameCopy.turn() === playerColor ? false : true)
+            } else if (gameCopy.isDraw()) {
+              handleGameEnd('Draw', false)
+            } else if (gameCopy.isStalemate()) {
+              handleGameEnd('Stalemate', false)
+            }
+          }
+        } catch { }
+      }
+      setIsThinking(false)
     }, delay)
-  }, [aiConfig.depth, playerColor, timeControl.increment, handleGameEnd])
+  }, [aiConfig.depth, aiConfig.useStockfish, playerColor, timeControl.increment, handleGameEnd])
 
   // Trigger AI move when it's AI's turn
   useEffect(() => {
@@ -499,6 +503,7 @@ function GameSession({
       const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
       if (!move) return false
 
+      setLastMoveIsPlayer(true)
       setGame(gameCopy)
       setLastMove({ from, to })
       setMoveHistory(prev => [...prev, move.san])
@@ -637,10 +642,13 @@ function GameSession({
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className="w-3 h-3 border-2 border-accent border-t-transparent rounded-full"
+                className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full"
               />
-              <span className="text-xs text-accent font-medium">Thinking...</span>
+              <span className="text-xs text-accent font-semibold">Thinking...</span>
             </div>
+          )}
+          {fallbackNotice && (
+            <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-1 rounded">Fallback engine</span>
           )}
         </div>
       </div>
@@ -683,6 +691,7 @@ function GameSession({
             pieceStyle={settings.pieceStyle}
             arrows={premove ? [{ from: premove.from, to: premove.to, color: 'orange' }] : []}
             blindfoldMode={settings.blindfoldMode}
+            isPlayerMove={lastMoveIsPlayer}
           />
         </div>
       </div>
@@ -695,16 +704,8 @@ function GameSession({
         </div>
       )}
 
-      {/* Board size controls (Feature 5) + sound toggle */}
+      {/* Board controls: blindfold, copy FEN */}
       <div className="flex items-center justify-center gap-2">
-        <button onClick={() => updateBoardSize(-20)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center" title="Smaller board">
-          <Minus className="w-3.5 h-3.5 text-muted-foreground" />
-        </button>
-        <span className="text-xs text-muted-foreground font-mono w-12 text-center">{boardSize}px</span>
-        <button onClick={() => updateBoardSize(20)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center" title="Larger board">
-          <Plus className="w-3.5 h-3.5 text-muted-foreground" />
-        </button>
-        <div className="w-px h-5 bg-border mx-1" />
         <button
           onClick={() => updateSetting('blindfoldMode', !settings.blindfoldMode)}
           className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${settings.blindfoldMode ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground'}`}
@@ -777,51 +778,6 @@ function GameSession({
         </div>
       )}
 
-      {/* Keyboard move input */}
-      {!gameOver && (
-        <div className="flex items-center gap-2 px-1">
-          <input
-            type="text"
-            value={keyboardInput}
-            onChange={e => setKeyboardInput(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                const input = keyboardInput.trim()
-                if (!input) return
-                let success = false
-                try {
-                  // Try SAN notation first
-                  const gameCopy = new Chess(game.fen())
-                  const move = gameCopy.move(input)
-                  if (move) {
-                    success = handlePlayerMove(move.from, move.to, move.promotion)
-                  }
-                } catch {
-                  // Try coordinate notation (e.g. e2e4, e7e8q)
-                  if (input.length >= 4) {
-                    const from = input.slice(0, 2)
-                    const to = input.slice(2, 4)
-                    const promotion = input.length > 4 ? input[4] : undefined
-                    success = handlePlayerMove(from, to, promotion)
-                  }
-                }
-                if (success) {
-                  setKeyboardInput('')
-                  setKeyboardError(false)
-                } else {
-                  setKeyboardError(true)
-                  setTimeout(() => setKeyboardError(false), 1500)
-                }
-              }
-            }}
-            placeholder="Type move (e.g. e2e4, Nf3)"
-            className={`flex-1 px-3 py-1.5 rounded-lg bg-secondary text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 transition-all ${
-              keyboardError ? 'ring-1 ring-destructive animate-shake' : 'ring-primary/30 focus:ring-primary'
-            }`}
-          />
-        </div>
-      )}
 
       {/* Player info (bottom) */}
       <div className="flex items-center justify-between glass-card p-3">

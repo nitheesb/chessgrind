@@ -157,10 +157,24 @@ export function getLichessToken(): string | null {
 
 function getHeaders(): HeadersInit {
   const headers: HeadersInit = { 'Accept': 'application/json' }
+  // Only include auth header when using client-side token (direct to Lichess)
   if (lichessToken) {
     headers['Authorization'] = `Bearer ${lichessToken}`
   }
   return headers
+}
+
+/**
+ * Get the base URL for API calls.
+ * When a client-side token is set, calls go directly to Lichess.
+ * Otherwise, calls go through our server-side proxy (which has the site-wide token).
+ */
+function getBaseUrl(endpoint: 'api' | 'explorer'): string {
+  if (lichessToken) {
+    return endpoint === 'explorer' ? 'https://explorer.lichess.org' : 'https://lichess.org/api'
+  }
+  // Route through server-side proxy
+  return endpoint === 'explorer' ? '/api/lichess/explorer' : '/api/lichess'
 }
 
 async function fetchWithRetry(url: string, options: RequestInit = {}, limiter: RateLimiter): Promise<Response> {
@@ -189,7 +203,7 @@ export async function getDailyPuzzle(): Promise<LichessDailyPuzzle | null> {
 
   try {
     const res = await fetchWithRetry(
-      'https://lichess.org/api/puzzle/daily',
+      `${getBaseUrl('api')}/puzzle/daily`,
       { headers: getHeaders() },
       mainLimiter,
     )
@@ -234,7 +248,7 @@ export async function getPuzzleById(id: string): Promise<LichessPuzzle | null> {
 
   try {
     const res = await fetchWithRetry(
-      `https://lichess.org/api/puzzle/${id}`,
+      `${getBaseUrl('api')}/puzzle/${id}`,
       { headers: getHeaders() },
       mainLimiter,
     )
@@ -287,7 +301,7 @@ export async function getOpeningExplorer(
     params.set('topGames', '3')
 
     const res = await fetchWithRetry(
-      `https://explorer.lichess.org/${source}?${params}`,
+      `${getBaseUrl('explorer')}/${source}?${params}`,
       { headers: { 'Accept': 'application/json' } },
       explorerLimiter,
     )
@@ -345,7 +359,7 @@ export async function getPlayerGames(
     if (options.perfType) params.set('perfType', options.perfType)
 
     const res = await fetchWithRetry(
-      `https://lichess.org/api/games/user/${encodeURIComponent(username)}?${params}`,
+      `${getBaseUrl('api')}/games/user/${encodeURIComponent(username)}?${params}`,
       {
         headers: {
           ...getHeaders(),
@@ -384,8 +398,11 @@ export async function getGameById(gameId: string): Promise<LichessGame | null> {
   if (cached) return cached
 
   try {
+    const baseUrl = lichessToken
+      ? `https://lichess.org/game/export/${gameId}`
+      : `/api/lichess/game-export/${gameId}`
     const res = await fetchWithRetry(
-      `https://lichess.org/game/export/${gameId}?pgnInJson=true&opening=true&clocks=true`,
+      `${baseUrl}?pgnInJson=true&opening=true&clocks=true`,
       { headers: getHeaders() },
       mainLimiter,
     )

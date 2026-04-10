@@ -1525,6 +1525,12 @@ input[type="email"]:focus {
 .lm-anim-slide-left  { animation: lm-slide-in-left  0.18s cubic-bezier(0.25,0.1,0.25,1) both; }
 .lm-anim-fade-up     { animation: lm-fade-up        0.18s cubic-bezier(0.25,0.1,0.25,1) both; }
 
+/* ── Thinking bar animation ── */
+@keyframes thinkingBar {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
 /* ── GPU layer promotion for board + eval bar ── */
 .lm-gpu {
   transform: translateZ(0);

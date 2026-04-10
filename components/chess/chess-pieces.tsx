@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react'
 
-export type PieceStyleType = 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+export type PieceStyleType = 'neo' | 'classic'
 
 interface ChessPieceProps {
   piece: string
@@ -420,27 +420,30 @@ const PIECE_STYLE_MAP: Record<PieceStyleType, Record<string, (isWhite: boolean) 
   pink: PinkPieceSVGs,
 }
 
-// Memoized piece component for performance
-export const ChessPiece = memo(function ChessPiece({ piece, size = 45, className = '', pieceStyle = 'standard' }: ChessPieceProps) {
-  const pieceType = piece[1]
-  const isWhite = piece[0] === 'w'
-  const styleSVGs = PIECE_STYLE_MAP[pieceStyle] || PieceSVGs
-  const PieceSVG = styleSVGs[pieceType]
-  if (!PieceSVG) return null
+// Memoized piece component — uses high-quality SVG images from /pieces/{style}/
+export const ChessPiece = memo(function ChessPiece({ piece, size = 45, className = '', pieceStyle = 'neo' }: ChessPieceProps) {
+  const color = piece[0] // 'w' or 'b'
+  const type = piece[1] // K, Q, R, B, N, P
+
+  // Map style names to folder names (neo/classic have SVG assets)
+  const folder = pieceStyle === 'classic' ? 'classic' : 'neo'
+  const src = `/pieces/${folder}/${color}${type}.svg`
 
   return (
-    <svg
-      viewBox="0 0 45 45"
+    <img
+      src={src}
+      alt={`${color === 'w' ? 'White' : 'Black'} ${type}`}
       width={size}
       height={size}
       className={className}
-      style={{ 
+      draggable={false}
+      style={{
         willChange: 'transform',
-        filter: 'drop-shadow(2px 4px 2px rgba(0,0,0,0.4))',
+        filter: 'drop-shadow(1px 3px 2px rgba(0,0,0,0.35))',
+        userSelect: 'none',
+        pointerEvents: 'none',
       }}
-    >
-      {PieceSVG(isWhite)}
-    </svg>
+    />
   )
 })
 

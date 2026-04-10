@@ -34,12 +34,13 @@ interface ChessboardProps {
   onPieceSelect?: () => void
   onPieceMove?: (captured: boolean) => void
   boardStyle?: BoardStyle
-  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+  pieceStyle?: 'neo' | 'classic'
   isCheck?: boolean
   arrows?: Array<{ from: string; to: string; color?: string }>
   onArrowDraw?: (arrows: Array<{ from: string; to: string; color?: string }>) => void
   allowArrowDrawing?: boolean
   blindfoldMode?: boolean
+  isPlayerMove?: boolean
 }
 
 const squareToIndex = (square: string) => ({
@@ -100,7 +101,7 @@ const Square = memo(function Square({
   onMouseUp?: (e: React.MouseEvent) => void
   interactive: boolean
   theme: typeof BOARD_THEMES[BoardStyle]
-  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+  pieceStyle?: 'neo' | 'classic'
   square: string
   onKeyDown?: (e: React.KeyboardEvent, sq: string) => void
   blindfoldMode?: boolean
@@ -229,7 +230,7 @@ function AnimatedPiece({
   squareSize: number
   flipped: boolean
   onComplete: () => void
-  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+  pieceStyle?: 'neo' | 'classic'
 }) {
   const getPos = useCallback((square: string) => {
     const { row, col } = squareToIndex(square)
@@ -248,7 +249,7 @@ function AnimatedPiece({
     <motion.div
       initial={{ x: fromPos.x, y: fromPos.y }}
       animate={{ x: toPos.x, y: toPos.y }}
-      transition={{ type: 'spring', stiffness: 400, damping: 28, mass: 0.8 }}
+      transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
       onAnimationComplete={onComplete}
       style={{
         position: 'absolute',
@@ -286,7 +287,7 @@ function SnapBackPiece({
   flipped: boolean
   boardRect: DOMRect
   onComplete: () => void
-  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+  pieceStyle?: 'neo' | 'classic'
 }) {
   const { row, col } = squareToIndex(toSquare)
   const displayCol = flipped ? 7 - col : col
@@ -334,7 +335,7 @@ function CapturedPieceAnim({
   flipped: boolean
   capturedByColor: 'w' | 'b'
   onComplete: () => void
-  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+  pieceStyle?: 'neo' | 'classic'
 }) {
   const { row, col } = squareToIndex(square)
   const displayCol = flipped ? 7 - col : col
@@ -466,12 +467,13 @@ export function Chessboard({
   showHint,
   showHintArrow = false,
   boardStyle = 'green',
-  pieceStyle = 'standard',
+  pieceStyle = 'neo',
   isCheck = false,
   arrows: externalArrows = [],
   onArrowDraw,
   allowArrowDrawing = false,
   blindfoldMode = false,
+  isPlayerMove = false,
 }: ChessboardProps) {
   // Support both flipped and orientation props
   const isFlipped = orientation ? orientation === 'black' : flipped
@@ -567,21 +569,27 @@ export function Chessboard({
   // Detect moves, animate piece, and trigger capture animation
   useEffect(() => {
     if (prevFenRef.current !== fen && lastMove) {
-      const prevBoard = parseFEN(prevFenRef.current)
-      const { row, col } = squareToIndex(lastMove.from)
-      const piece = prevBoard[row]?.[col]
-      if (piece) {
-        setAnimating({ piece, from: lastMove.from, to: lastMove.to })
+      // Skip animation for the player's own move (instant feedback)
+      if (!isPlayerMove) {
+        const prevBoard = parseFEN(prevFenRef.current)
+        const { row, col } = squareToIndex(lastMove.from)
+        const piece = prevBoard[row]?.[col]
+        if (piece) {
+          setAnimating({ piece, from: lastMove.from, to: lastMove.to })
+        }
       }
       // Check for capture: was there an opponent piece on the target square?
+      const prevBoard = parseFEN(prevFenRef.current)
       const { row: toRow, col: toCol } = squareToIndex(lastMove.to)
+      const { row: fromRow, col: fromCol } = squareToIndex(lastMove.from)
       const capturedPiece = prevBoard[toRow]?.[toCol]
-      if (capturedPiece && piece && capturedPiece[0] !== piece[0]) {
-        setCaptureAnim({ piece: capturedPiece, square: lastMove.to, byColor: piece[0] as 'w' | 'b' })
+      const movingPiece = prevBoard[fromRow]?.[fromCol]
+      if (capturedPiece && movingPiece && capturedPiece[0] !== movingPiece[0]) {
+        setCaptureAnim({ piece: capturedPiece, square: lastMove.to, byColor: movingPiece[0] as 'w' | 'b' })
       }
     }
     prevFenRef.current = fen
-  }, [fen, lastMove])
+  }, [fen, lastMove, isPlayerMove])
 
   const getActualCoords = useCallback((displayRow: number, displayCol: number) => ({
     row: isFlipped ? 7 - displayRow : displayRow,
@@ -997,30 +1005,17 @@ export function Chessboard({
   }, [selectedSquare, fen, interactive])
 
   return (
-    <div className="relative inline-block select-none touch-none group/board">
-      {/* Animated gradient border */}
-      <div
-        className="absolute -inset-[3px] rounded-xl opacity-50 group-hover/board:opacity-100 transition-opacity duration-700"
-        style={{
-          background: 'conic-gradient(from var(--border-angle, 0deg), transparent 0%, rgba(245,158,11,0.5) 10%, transparent 20%, transparent 50%, rgba(99,102,241,0.4) 60%, transparent 70%)',
-          animation: 'border-spin 6s linear infinite',
-          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-          WebkitMaskComposite: 'xor',
-          maskComposite: 'exclude',
-          padding: '3px',
-          borderRadius: '14px',
-        }}
-      />
+    <div className="relative inline-block select-none touch-none">
       <div
         ref={boardRef}
         role="grid"
         aria-label="Chess board"
-        className="relative overflow-hidden rounded-xl bg-black"
+        className="relative overflow-hidden rounded-[4px] bg-black"
         style={{
           width: size,
           height: size,
           transition: 'width 0.3s cubic-bezier(0.25,0.1,0.25,1), height 0.3s cubic-bezier(0.25,0.1,0.25,1)',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08), inset 0 2px 4px rgba(255,255,255,0.05)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)',
         }}
         onContextMenu={(e) => e.preventDefault()}
         onMouseMove={handleBoardMouseMove}
@@ -1337,7 +1332,7 @@ export function Chessboard({
 }
 
 // Mini chessboard for previews
-export const MiniChessboard = memo(function MiniChessboard({ fen, size = 120, boardStyle = 'green', pieceStyle = 'standard' }: { fen: string; size?: number; boardStyle?: BoardStyle; pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink' }) {
+export const MiniChessboard = memo(function MiniChessboard({ fen, size = 120, boardStyle = 'green', pieceStyle = 'standard' }: { fen: string; size?: number; boardStyle?: BoardStyle; pieceStyle?: 'neo' | 'classic' }) {
   const board = useMemo(() => parseFEN(fen), [fen])
   const squareSize = size / 8
   const miniTheme = BOARD_THEMES[boardStyle]

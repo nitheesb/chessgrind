@@ -31,11 +31,13 @@ export interface StockfishSearchOptions {
 let worker: Worker | null = null
 let isReady = false
 let initPromise: Promise<void> | null = null
+let initRejecter: ((err: Error) => void) | null = null
 let currentAnalysisCallback: ((info: StockfishAnalysis) => void) | null = null
 let bestMoveResolver: ((result: StockfishMoveResult | null) => void) | null = null
 let analysisResolver: ((result: StockfishAnalysis) => void) | null = null
 let latestAnalysis: StockfishAnalysis = { eval: 0, bestLine: [], depth: 0, isMate: false, mateIn: null }
 let currentFen = '' // FEN being analyzed, for SAN conversion
+let currentRequestId = 0 // Prevents stale responses resolving wrong promises
 
 // --- UCI Output Parsing ---
 
@@ -131,6 +133,11 @@ function createWorker(): Worker {
     isReady = false
     worker = null
     initPromise = null
+    // Reject pending init if still waiting
+    if (initRejecter) {
+      initRejecter(new Error('Stockfish worker error'))
+      initRejecter = null
+    }
     // Resolve any pending promises with null
     if (bestMoveResolver) {
       bestMoveResolver(null)
@@ -208,8 +215,20 @@ export function initStockfish(): Promise<void> {
   if (isReady) return Promise.resolve()
   if (initPromise) return initPromise
 
-  initPromise = new Promise<void>((resolve) => {
+  initPromise = new Promise<void>((resolve, reject) => {
+    initRejecter = reject
     worker = createWorker()
+
+    // 15-second timeout for WASM load + init
+    const initTimeout = setTimeout(() => {
+      console.error('[stockfish] init timed out after 15s')
+      worker?.terminate()
+      worker = null
+      isReady = false
+      initPromise = null
+      initRejecter = null
+      reject(new Error('Stockfish init timeout'))
+    }, 15000)
 
     let gotUciOk = false
 
@@ -227,7 +246,9 @@ export function initStockfish(): Promise<void> {
       }
 
       if (line === 'readyok' && gotUciOk) {
+        clearTimeout(initTimeout)
         isReady = true
+        initRejecter = null
         // Restore normal message handler
         if (worker) worker.onmessage = handleMessage
         resolve()
@@ -254,9 +275,24 @@ export async function getStockfishMove(
   // Cancel any ongoing search
   sendUCI('stop')
 
+  // Resolve any stale pending request with null
+  if (bestMoveResolver) {
+    bestMoveResolver(null)
+    bestMoveResolver = null
+  }
+
+  const requestId = ++currentRequestId
+
   return new Promise<string | null>((resolve) => {
     currentFen = fen
-    bestMoveResolver = (result) => resolve(result?.bestMove ?? null)
+    bestMoveResolver = (result) => {
+      // Only resolve if this is still the current request
+      if (currentRequestId !== requestId) {
+        resolve(null)
+        return
+      }
+      resolve(result?.bestMove ?? null)
+    }
 
     sendUCI('position fen ' + fen)
 
@@ -274,7 +310,7 @@ export async function getStockfishMove(
 
     // Safety timeout: resolve null if no response in 30s
     setTimeout(() => {
-      if (bestMoveResolver) {
+      if (bestMoveResolver && currentRequestId === requestId) {
         bestMoveResolver(null)
         bestMoveResolver = null
         sendUCI('stop')
