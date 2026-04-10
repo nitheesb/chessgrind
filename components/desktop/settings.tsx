@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   RotateCcw,
   Minimize2,
+  Crown,
 } from 'lucide-react'
 
 
@@ -264,6 +265,52 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                 <span className="text-sm font-medium">{theme.name}</span>
               </motion.button>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Lichess Integration */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Crown className="w-5 h-5" />
+          Lichess Integration
+        </h2>
+        <div className="glass-card divide-y divide-border/50">
+          <div className="p-5">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">
+                <Crown className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Lichess Username</p>
+                <p className="text-sm text-muted-foreground">Link your Lichess account</p>
+              </div>
+            </div>
+            <input
+              type="text"
+              value={settings.lichessUsername}
+              onChange={(e) => updateSetting('lichessUsername', e.target.value)}
+              placeholder="Your Lichess username"
+              className="w-full px-4 py-2.5 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground border border-border/50 focus:border-primary focus:outline-none transition-colors"
+            />
+          </div>
+          <div className="p-5">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">
+                <Crown className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">API Token (Optional)</p>
+                <p className="text-sm text-muted-foreground">Get a free token at lichess.org/account/oauth/token</p>
+              </div>
+            </div>
+            <input
+              type="text"
+              value={settings.lichessToken}
+              onChange={(e) => updateSetting('lichessToken', e.target.value)}
+              placeholder="lip_..."
+              className="w-full px-4 py-2.5 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground border border-border/50 focus:border-primary focus:outline-none transition-colors"
+            />
           </div>
         </div>
       </div>

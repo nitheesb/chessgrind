@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
@@ -10,6 +10,7 @@ import { XPBar } from '@/components/ui/xp-animations'
 import { MiniChessboard } from '@/components/chess/chessboard'
 import { PUZZLES } from '@/lib/chess-data/puzzles'
 import { WeeklyMissions } from '@/components/ui/weekly-missions'
+import { getPlayerGames, type LichessGame } from '@/lib/lichess-api'
 import {
   Flame,
   Puzzle,
@@ -55,6 +56,18 @@ const CHESS_TIPS = [
   "The threat is often stronger than the execution.",
 ]
 
+function formatTimeAgo(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000)
+  if (seconds < 60) return 'now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}d`
+  return `${Math.floor(days / 30)}mo`
+}
+
 interface DashboardProps {
   onNavigate: (page: string) => void
 }
@@ -68,6 +81,25 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   const dailyPuzzleIndex = getDailyPuzzleIndex(PUZZLES.length)
   const dailyPuzzle = PUZZLES[dailyPuzzleIndex]
+
+  // Lichess games
+  const [lichessGames, setLichessGames] = useState<LichessGame[]>([])
+  const [lichessLoading, setLichessLoading] = useState(false)
+
+  useEffect(() => {
+    if (!settings.lichessUsername) return
+    let cancelled = false
+    setLichessLoading(true)
+    getPlayerGames(settings.lichessUsername, { max: 10 }).then(games => {
+      if (!cancelled) {
+        setLichessGames(games)
+        setLichessLoading(false)
+      }
+    }).catch(() => {
+      if (!cancelled) setLichessLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [settings.lichessUsername])
 
   const today = new Date()
   const startOfYear = new Date(today.getFullYear(), 0, 0)
@@ -302,6 +334,54 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             })
           })()}
         </div>
+      </motion.div>
+
+      {/* Recent Lichess Games */}
+      <motion.div variants={staggerItem}>
+        {settings.lichessUsername ? (
+          <div>
+            <h2 className="text-sm font-semibold text-foreground mb-2">Recent Lichess Games</h2>
+            {lichessLoading ? (
+              <div className="glass-card p-4 text-center text-xs text-muted-foreground">Loading games...</div>
+            ) : lichessGames.length === 0 ? (
+              <div className="glass-card p-4 text-center text-xs text-muted-foreground">No recent games found</div>
+            ) : (
+              <div className="glass-card p-3 space-y-1">
+                {lichessGames.map((game) => {
+                  const username = settings.lichessUsername.toLowerCase()
+                  const isWhite = game.players.white.user?.id?.toLowerCase() === username || game.players.white.user?.name?.toLowerCase() === username
+                  const opponent = isWhite
+                    ? (game.players.black.user?.name || game.players.black.aiLevel ? `AI Level ${game.players.black.aiLevel}` : '?')
+                    : (game.players.white.user?.name || game.players.white.aiLevel ? `AI Level ${game.players.white.aiLevel}` : '?')
+                  const result = !game.winner ? 'D' : (game.winner === 'white' && isWhite) || (game.winner === 'black' && !isWhite) ? 'W' : 'L'
+                  const resultColor = result === 'W' ? 'bg-amber-500/10 text-amber-400' : result === 'D' ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'
+                  const timeAgo = game.createdAt ? formatTimeAgo(game.createdAt) : ''
+                  return (
+                    <div key={game.id} className="flex items-center gap-2.5 py-1.5 border-b border-border/20 last:border-0">
+                      <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold flex-none ${resultColor}`}>{result}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">vs {opponent}</p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                          {game.opening?.name && <span className="truncate">{game.opening.name}</span>}
+                          {game.speed && <span className="capitalize">{game.speed}</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-none">
+                        <span className={`w-2.5 h-2.5 rounded-full ${isWhite ? 'bg-white border border-zinc-400' : 'bg-zinc-800 border border-zinc-600'}`} />
+                        <span className="text-[10px] text-muted-foreground">{timeAgo}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="glass-card p-4 text-center">
+            <p className="text-xs font-semibold text-foreground mb-1">Connect Lichess</p>
+            <p className="text-[10px] text-muted-foreground">Add your Lichess username in Settings to see your recent games here.</p>
+          </div>
+        )}
       </motion.div>
 
       {/* Chess Tip */}

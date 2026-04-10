@@ -10,6 +10,7 @@ import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { staggerContainer, staggerItem } from '@/components/ui/animated-components'
+import { OpeningExplorer } from '@/components/chess/opening-explorer'
 import {
   ArrowLeft,
   ChevronRight,
@@ -21,6 +22,8 @@ import {
   Eye,
   EyeOff,
   FlipVertical,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 
 interface OpeningsPageProps {
@@ -151,6 +154,7 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
   const [incorrectMove, setIncorrectMove] = useState(false)
   const [boardFlipped, setBoardFlipped] = useState(false)
   const [showCoords, setShowCoords] = useState(true)
+  const [explorerOpen, setExplorerOpen] = useState(false)
 
   // Determine whose turn it is in the opening
   const isUserTurn = moveIndex % 2 === 0 // User plays white's moves
@@ -432,6 +436,22 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* Lichess Opening Explorer (collapsible) */}
+      <div className="bg-secondary rounded-xl overflow-hidden">
+        <button
+          onClick={() => setExplorerOpen(!explorerOpen)}
+          className="w-full flex items-center justify-between p-3 text-left"
+        >
+          <span className="text-xs text-muted-foreground font-medium">Lichess Explorer</span>
+          {explorerOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        {explorerOpen && (
+          <div className="px-3 pb-3">
+            <OpeningExplorer fen={game.fen()} />
+          </div>
+        )}
       </div>
     </div>
   )

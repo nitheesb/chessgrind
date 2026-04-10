@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { setLichessToken } from './lichess-api'
 
 export interface AppSettings {
   soundEnabled: boolean
@@ -14,6 +15,8 @@ export interface AppSettings {
   reducedMotion: boolean
   blindfoldMode: boolean
   zenMode: boolean
+  lichessToken: string
+  lichessUsername: string
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -28,6 +31,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   reducedMotion: false,
   blindfoldMode: false,
   zenMode: false,
+  lichessToken: '',
+  lichessUsername: '',
 }
 
 interface SettingsContextType {
@@ -102,6 +107,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       root.classList.remove('zen-mode')
     }
   }, [settings.zenMode, loaded])
+
+  // Sync Lichess token to API client
+  useEffect(() => {
+    if (loaded && settings.lichessToken) {
+      setLichessToken(settings.lichessToken)
+    }
+  }, [settings.lichessToken, loaded])
 
   const updateSetting = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }))

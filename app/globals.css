@@ -1488,6 +1488,8 @@ input[type="email"]:focus {
   width: var(--lm-board-size);
   height: var(--lm-board-size);
   flex: none;
+  /* Smooth resize transitions */
+  transition: width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), height 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   /* Crisp pixel rendering for the board */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;

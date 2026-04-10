@@ -391,6 +391,52 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
         </div>
       </motion.div>
 
+      {/* Lichess Integration */}
+      <motion.div variants={item} className="glass-card p-4">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <Crown className="w-3.5 h-3.5" />
+          Lichess Integration
+        </h2>
+
+        <div className="py-4 border-b border-border/50">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">
+              <Crown className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Lichess Username</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Link your Lichess account</p>
+            </div>
+          </div>
+          <input
+            type="text"
+            value={settings.lichessUsername}
+            onChange={(e) => updateSetting('lichessUsername', e.target.value)}
+            placeholder="Your Lichess username"
+            className="w-full px-3 py-2 rounded-lg bg-secondary text-foreground text-sm placeholder:text-muted-foreground border border-border/50 focus:border-primary focus:outline-none transition-colors"
+          />
+        </div>
+
+        <div className="py-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">
+              <Crown className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">API Token (Optional)</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Get a free token at lichess.org/account/oauth/token</p>
+            </div>
+          </div>
+          <input
+            type="text"
+            value={settings.lichessToken}
+            onChange={(e) => updateSetting('lichessToken', e.target.value)}
+            placeholder="lip_..."
+            className="w-full px-3 py-2 rounded-lg bg-secondary text-foreground text-sm placeholder:text-muted-foreground border border-border/50 focus:border-primary focus:outline-none transition-colors"
+          />
+        </div>
+      </motion.div>
+
       {/* About */}
       <motion.div variants={item} className="glass-card p-4">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">

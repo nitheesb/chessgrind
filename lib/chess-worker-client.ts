@@ -1,9 +1,17 @@
 /**
  * Chess Worker Client
- * Provides async wrappers for getBestMove and analyzePosition
- * that run inside a Web Worker — keeping the main thread free.
+ * Provides async wrappers for getBestMove and analyzePosition.
+ * Routes to either the custom engine (low levels) or Stockfish WASM (high levels).
  */
 import type { EngineConfig } from './chess-engine'
+import {
+  getStockfishMove,
+  analyzeWithStockfish,
+  stopStockfish,
+  terminateStockfish,
+  type StockfishSearchOptions,
+  type StockfishAnalysis,
+} from './stockfish-client'
 
 type PendingResolver = (value: unknown) => void
 
@@ -25,18 +33,37 @@ function getWorker(): Worker {
   }
   worker.onerror = (e) => {
     console.error('[chess-worker] error', e)
-    // Resolve all pending with null so callers don't hang
     pending.forEach((resolve) => resolve(null))
     pending.clear()
-    worker = null // force recreation on next call
+    worker = null
   }
   return worker
+}
+
+/** Stockfish search options mapped from engine config */
+function stockfishOptionsFromConfig(config: EngineConfig): StockfishSearchOptions {
+  // Map custom engine depth to Stockfish parameters
+  // Custom depth 4 → SF depth 10, depth 5 → SF depth 15, depth 6+ → SF depth 20
+  if (config.depth <= 4) {
+    return { depth: 10, movetime: 800 }
+  } else if (config.depth <= 5) {
+    return { depth: 15, movetime: 2000 }
+  } else {
+    return { depth: 20, movetime: 5000 }
+  }
 }
 
 export function getBestMoveAsync(
   fen: string,
   config: EngineConfig,
 ): Promise<string | null> {
+  // Use Stockfish for depth >= 4 (levels 5+)
+  if (config.useStockfish) {
+    const opts = stockfishOptionsFromConfig(config)
+    return getStockfishMove(fen, opts)
+  }
+
+  // Use custom engine for low levels
   return new Promise((resolve) => {
     const id = String(nextId++)
     pending.set(id, (r) => resolve(r as string | null))
@@ -52,12 +79,21 @@ export function getBestMoveAsync(
 export function analyzePositionAsync(
   fen: string,
   depth = 4,
+  useStockfish = true,
+  onProgress?: (info: StockfishAnalysis) => void,
 ): Promise<{
   eval: number
   bestLine: string[]
   isMate: boolean
   mateIn: number | null
+  depth?: number
 }> {
+  // Always prefer Stockfish for analysis (much better quality)
+  if (useStockfish) {
+    return analyzeWithStockfish(fen, { depth: Math.max(depth, 16) }, onProgress)
+  }
+
+  // Fallback to custom engine
   return new Promise((resolve) => {
     const id = String(nextId++)
     const fallback = { eval: 0, bestLine: [], isMate: false, mateIn: null }
@@ -73,9 +109,15 @@ export function analyzePositionAsync(
   })
 }
 
-/** Terminate the worker (call on component unmount if needed) */
+/** Stop any running Stockfish analysis */
+export function stopAnalysis() {
+  stopStockfish()
+}
+
+/** Terminate all workers */
 export function terminateWorker() {
   worker?.terminate()
   worker = null
   pending.clear()
+  terminateStockfish()
 }

@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard, MiniChessboard } from '@/components/chess/chessboard'
+import { OpeningExplorer } from '@/components/chess/opening-explorer'
 import { OPENINGS } from '@/lib/chess-data'
 import type { Opening } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
@@ -457,6 +458,9 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
             </div>
           )}
         </div>
+
+        {/* Lichess Opening Explorer */}
+        <OpeningExplorer fen={game.fen()} />
       </div>
     </div>
   )

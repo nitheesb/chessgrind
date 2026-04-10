@@ -321,6 +321,7 @@ export interface EngineConfig {
   useQuiescence: boolean
   useOpeningBook: boolean
   timeBudgetMs: number // max time in ms for the search (0 = unlimited)
+  useStockfish?: boolean // if true, route to Stockfish WASM instead of custom engine
 }
 
 // Preset configs mapped to depth values for backward compatibility
@@ -409,7 +410,7 @@ export function getBestMove(game: Chess, config: EngineConfig): string | null {
  * Get engine config for a given depth level.
  * Convenience function for backward compatibility.
  */
-export function getEngineConfig(depth: number): EngineConfig {
+export function getEngineConfig(depth: number, useStockfish = false): EngineConfig {
   const preset = DEPTH_PRESETS[Math.min(depth, 6)] || DEPTH_PRESETS[6]
   return {
     depth: Math.max(1, depth),
@@ -417,6 +418,7 @@ export function getEngineConfig(depth: number): EngineConfig {
     useQuiescence: preset.useQuiescence ?? true,
     useOpeningBook: preset.useOpeningBook ?? true,
     timeBudgetMs: preset.timeBudgetMs ?? 5000,
+    useStockfish,
   }
 }
 

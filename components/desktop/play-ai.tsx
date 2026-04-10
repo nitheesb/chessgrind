@@ -51,11 +51,11 @@ const TIME_CONTROLS: TimeControl[] = [
   { label: '10|5', minutes: 10, increment: 5 },
 ]
 
-const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string }> = {
-  beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'amber' },
-  intermediate: { name: 'Intermediate', depth: 3, description: 'A fair challenge', color: 'blue' },
-  advanced: { name: 'Advanced', depth: 5, description: 'For experienced players', color: 'purple' },
-  master: { name: 'Master', depth: 6, description: 'The ultimate test', color: 'red' },
+const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string; useStockfish: boolean }> = {
+  beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'amber', useStockfish: false },
+  intermediate: { name: 'Intermediate', depth: 3, description: 'A fair challenge', color: 'blue', useStockfish: false },
+  advanced: { name: 'Advanced', depth: 5, description: 'Stockfish engine', color: 'purple', useStockfish: true },
+  master: { name: 'Master', depth: 6, description: 'Full Stockfish 18', color: 'red', useStockfish: true },
 }
 
 const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string; activeStyle: string }> = {
@@ -214,7 +214,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     // Scale artificial delay with difficulty - easy levels respond faster
     const depthVal = DIFFICULTY_CONFIG[difficulty].depth
     const delay = depthVal <= 2 ? 100 + Math.random() * 200 : 300 + Math.random() * 400
-    const config = getEngineConfig(depthVal)
+    const config = getEngineConfig(depthVal, DIFFICULTY_CONFIG[difficulty].useStockfish)
     const fen = currentGame.fen()
 
     setTimeout(() => {
@@ -410,36 +410,75 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     }
   }, [moveHistory.length])
 
+  // Auto-start game on first move from setup screen
+  const handleSetupMove = useCallback((from: string, to: string, promotion?: string): boolean => {
+    const freshGame = new Chess()
+    try {
+      const move = freshGame.move({ from, to, promotion: promotion || 'q' })
+      if (!move) return false
+
+      // Start the game with current settings
+      setGameStarted(true)
+      setGame(freshGame)
+      setGameStatus('playing')
+      setLastMove({ from, to })
+      setMoveHistory([move.san])
+      setTimer(0)
+      setWhiteTime(timeControl.minutes * 60)
+      setBlackTime(timeControl.minutes * 60)
+      setKeyboardInput('')
+      setAnalysis(null)
+      setAnalysisLog([])
+      playSound(move.captured ? 'capture' : 'move')
+      triggerHaptic('medium')
+
+      // Trigger AI response after a short delay
+      if (!freshGame.isGameOver()) {
+        setTimeout(() => makeAIMove(freshGame), 300)
+      }
+      return true
+    } catch {
+      return false
+    }
+  }, [playSound, triggerHaptic, makeAIMove, timeControl.minutes])
+
   if (!gameStarted) {
     return (
       <div className="flex h-full overflow-hidden lm-gpu">
-        {/* Left: static board preview */}
+        {/* Left: interactive board — make a move to start */}
         <div className="lm-board-panel flex items-center justify-center bg-black/20 border-r border-white/[0.06]">
-          <div className="lm-board-wrap flex items-center justify-center">
-            <Chessboard
-              fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-              interactive={false}
-              size={boardSize}
-              boardStyle={settings.boardStyle}
-              pieceStyle={settings.pieceStyle}
-            />
+          <div className="flex flex-col items-center gap-3">
+            <div className="lm-board-wrap flex items-center justify-center">
+              <Chessboard
+                fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+                interactive={true}
+                onMove={handleSetupMove}
+                orientation={playerColor}
+                size={boardSize}
+                boardStyle={settings.boardStyle}
+                pieceStyle={settings.pieceStyle}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground animate-pulse">Make a move to start playing</p>
           </div>
         </div>
-        {/* Right: setup options */}
-        <div className="lm-right-panel">
-          <div className="p-8 max-w-xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-6" style={{ background: '#312e2b', border: '1px solid #3d3a37' }}>
-                <Swords className="w-10 h-10 text-white" />
+        {/* Right: compact setup options */}
+        <div className="lm-right-panel flex flex-col">
+          <div className="flex-1 overflow-y-auto p-5 max-w-xl mx-auto w-full">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#312e2b', border: '1px solid #3d3a37' }}>
+                <Swords className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-foreground mb-3">Play vs Computer</h1>
-              <p className="text-lg text-muted-foreground">Choose your settings and start playing</p>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Play vs Computer</h1>
+                <p className="text-sm text-muted-foreground">Choose settings or just make a move</p>
+              </div>
             </div>
 
             {/* Difficulty Selection */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Select Difficulty</h2>
-              <div className="grid grid-cols-4 gap-4">
+            <div className="mb-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3 text-center">Select Difficulty</h2>
+              <div className="grid grid-cols-4 gap-3">
                 {(Object.entries(DIFFICULTY_CONFIG) as [Difficulty, typeof DIFFICULTY_CONFIG[Difficulty]][]).map(([key, config]) => (
                   <motion.button
                     key={key}
@@ -447,17 +486,16 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                       playSound('click')
                       setDifficulty(key)
                     }}
-                    className={`p-6 rounded-2xl border transition-all duration-300 relative overflow-hidden group ${difficulty === key
+                    className={`p-3 rounded-xl border transition-all duration-300 relative overflow-hidden group ${difficulty === key
                       ? `${COLOR_CLASSES[config.color].border} ${COLOR_CLASSES[config.color].bg} ${COLOR_CLASSES[config.color].activeStyle}`
                       : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
                       }`}
                   >
-                    {/* Subtle gradient hover block */}
                     {difficulty !== key && (
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
                     )}
-                    <Cpu className={`w-8 h-8 mb-4 mx-auto relative z-10 transition-colors ${difficulty === key ? COLOR_CLASSES[config.color].text : 'text-muted-foreground group-hover:text-foreground'}`} />
-                    <h3 className="font-semibold text-foreground mb-1.5 relative z-10 tracking-wide text-sm">{config.name}</h3>
+                    <Cpu className={`w-6 h-6 mb-2 mx-auto relative z-10 transition-colors ${difficulty === key ? COLOR_CLASSES[config.color].text : 'text-muted-foreground group-hover:text-foreground'}`} />
+                    <h3 className="font-semibold text-foreground mb-1 relative z-10 tracking-wide text-sm">{config.name}</h3>
                     <p className="text-xs text-muted-foreground relative z-10">{config.description}</p>
                   </motion.button>
                 ))}
@@ -465,9 +503,9 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
             </div>
 
             {/* Color Selection */}
-            <div className="mb-10">
-              <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Choose Your Side</h2>
-              <div className="flex justify-center gap-4">
+            <div className="mb-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3 text-center">Choose Your Side</h2>
+              <div className="flex justify-center gap-3">
                 {(['white', 'black', 'random'] as const).map((color) => (
                   <motion.button
                     key={color}
@@ -475,61 +513,60 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                       playSound('click')
                       setPlayerColor(color === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : color)
                     }}
-                    className={`px-8 py-4 rounded-2xl border transition-all duration-300 flex items-center gap-3 relative overflow-hidden group ${playerColor === color || (color !== 'random' && playerColor === color)
+                    className={`px-6 py-3 rounded-xl border transition-all duration-300 flex items-center gap-2.5 relative overflow-hidden group ${playerColor === color || (color !== 'random' && playerColor === color)
                       ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/50'
                       : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20'
                       }`}
                   >
-                    {/* Subtle gradient hover block */}
                     {!(playerColor === color || (color !== 'random' && playerColor === color)) && (
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
                     )}
-                    <span className={`w-6 h-6 rounded-full relative z-10 shadow-inner ${color === 'white' ? 'bg-white border text-black' :
+                    <span className={`w-5 h-5 rounded-full relative z-10 shadow-inner ${color === 'white' ? 'bg-white border text-black' :
                       color === 'black' ? 'bg-zinc-900 border border-white/20' :
                         'bg-gradient-to-br from-white to-zinc-900 border border-white/20'
                       }`} />
-                    <span className="font-semibold text-foreground capitalize relative z-10 tracking-wide">{color}</span>
+                    <span className="font-semibold text-foreground capitalize relative z-10 tracking-wide text-sm">{color}</span>
                   </motion.button>
                 ))}
               </div>
             </div>
 
             {/* Time Control */}
-            <div className="mb-10">
-              <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Time Control</h2>
-              <div className="flex flex-wrap justify-center gap-3">
+            <div className="mb-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3 text-center">Time Control</h2>
+              <div className="flex flex-wrap justify-center gap-2">
                 {TIME_CONTROLS.map((tc) => (
                   <motion.button
                     key={tc.label}
                     onClick={() => { playSound('click'); setTimeControl(tc) }}
-                    className={`px-5 py-3 rounded-xl border transition-all duration-300 relative overflow-hidden group ${timeControl.label === tc.label
+                    className={`px-4 py-2 rounded-lg border transition-all duration-300 text-sm relative overflow-hidden group ${timeControl.label === tc.label
                       ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] ring-1 ring-primary/50 text-primary font-semibold'
                       : 'border-white/10 bg-black/40 hover:bg-white/5 hover:border-white/20 text-muted-foreground'
                       }`}
                   >
-                    <Clock className="w-4 h-4 inline mr-1.5" />
+                    <Clock className="w-3.5 h-3.5 inline mr-1" />
                     {tc.label}
                   </motion.button>
                 ))}
               </div>
             </div>
+          </div>
 
-            {/* Start Button */}
-            <div className="text-center mt-6">
-              <motion.button
-                onClick={startGame}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-16 py-4 rounded-lg font-bold text-lg text-white transition-all duration-200 relative overflow-hidden"
-                style={{
-                  background: '#81b64c',
-                  borderBottom: '4px solid #5d8c34',
-                  boxShadow: '0 4px 12px rgba(129, 182, 76, 0.3)',
-                }}
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2">Play <ChevronRight className="w-5 h-5" /></span>
-              </motion.button>
-            </div>
+          {/* Pinned Play button */}
+          <div className="flex-shrink-0 p-5 pt-3 border-t border-white/[0.06] bg-background/80 backdrop-blur-sm">
+            <motion.button
+              onClick={startGame}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-3.5 rounded-lg font-bold text-lg text-white transition-all duration-200 relative overflow-hidden"
+              style={{
+                background: '#81b64c',
+                borderBottom: '4px solid #5d8c34',
+                boxShadow: '0 4px 12px rgba(129, 182, 76, 0.3)',
+              }}
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">Play <ChevronRight className="w-5 h-5" /></span>
+            </motion.button>
           </div>
         </div>
       </div>

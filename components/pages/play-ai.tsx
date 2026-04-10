@@ -91,6 +91,21 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
   const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w')
   const [timeControl, setTimeControl] = useState<TimeControl>(TIME_CONTROLS[0])
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const { settings } = useSettings()
+
+  // Auto-start from board: use level 3 (Club Player), white, unlimited
+  const handleSetupMove = useCallback((from: string, to: string, promotion?: string): boolean => {
+    const freshGame = new Chess()
+    try {
+      const move = freshGame.move({ from, to, promotion: promotion || 'q' })
+      if (!move) return false
+      setSelectedLevel(3)
+      setGameStarted(true)
+      return true
+    } catch {
+      return false
+    }
+  }, [])
 
   if (gameStarted && selectedLevel !== null) {
     return (
@@ -125,6 +140,19 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
           <h1 className="text-xl font-display font-bold text-foreground shimmer-text">Play vs Computer</h1>
           <p className="text-xs text-muted-foreground shimmer-text">Choose your opponent</p>
         </div>
+      </motion.div>
+
+      {/* Interactive board — make a move to quick-start */}
+      <motion.div variants={staggerItem} className="flex flex-col items-center gap-2">
+        <Chessboard
+          fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+          interactive={true}
+          onMove={handleSetupMove}
+          size={Math.min(320, typeof window !== 'undefined' ? window.innerWidth - 48 : 320)}
+          boardStyle={settings.boardStyle}
+          pieceStyle={settings.pieceStyle}
+        />
+        <p className="text-xs text-muted-foreground animate-pulse">Make a move to start playing</p>
       </motion.div>
 
       {/* Color Selection */}
@@ -413,7 +441,7 @@ function GameSession({
     setIsThinking(true)
     // Scale artificial delay with difficulty - easy levels respond faster
     const delay = aiConfig.depth <= 2 ? 100 + Math.random() * 200 : 300 + Math.random() * 400
-    const config = getEngineConfig(aiConfig.depth)
+    const config = getEngineConfig(aiConfig.depth, aiConfig.useStockfish)
     const fen = currentGame.fen()
 
     setTimeout(() => {

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { ChessPiece, parseFEN } from './chess-pieces'
 import { getGlobalSoundHaptics } from '@/lib/use-sound-haptics'
@@ -212,7 +213,7 @@ const Square = memo(function Square({
   )
 })
 
-// Animated piece during movement
+// Animated piece during movement — spring physics via framer-motion
 function AnimatedPiece({
   piece,
   from,
@@ -230,10 +231,6 @@ function AnimatedPiece({
   onComplete: () => void
   pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
 }) {
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const rafRef = useRef<number | undefined>(undefined)
-  const startTimeRef = useRef<number | undefined>(undefined)
-
   const getPos = useCallback((square: string) => {
     const { row, col } = squareToIndex(square)
     const displayCol = flipped ? 7 - col : col
@@ -244,45 +241,17 @@ function AnimatedPiece({
     }
   }, [squareSize, flipped])
 
-  useEffect(() => {
-    const fromPos = getPos(from)
-    const toPos = getPos(to)
-    const duration = 120 // ms - fast and snappy
-
-    const animate = (timestamp: number) => {
-      if (!startTimeRef.current) startTimeRef.current = timestamp
-      const elapsed = timestamp - startTimeRef.current
-      const progress = Math.min(elapsed / duration, 1)
-
-      // Ease out cubic for snappy feel
-      const eased = 1 - Math.pow(1 - progress, 3)
-
-      setPosition({
-        x: fromPos.x + (toPos.x - fromPos.x) * eased,
-        y: fromPos.y + (toPos.y - fromPos.y) * eased,
-      })
-
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(animate)
-      } else {
-        onComplete()
-      }
-    }
-
-    setPosition(fromPos)
-    rafRef.current = requestAnimationFrame(animate)
-
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    }
-  }, [from, to, getPos, onComplete])
+  const fromPos = getPos(from)
+  const toPos = getPos(to)
 
   return (
-    <div
+    <motion.div
+      initial={{ x: fromPos.x, y: fromPos.y }}
+      animate={{ x: toPos.x, y: toPos.y }}
+      transition={{ type: 'spring', stiffness: 400, damping: 28, mass: 0.8 }}
+      onAnimationComplete={onComplete}
       style={{
         position: 'absolute',
-        left: position.x,
-        top: position.y,
         width: squareSize,
         height: squareSize,
         display: 'flex',
@@ -293,7 +262,107 @@ function AnimatedPiece({
       }}
     >
       <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
-    </div>
+    </motion.div>
+  )
+}
+
+// Snap-back animation for illegal drag drops
+function SnapBackPiece({
+  piece,
+  fromX,
+  fromY,
+  toSquare,
+  squareSize,
+  flipped,
+  boardRect,
+  onComplete,
+  pieceStyle,
+}: {
+  piece: string
+  fromX: number
+  fromY: number
+  toSquare: string
+  squareSize: number
+  flipped: boolean
+  boardRect: DOMRect
+  onComplete: () => void
+  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+}) {
+  const { row, col } = squareToIndex(toSquare)
+  const displayCol = flipped ? 7 - col : col
+  const displayRow = flipped ? 7 - row : row
+  // Convert board-relative target to fixed screen coords
+  const targetX = boardRect.left + displayCol * squareSize + squareSize * 0.075
+  const targetY = boardRect.top + displayRow * squareSize + squareSize * 0.075
+
+  return (
+    <motion.div
+      initial={{ x: fromX - squareSize * 0.45, y: fromY - squareSize * 0.55, scale: 1.1 }}
+      animate={{ x: targetX, y: targetY, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.7 }}
+      onAnimationComplete={onComplete}
+      style={{
+        position: 'fixed',
+        width: squareSize * 0.85,
+        height: squareSize * 0.85,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 100,
+        pointerEvents: 'none',
+        filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))',
+      }}
+    >
+      <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
+    </motion.div>
+  )
+}
+
+// Captured piece fly-off animation
+function CapturedPieceAnim({
+  piece,
+  square,
+  squareSize,
+  flipped,
+  capturedByColor,
+  onComplete,
+  pieceStyle,
+}: {
+  piece: string
+  square: string
+  squareSize: number
+  flipped: boolean
+  capturedByColor: 'w' | 'b'
+  onComplete: () => void
+  pieceStyle?: 'standard' | 'neo' | 'classic' | 'minimal' | 'pink'
+}) {
+  const { row, col } = squareToIndex(square)
+  const displayCol = flipped ? 7 - col : col
+  const displayRow = flipped ? 7 - row : row
+  const x = displayCol * squareSize
+  const y = displayRow * squareSize
+  // Fly toward the capturing side (top or bottom of board)
+  const exitY = capturedByColor === 'w' ? -squareSize * 1.5 : squareSize * 9.5
+
+  return (
+    <motion.div
+      initial={{ x, y, opacity: 1, scale: 1, rotate: 0 }}
+      animate={{ x: x + (Math.random() - 0.5) * squareSize, y: exitY, opacity: 0, scale: 0.4, rotate: (Math.random() - 0.5) * 30 }}
+      transition={{ duration: 0.45, ease: 'easeIn' }}
+      onAnimationComplete={onComplete}
+      style={{
+        position: 'absolute',
+        width: squareSize,
+        height: squareSize,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 45,
+        pointerEvents: 'none',
+      }}
+    >
+      <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
+    </motion.div>
   )
 }
 
@@ -409,8 +478,14 @@ export function Chessboard({
   const theme = BOARD_THEMES[boardStyle]
 
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
-  const [dragPiece, setDragPiece] = useState<{ piece: string; from: string; x: number; y: number } | null>(null)
+  // Drag state: only piece/from are in React state (change rarely), x/y in ref for 60fps
+  const [dragInfo, setDragInfo] = useState<{ piece: string; from: string } | null>(null)
+  const dragNodeRef = useRef<HTMLDivElement>(null)
+  const dragPosRef = useRef({ x: 0, y: 0 })
+  const dragOffsetRef = useRef({ x: 0, y: 0 }) // Offset from click to piece center
   const [animating, setAnimating] = useState<{ piece: string; from: string; to: string } | null>(null)
+  const [captureAnim, setCaptureAnim] = useState<{ piece: string; square: string; byColor: 'w' | 'b' } | null>(null)
+  const [snapBack, setSnapBack] = useState<{ piece: string; from: string; x: number; y: number } | null>(null)
   const [promotionPending, setPromotionPending] = useState<{ from: string; to: string; color: 'w' | 'b' } | null>(null)
   const [longPressTooltip, setLongPressTooltip] = useState<{ piece: string; x: number; y: number } | null>(null)
   // Arrow drawing state
@@ -428,6 +503,38 @@ export function Chessboard({
   const mouseDragPendingRef = useRef<{ piece: string; from: string } | null>(null)
   const wasMouseDragRef = useRef(false)
   const squareSize = size / 8
+
+  // Direct DOM update for drag position — zero React re-renders
+  const updateDragPos = useCallback((x: number, y: number) => {
+    dragPosRef.current = { x, y }
+    if (dragNodeRef.current) {
+      const ox = dragOffsetRef.current.x
+      const oy = dragOffsetRef.current.y
+      dragNodeRef.current.style.transform = `translate3d(${x - ox}px, ${y - oy}px, 0) scale(1.1)`
+    }
+  }, [])
+
+  // Start drag helper
+  const startDrag = useCallback((piece: string, from: string, clientX: number, clientY: number) => {
+    if (boardRef.current) {
+      const rect = boardRef.current.getBoundingClientRect()
+      const { row, col } = squareToIndex(from)
+      const displayCol = isFlipped ? 7 - col : col
+      const displayRow = isFlipped ? 7 - row : row
+      const pieceCenterX = rect.left + (displayCol + 0.5) * squareSize
+      const pieceCenterY = rect.top + (displayRow + 0.5) * squareSize
+      // Offset so piece appears at click point relative to its center
+      dragOffsetRef.current = {
+        x: squareSize * 0.425,
+        y: squareSize * 0.425 + Math.min(15, (clientY - pieceCenterY) * 0.15),
+      }
+    } else {
+      dragOffsetRef.current = { x: squareSize * 0.425, y: squareSize * 0.5 }
+    }
+    dragPosRef.current = { x: clientX, y: clientY }
+    setDragInfo({ piece, from })
+    requestAnimationFrame(() => updateDragPos(clientX, clientY))
+  }, [squareSize, isFlipped, updateDragPos])
 
   // Use either hintArrow or showHint
   const activeHint = hintArrow || showHint
@@ -457,7 +564,7 @@ export function Chessboard({
     return (piece === 'wP' && toRank === 8) || (piece === 'bP' && toRank === 1)
   }, [board])
 
-  // Detect moves and animate
+  // Detect moves, animate piece, and trigger capture animation
   useEffect(() => {
     if (prevFenRef.current !== fen && lastMove) {
       const prevBoard = parseFEN(prevFenRef.current)
@@ -465,6 +572,12 @@ export function Chessboard({
       const piece = prevBoard[row]?.[col]
       if (piece) {
         setAnimating({ piece, from: lastMove.from, to: lastMove.to })
+      }
+      // Check for capture: was there an opponent piece on the target square?
+      const { row: toRow, col: toCol } = squareToIndex(lastMove.to)
+      const capturedPiece = prevBoard[toRow]?.[toCol]
+      if (capturedPiece && piece && capturedPiece[0] !== piece[0]) {
+        setCaptureAnim({ piece: capturedPiece, square: lastMove.to, byColor: piece[0] as 'w' | 'b' })
       }
     }
     prevFenRef.current = fen
@@ -547,7 +660,7 @@ export function Chessboard({
     rightDragRef.current = { from: null, modifiers: { ctrl: false, shift: false } }
   }, [allowArrowDrawing, getActualCoords, onArrowDraw])
 
-  // Board-level mouse move for drag
+  // Board-level mouse move for drag — direct DOM update, no React re-render
   const handleBoardMouseMove = useCallback((e: React.MouseEvent) => {
     if (!mouseDragStartRef.current || !mouseDragPendingRef.current) return
     if (!wasMouseDragRef.current) {
@@ -556,15 +669,15 @@ export function Chessboard({
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         wasMouseDragRef.current = true
         const { piece, from } = mouseDragPendingRef.current
-        setDragPiece({ piece, from, x: e.clientX, y: e.clientY })
+        startDrag(piece, from, e.clientX, e.clientY)
         setSelectedSquare(from)
       }
-    } else if (dragPiece) {
-      setDragPiece(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null)
+    } else if (dragInfo) {
+      updateDragPos(e.clientX, e.clientY)
     }
-  }, [dragPiece])
+  }, [dragInfo, startDrag, updateDragPos])
 
-  // Board-level mouse up for drag drop
+  // Board-level mouse up for drag drop — with snap-back on illegal
   const handleBoardMouseUp = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return
     mouseDragStartRef.current = null
@@ -572,8 +685,8 @@ export function Chessboard({
     if (!wasMouseDragRef.current) {
       return // Was a click - let onClick handle it
     }
-    if (!dragPiece || !boardRef.current) {
-      setDragPiece(null)
+    if (!dragInfo || !boardRef.current) {
+      setDragInfo(null)
       return
     }
     const rect = boardRef.current.getBoundingClientRect()
@@ -582,29 +695,37 @@ export function Chessboard({
     const displayCol = Math.floor(x / squareSize)
     const displayRow = Math.floor(y / squareSize)
     const soundHaptics = getGlobalSoundHaptics()
+    let moved = false
     if (displayCol >= 0 && displayCol < 8 && displayRow >= 0 && displayRow < 8) {
       const { row, col } = getActualCoords(displayRow, displayCol)
       const targetSquare = indexToSquare(row, col)
       const targetPiece = board[row]?.[col]
-      if (targetSquare !== dragPiece.from && onMove) {
-        if (isPromotionMove(dragPiece.from, targetSquare)) {
-          const { row: fromRow2, col: fromCol2 } = squareToIndex(dragPiece.from)
+      if (targetSquare !== dragInfo.from && onMove) {
+        if (isPromotionMove(dragInfo.from, targetSquare)) {
+          const { row: fromRow2, col: fromCol2 } = squareToIndex(dragInfo.from)
           const p = board[fromRow2]?.[fromCol2]
-          setPromotionPending({ from: dragPiece.from, to: targetSquare, color: p?.startsWith('w') ? 'w' : 'b' })
-          setDragPiece(null)
+          setPromotionPending({ from: dragInfo.from, to: targetSquare, color: p?.startsWith('w') ? 'w' : 'b' })
+          setDragInfo(null)
           setSelectedSquare(null)
           return
         }
-        const success = onMove(dragPiece.from, targetSquare)
+        const success = onMove(dragInfo.from, targetSquare)
         if (success) {
           soundHaptics.playSound(targetPiece ? 'capture' : 'move')
           soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
+          moved = true
         }
       }
     }
-    setDragPiece(null)
+    // Snap back on illegal move or same-square drop
+    if (!moved && dragInfo) {
+      setSnapBack({ piece: dragInfo.piece, from: dragInfo.from, x: dragPosRef.current.x, y: dragPosRef.current.y })
+      soundHaptics.playSound('illegal')
+      soundHaptics.triggerHaptic('error')
+    }
+    setDragInfo(null)
     setSelectedSquare(null)
-  }, [dragPiece, squareSize, onMove, getActualCoords, board, isPromotionMove])
+  }, [dragInfo, squareSize, onMove, getActualCoords, board, isPromotionMove])
 
   const handleSquareClick = useCallback((displayRow: number, displayCol: number) => {
     if (!interactive) return
@@ -710,19 +831,17 @@ export function Chessboard({
     // If a piece is already selected, try to move first
     if (selectedSquare) {
       if (square === selectedSquare) {
-        // Tapping same piece - start drag for potential drag, mark as deselect for tap
         tapActionRef.current = 'deselect'
         if (piece) {
           longPressTimerRef.current = setTimeout(() => {
             setLongPressTooltip({ piece, x: touch.clientX, y: touch.clientY })
             setTimeout(() => setLongPressTooltip(null), 2000)
           }, 600)
-          setDragPiece({ piece, from: square, x: touch.clientX, y: touch.clientY })
+          startDrag(piece, square, touch.clientX, touch.clientY)
         }
         return
       }
 
-      // Different square - try to move from selectedSquare
       if (onMove) {
         if (isPromotionMove(selectedSquare, square)) {
           const { row: fromRow2, col: fromCol2 } = squareToIndex(selectedSquare)
@@ -743,7 +862,6 @@ export function Chessboard({
         }
       }
 
-      // Move failed - if piece exists, select new piece and start drag
       if (piece) {
         soundHaptics.playSound('click')
         soundHaptics.triggerHaptic('selection')
@@ -751,7 +869,7 @@ export function Chessboard({
           setLongPressTooltip({ piece, x: touch.clientX, y: touch.clientY })
           setTimeout(() => setLongPressTooltip(null), 2000)
         }, 600)
-        setDragPiece({ piece, from: square, x: touch.clientX, y: touch.clientY })
+        startDrag(piece, square, touch.clientX, touch.clientY)
         setSelectedSquare(square)
         tapActionRef.current = 'select'
       } else {
@@ -771,14 +889,14 @@ export function Chessboard({
         setLongPressTooltip({ piece, x: touch.clientX, y: touch.clientY })
         setTimeout(() => setLongPressTooltip(null), 2000)
       }, 600)
-      setDragPiece({ piece, from: square, x: touch.clientX, y: touch.clientY })
+      startDrag(piece, square, touch.clientX, touch.clientY)
       setSelectedSquare(square)
       tapActionRef.current = 'select'
     }
-  }, [interactive, board, selectedSquare, onMove, getActualCoords, isPromotionMove])
+  }, [interactive, board, selectedSquare, onMove, getActualCoords, isPromotionMove, startDrag])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!dragPiece) return
+    if (!dragInfo) return
     e.preventDefault()
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current)
@@ -792,27 +910,26 @@ export function Chessboard({
         wasTouchDragRef.current = true
       }
     }
-    setDragPiece(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null)
-  }, [dragPiece])
+    updateDragPos(touch.clientX, touch.clientY)
+  }, [dragInfo, updateDragPos])
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current)
       longPressTimerRef.current = null
     }
-    if (!dragPiece || !boardRef.current) {
-      setDragPiece(null)
+    if (!dragInfo || !boardRef.current) {
+      setDragInfo(null)
       return
     }
     e.preventDefault()
 
     // Tap (not drag) - preserve selection for tap-to-move workflow
     if (!wasTouchDragRef.current) {
-      setDragPiece(null)
+      setDragInfo(null)
       if (tapActionRef.current === 'deselect') {
         setSelectedSquare(null)
       }
-      // 'select' keeps selectedSquare as set in touchStart
       tapActionRef.current = null
       return
     }
@@ -825,31 +942,40 @@ export function Chessboard({
     const displayCol = Math.floor(x / squareSize)
     const displayRow = Math.floor(y / squareSize)
     const soundHaptics = getGlobalSoundHaptics()
+    let moved = false
 
     if (displayCol >= 0 && displayCol < 8 && displayRow >= 0 && displayRow < 8) {
       const { row, col } = getActualCoords(displayRow, displayCol)
       const targetSquare = indexToSquare(row, col)
       const targetPiece = board[row]?.[col]
-      if (targetSquare !== dragPiece.from && onMove) {
-        if (isPromotionMove(dragPiece.from, targetSquare)) {
-          const { row: fromRow2, col: fromCol2 } = squareToIndex(dragPiece.from)
+      if (targetSquare !== dragInfo.from && onMove) {
+        if (isPromotionMove(dragInfo.from, targetSquare)) {
+          const { row: fromRow2, col: fromCol2 } = squareToIndex(dragInfo.from)
           const p = board[fromRow2]?.[fromCol2]
-          setPromotionPending({ from: dragPiece.from, to: targetSquare, color: p?.startsWith('w') ? 'w' : 'b' })
-          setDragPiece(null)
+          setPromotionPending({ from: dragInfo.from, to: targetSquare, color: p?.startsWith('w') ? 'w' : 'b' })
+          setDragInfo(null)
           setSelectedSquare(null)
           return
         }
-        const success = onMove(dragPiece.from, targetSquare)
+        const success = onMove(dragInfo.from, targetSquare)
         if (success) {
           soundHaptics.playSound(targetPiece ? 'capture' : 'move')
           soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
+          moved = true
         }
       }
     }
 
-    setDragPiece(null)
+    // Snap back on illegal move
+    if (!moved && dragInfo) {
+      setSnapBack({ piece: dragInfo.piece, from: dragInfo.from, x: dragPosRef.current.x, y: dragPosRef.current.y })
+      soundHaptics.playSound('illegal')
+      soundHaptics.triggerHaptic('error')
+    }
+
+    setDragInfo(null)
     setSelectedSquare(null)
-  }, [dragPiece, squareSize, onMove, getActualCoords, board, isPromotionMove])
+  }, [dragInfo, squareSize, onMove, getActualCoords, board, isPromotionMove])
 
   // Pre-compute square states for performance
   const highlightSet = useMemo(() => new Set(highlightSquares), [highlightSquares])
@@ -893,6 +1019,7 @@ export function Chessboard({
         style={{
           width: size,
           height: size,
+          transition: 'width 0.3s cubic-bezier(0.25,0.1,0.25,1), height 0.3s cubic-bezier(0.25,0.1,0.25,1)',
           boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08), inset 0 2px 4px rgba(255,255,255,0.05)',
         }}
         onContextMenu={(e) => e.preventDefault()}
@@ -909,7 +1036,8 @@ export function Chessboard({
           const square = indexToSquare(row, col)
           const piece = board[row]?.[col]
           const isLight = (row + col) % 2 === 0
-          const isDragging = dragPiece?.from === square
+          const isDragging = dragInfo?.from === square
+          const isSnappingBack = snapBack?.from === square
           const isAnimatingFrom = animating?.from === square
 
           return (
@@ -917,7 +1045,7 @@ export function Chessboard({
               key={square}
               row={displayRow}
               col={displayCol}
-              piece={isDragging || isAnimatingFrom ? null : piece}
+              piece={isDragging || isAnimatingFrom || isSnappingBack ? null : piece}
               isLight={isLight}
               isSelected={selectedSquare === square}
               isLastMove={lastMoveSet.has(square) && !animating}
@@ -992,6 +1120,21 @@ export function Chessboard({
           />
         )}
 
+        {/* Captured piece fly-off animation */}
+        <AnimatePresence>
+          {captureAnim && (
+            <CapturedPieceAnim
+              piece={captureAnim.piece}
+              square={captureAnim.square}
+              squareSize={squareSize}
+              flipped={isFlipped}
+              capturedByColor={captureAnim.byColor}
+              onComplete={() => setCaptureAnim(null)}
+              pieceStyle={pieceStyle}
+            />
+          )}
+        </AnimatePresence>
+
         {/* Hint indicator */}
         {(showHintArrow && hintArrow) || activeHint ? (
           <HintIndicator
@@ -1062,22 +1205,40 @@ export function Chessboard({
         )}
       </div>
 
-      {/* Dragged piece */}
-      {dragPiece && (
+      {/* Dragged piece — positioned via ref, not React state */}
+      {dragInfo && (
         <div
+          ref={dragNodeRef}
           style={{
             position: 'fixed',
-            left: dragPiece.x - squareSize * 0.45,
-            top: dragPiece.y - squareSize * 0.55,
+            left: 0,
+            top: 0,
             zIndex: 100,
             pointerEvents: 'none',
-            transform: 'scale(1.1)',
+            willChange: 'transform',
             filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(245,158,11,0.15))',
           }}
         >
-          <ChessPiece piece={dragPiece.piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
+          <ChessPiece piece={dragInfo.piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
         </div>
       )}
+
+      {/* Snap-back animation on illegal drop */}
+      <AnimatePresence>
+        {snapBack && boardRef.current && (
+          <SnapBackPiece
+            piece={snapBack.piece}
+            fromX={snapBack.x}
+            fromY={snapBack.y}
+            toSquare={snapBack.from}
+            squareSize={squareSize}
+            flipped={isFlipped}
+            boardRect={boardRef.current.getBoundingClientRect()}
+            onComplete={() => setSnapBack(null)}
+            pieceStyle={pieceStyle}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Promotion dialog */}
       {promotionPending && (
