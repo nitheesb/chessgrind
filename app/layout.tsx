@@ -127,13 +127,6 @@ function JsonLd() {
           price: '0',
           priceCurrency: 'USD',
         },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: '4.8',
-          ratingCount: '120',
-          bestRating: '5',
-          worstRating: '1',
-        },
         featureList: [
           'Interactive chess puzzles',
           'Opening explorer with animated boards',

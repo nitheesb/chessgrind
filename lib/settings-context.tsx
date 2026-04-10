@@ -56,6 +56,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
+        // Migrate stale pieceStyle values to valid options
+        if (parsed.pieceStyle && parsed.pieceStyle !== 'neo' && parsed.pieceStyle !== 'classic') {
+          parsed.pieceStyle = 'neo'
+        }
         setSettings({ ...DEFAULT_SETTINGS, ...parsed })
       }
     } catch { }

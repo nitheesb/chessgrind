@@ -14,6 +14,7 @@ import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { ShareButtons } from '@/components/ui/share-buttons'
 import { TacticalRadar } from '@/components/ui/tactical-radar'
+import { useDailyPuzzle } from '@/lib/use-daily-puzzle'
 import {
   Puzzle as PuzzleIcon,
   ChevronRight,
@@ -47,6 +48,7 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
   const [filterTheme, setFilterTheme] = useState<string>('all')
   const [rushMinutes, setRushMinutes] = useState<3 | 5 | null>(null)
   const [visibleCount, setVisibleCount] = useState(24)
+  const { puzzle: dailyPuzzle, loading: dailyLoading } = useDailyPuzzle()
 
   const filteredPuzzles = useMemo(() => {
     let result = PUZZLES
@@ -226,6 +228,48 @@ export function DesktopPuzzles({ onNavigate }: DesktopPuzzlesProps) {
             </button>
           ))}
         </div>
+
+        {/* Daily Puzzle from Lichess */}
+        {dailyLoading ? (
+          <div className="glass-card p-5 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-secondary" />
+              <div className="flex-1">
+                <div className="h-4 bg-secondary rounded w-32 mb-2" />
+                <div className="h-3 bg-secondary rounded w-48" />
+              </div>
+            </div>
+          </div>
+        ) : dailyPuzzle ? (
+          <button
+            onClick={() => {
+              playSound('click')
+              setActivePuzzle(dailyPuzzle)
+            }}
+            className="glass-card-hover p-5 text-left group transition-transform hover:scale-[1.01] w-full border border-accent/20"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                <Star className="w-6 h-6 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-lg font-semibold text-foreground">Daily Puzzle</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent/10 text-accent border border-accent/20">
+                    Lichess
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">{dailyPuzzle.description}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getDifficultyBg(dailyPuzzle.difficulty)}`}>
+                  {dailyPuzzle.difficulty}
+                </span>
+                <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+          </button>
+        ) : null}
 
         {/* Puzzle grid - 2 columns */}
         <div className="grid grid-cols-2 gap-4">
@@ -617,6 +661,17 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
             </div>
           </div>
           <p className="text-sm text-muted-foreground">{puzzle.description}</p>
+          {puzzle.source === 'lichess' && puzzle.lichessId && (
+            <a
+              href={`https://lichess.org/training/${puzzle.lichessId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent mt-1 transition-colors"
+            >
+              Puzzle from Lichess
+              <ChevronRight className="w-3 h-3" />
+            </a>
+          )}
         </div>
 
         {/* Timer & XP card */}

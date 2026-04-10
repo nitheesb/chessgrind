@@ -295,10 +295,11 @@ function SnapBackPiece({
   // Convert board-relative target to fixed screen coords
   const targetX = boardRect.left + displayCol * squareSize + squareSize * 0.075
   const targetY = boardRect.top + displayRow * squareSize + squareSize * 0.075
+  const pieceHalf = squareSize * 0.85 / 2
 
   return (
     <motion.div
-      initial={{ x: fromX - squareSize * 0.45, y: fromY - squareSize * 0.55, scale: 1.1 }}
+      initial={{ x: fromX - pieceHalf, y: fromY - pieceHalf, scale: 1.1 }}
       animate={{ x: targetX, y: targetY, scale: 1 }}
       transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.7 }}
       onAnimationComplete={onComplete}
@@ -504,6 +505,8 @@ export function Chessboard({
   const mouseDragStartRef = useRef<{ x: number; y: number } | null>(null)
   const mouseDragPendingRef = useRef<{ piece: string; from: string } | null>(null)
   const wasMouseDragRef = useRef(false)
+  // Touch drag pending (deferred until 5px threshold in touchmove)
+  const touchDragPendingRef = useRef<{ piece: string; from: string } | null>(null)
   const squareSize = size / 8
 
   // Direct DOM update for drag position — zero React re-renders
@@ -525,13 +528,14 @@ export function Chessboard({
       const displayRow = isFlipped ? 7 - row : row
       const pieceCenterX = rect.left + (displayCol + 0.5) * squareSize
       const pieceCenterY = rect.top + (displayRow + 0.5) * squareSize
-      // Offset so piece appears at click point relative to its center
+      // Use actual click offset from piece center so piece doesn't jump
+      const pieceHalf = squareSize * 0.85 / 2
       dragOffsetRef.current = {
-        x: squareSize * 0.425,
-        y: squareSize * 0.425 + Math.min(15, (clientY - pieceCenterY) * 0.15),
+        x: pieceHalf + (clientX - pieceCenterX),
+        y: pieceHalf + (clientY - pieceCenterY),
       }
     } else {
-      dragOffsetRef.current = { x: squareSize * 0.425, y: squareSize * 0.5 }
+      dragOffsetRef.current = { x: squareSize * 0.425, y: squareSize * 0.425 }
     }
     dragPosRef.current = { x: clientX, y: clientY }
     setDragInfo({ piece, from })
@@ -834,6 +838,7 @@ export function Chessboard({
 
     wasTouchDragRef.current = false
     touchStartPosRef.current = { x: touch.clientX, y: touch.clientY }
+    touchDragPendingRef.current = null
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
 
     // If a piece is already selected, try to move first
@@ -845,7 +850,8 @@ export function Chessboard({
             setLongPressTooltip({ piece, x: touch.clientX, y: touch.clientY })
             setTimeout(() => setLongPressTooltip(null), 2000)
           }, 600)
-          startDrag(piece, square, touch.clientX, touch.clientY)
+          // Defer drag start to touchmove (avoids flicker on tap)
+          touchDragPendingRef.current = { piece, from: square }
         }
         return
       }
@@ -877,7 +883,8 @@ export function Chessboard({
           setLongPressTooltip({ piece, x: touch.clientX, y: touch.clientY })
           setTimeout(() => setLongPressTooltip(null), 2000)
         }, 600)
-        startDrag(piece, square, touch.clientX, touch.clientY)
+        // Defer drag start to touchmove
+        touchDragPendingRef.current = { piece, from: square }
         setSelectedSquare(square)
         tapActionRef.current = 'select'
       } else {
@@ -889,7 +896,7 @@ export function Chessboard({
       return
     }
 
-    // No selection - if piece, select it and start drag
+    // No selection - if piece, select it and defer drag to touchmove
     if (piece) {
       soundHaptics.playSound('click')
       soundHaptics.triggerHaptic('selection')
@@ -897,40 +904,46 @@ export function Chessboard({
         setLongPressTooltip({ piece, x: touch.clientX, y: touch.clientY })
         setTimeout(() => setLongPressTooltip(null), 2000)
       }, 600)
-      startDrag(piece, square, touch.clientX, touch.clientY)
+      touchDragPendingRef.current = { piece, from: square }
       setSelectedSquare(square)
       tapActionRef.current = 'select'
     }
-  }, [interactive, board, selectedSquare, onMove, getActualCoords, isPromotionMove, startDrag])
+  }, [interactive, board, selectedSquare, onMove, getActualCoords, isPromotionMove])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!dragInfo) return
     e.preventDefault()
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current)
       longPressTimerRef.current = null
     }
     const touch = e.touches[0]
+
+    // Start drag after 5px movement threshold (deferred from touchstart)
     if (!wasTouchDragRef.current) {
       const dx = touch.clientX - touchStartPosRef.current.x
       const dy = touch.clientY - touchStartPosRef.current.y
       if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
         wasTouchDragRef.current = true
+        // If we have a pending drag piece, start the drag now
+        if (touchDragPendingRef.current && !dragInfo) {
+          const { piece, from } = touchDragPendingRef.current
+          startDrag(piece, from, touch.clientX, touch.clientY)
+          touchDragPendingRef.current = null
+        }
       }
     }
-    updateDragPos(touch.clientX, touch.clientY)
-  }, [dragInfo, updateDragPos])
+
+    if (dragInfo) {
+      updateDragPos(touch.clientX, touch.clientY)
+    }
+  }, [dragInfo, updateDragPos, startDrag])
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current)
       longPressTimerRef.current = null
     }
-    if (!dragInfo || !boardRef.current) {
-      setDragInfo(null)
-      return
-    }
-    e.preventDefault()
+    touchDragPendingRef.current = null
 
     // Tap (not drag) - preserve selection for tap-to-move workflow
     if (!wasTouchDragRef.current) {
@@ -941,6 +954,12 @@ export function Chessboard({
       tapActionRef.current = null
       return
     }
+
+    if (!dragInfo || !boardRef.current) {
+      setDragInfo(null)
+      return
+    }
+    e.preventDefault()
 
     // Drag drop
     const rect = boardRef.current.getBoundingClientRect()
@@ -1332,7 +1351,7 @@ export function Chessboard({
 }
 
 // Mini chessboard for previews
-export const MiniChessboard = memo(function MiniChessboard({ fen, size = 120, boardStyle = 'green', pieceStyle = 'standard' }: { fen: string; size?: number; boardStyle?: BoardStyle; pieceStyle?: 'neo' | 'classic' }) {
+export const MiniChessboard = memo(function MiniChessboard({ fen, size = 120, boardStyle = 'green', pieceStyle = 'neo' }: { fen: string; size?: number; boardStyle?: BoardStyle; pieceStyle?: 'neo' | 'classic' }) {
   const board = useMemo(() => parseFEN(fen), [fen])
   const squareSize = size / 8
   const miniTheme = BOARD_THEMES[boardStyle]

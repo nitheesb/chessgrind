@@ -29,6 +29,8 @@ export interface Puzzle {
   difficulty: 'easy' | 'medium' | 'hard' | 'expert'
   xpReward: number
   solved?: boolean
+  source?: 'static' | 'lichess'
+  lichessId?: string
 }
 
 export interface Trap {

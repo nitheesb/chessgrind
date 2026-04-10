@@ -370,11 +370,8 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
         
         <div className="grid grid-cols-4 gap-2 py-3">
           {([
-            { id: 'standard', label: 'Standard' },
             { id: 'neo', label: 'Neo' },
             { id: 'classic', label: 'Classic' },
-            { id: 'minimal', label: 'Minimal' },
-            { id: 'pink', label: 'Rose' },
           ] as const).map((ps) => (
             <PieceStylePreview
               key={ps.id}

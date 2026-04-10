@@ -12,6 +12,7 @@ import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { ShareButtons } from '@/components/ui/share-buttons'
 import { TacticalRadar } from '@/components/ui/tactical-radar'
+import { useDailyPuzzle } from '@/lib/use-daily-puzzle'
 import { AnimatedCounter, staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
@@ -46,6 +47,7 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
   const [filterTheme, setFilterTheme] = useState<string>('all')
   const [rushMinutes, setRushMinutes] = useState<3 | 5 | null>(null)
   const [visibleCount, setVisibleCount] = useState(20)
+  const { puzzle: dailyPuzzle, loading: dailyLoading } = useDailyPuzzle()
 
   const filteredPuzzles = useMemo(() => {
     let result = PUZZLES
@@ -132,6 +134,44 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
           </button>
         </div>
       </motion.div>
+
+      {/* Daily Puzzle from Lichess */}
+      {dailyLoading ? (
+        <motion.div variants={staggerItem} className="glass-card p-4 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-secondary" />
+            <div className="flex-1">
+              <div className="h-3 bg-secondary rounded w-24 mb-2" />
+              <div className="h-3 bg-secondary rounded w-40" />
+            </div>
+          </div>
+        </motion.div>
+      ) : dailyPuzzle ? (
+        <motion.button
+          variants={staggerItem}
+          onClick={() => setActivePuzzle(dailyPuzzle)}
+          className="w-full glass-card-hover p-4 flex items-center gap-3 text-left border border-accent/20"
+        >
+          <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+            <Star className="w-5 h-5 text-accent" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <p className="text-sm font-semibold text-foreground">Daily Puzzle</p>
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-accent/10 text-accent border border-accent/20">
+                Lichess
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground line-clamp-1">{dailyPuzzle.description}</p>
+          </div>
+          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${getDifficultyBg(dailyPuzzle.difficulty)}`}>
+              {dailyPuzzle.difficulty}
+            </span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </div>
+        </motion.button>
+      ) : null}
 
       {/* Puzzle stats */}
       <motion.div variants={staggerItem} className="grid grid-cols-3 gap-3">
@@ -547,6 +587,16 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
                 {puzzle.difficulty}
               </span>
               <span className="text-[10px] text-muted-foreground">Rating: {puzzle.rating}</span>
+              {puzzle.source === 'lichess' && puzzle.lichessId && (
+                <a
+                  href={`https://lichess.org/training/${puzzle.lichessId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-accent"
+                >
+                  Lichess
+                </a>
+              )}
             </div>
           </div>
         </div>

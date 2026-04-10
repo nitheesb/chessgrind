@@ -480,5 +480,7 @@ export function lichessPuzzleToAppPuzzle(lp: LichessPuzzle): {
     description: `Rating: ${lp.rating} • ${lp.themes.slice(0, 3).join(', ')}`,
     difficulty,
     xpReward: difficulty === 'easy' ? 10 : difficulty === 'medium' ? 20 : difficulty === 'hard' ? 35 : 50,
+    source: 'lichess' as const,
+    lichessId: lp.id,
   }
 }

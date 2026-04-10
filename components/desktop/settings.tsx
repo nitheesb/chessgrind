@@ -205,11 +205,8 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-foreground mb-4">Piece Style</h2>
         <div className="grid grid-cols-5 gap-4">
-          {[{ id: 'standard', name: 'Standard', fill: '#fff', stroke: '#000', strokeWidth: 1.5 },
-          { id: 'neo', name: 'Neo', fill: '#f8f8f8', stroke: '#555', strokeWidth: 1.5 },
+          {[{ id: 'neo', name: 'Neo', fill: '#f8f8f8', stroke: '#555', strokeWidth: 1.5 },
           { id: 'classic', name: 'Classic', fill: '#f5e6c8', stroke: '#4a3728', strokeWidth: 2 },
-          { id: 'minimal', name: 'Minimal', fill: '#fff', stroke: '#999', strokeWidth: 1 },
-          { id: 'pink', name: 'Rose', fill: '#fce4ec', stroke: '#d4778a', strokeWidth: 1.5 },
           ].map((ps) => (
             <motion.button
               key={ps.id}
