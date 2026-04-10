@@ -457,7 +457,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
                     )}
                     <Cpu className={`w-8 h-8 mb-4 mx-auto relative z-10 transition-colors ${difficulty === key ? COLOR_CLASSES[config.color].text : 'text-muted-foreground group-hover:text-foreground'}`} />
-                    <h3 className="font-semibold text-foreground mb-1.5 relative z-10 tracking-wide">{config.name}</h3>
+                    <h3 className="font-semibold text-foreground mb-1.5 relative z-10 tracking-wide text-sm">{config.name}</h3>
                     <p className="text-xs text-muted-foreground relative z-10">{config.description}</p>
                   </motion.button>
                 ))}
@@ -895,7 +895,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                         : 'text-muted-foreground'
                 }`}>
                   {analysis.isMate
-                    ? `M${analysis.mateIn}`
+                    ? `M${analysis.mateIn ?? '?'}`
                     : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`
                   }
                 </span>

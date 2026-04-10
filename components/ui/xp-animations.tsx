@@ -12,9 +12,9 @@ export function XPPopup() {
     <AnimatePresence>
       {xpAnimation.show && (
         <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.7, filter: 'blur(8px)' }}
-          animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, y: -40, scale: 0.5, filter: 'blur(8px)' }}
+          initial={{ opacity: 0, y: 30, scale: 0.7 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -40, scale: 0.5 }}
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] pointer-events-none"
         >
