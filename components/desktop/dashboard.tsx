@@ -6,6 +6,7 @@ import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { getLevelInfo, getDailyPuzzleIndex } from '@/lib/chess-store'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
+import { formatTimeAgo } from '@/lib/utils'
 import { MiniChessboard } from '@/components/chess/chessboard'
 import { AnimatedCounter } from '@/components/ui/animated-components'
 import { OdometerCounter, TypewriterText, RevealGrid } from '@/components/ui/effects'
@@ -44,18 +45,6 @@ import {
 } from 'lucide-react'
 
 
-
-function formatTimeAgo(timestamp: number): string {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000)
-  if (seconds < 60) return 'now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}d`
-  return `${Math.floor(days / 30)}mo`
-}
 
 interface DesktopDashboardProps {
   onNavigate: (page: string) => void

@@ -10,6 +10,7 @@ import type { Puzzle } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
+import { formatTime, shuffleArray } from '@/lib/utils'
 import { ShareButtons } from '@/components/ui/share-buttons'
 import { TacticalRadar } from '@/components/ui/tactical-radar'
 import { useDailyPuzzle } from '@/lib/use-daily-puzzle'
@@ -182,12 +183,12 @@ export function PuzzlesPage({ onBack }: PuzzlesPageProps) {
         </div>
         <div className="glass-card p-3 text-center">
           <Star className="w-4 h-4 text-accent mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={0} /></p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={profile.puzzlesSolved} /></p>
           <p className="text-[10px] text-muted-foreground">Solved</p>
         </div>
         <div className="glass-card p-3 text-center">
           <Trophy className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
-          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={0} suffix="%" /></p>
+          <p className="text-lg font-bold text-foreground"><AnimatedCounter value={profile.puzzlesAttempted > 0 ? Math.round((profile.puzzlesCorrect / profile.puzzlesAttempted) * 100) : 0} suffix="%" /></p>
           <p className="text-[10px] text-muted-foreground">Accuracy</p>
         </div>
       </motion.div>
@@ -514,12 +515,6 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
       setHighlightSquares([hint.from, hint.to])
     }
   }, [game, moveIndex, calculateHint, hintLevel])
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
-    return `${m}:${s.toString().padStart(2, '0')}`
-  }
 
   const handleRetry = useCallback(() => {
     setGame(new Chess(puzzle.fen))
@@ -913,7 +908,7 @@ function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => voi
   useEffect(() => { setSoundEnabled(settings.soundEnabled) }, [settings.soundEnabled, setSoundEnabled])
 
   // Shuffle puzzles for rush mode
-  const shuffled = useMemo(() => [...PUZZLES].sort(() => Math.random() - 0.5), [])
+  const shuffled = useMemo(() => shuffleArray([...PUZZLES]), [])
   const [puzzleIdx, setPuzzleIdx] = useState(0)
   const [game, setGame] = useState(() => new Chess(shuffled[0].fen))
   const [timeLeft, setTimeLeft] = useState(minutes * 60)
@@ -1027,7 +1022,6 @@ function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => voi
     }
   }, [game, moveIndex, currentPuzzle, phase, showFeedback, playSound, triggerHaptic])
 
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
   const total = score + misses
   const accuracy = total > 0 ? Math.round((score / total) * 100) : 0
   const xpEarned = score * 5

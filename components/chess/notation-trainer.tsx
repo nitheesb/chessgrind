@@ -5,16 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PenTool, BookOpen, X, Timer, Trophy } from 'lucide-react'
 import { Chess, type Square as ChessSquare } from 'chess.js'
 import { PUZZLES } from '@/lib/chess-data'
+import { FILES, RANKS, PIECE_SYMBOLS } from '@/lib/chess-constants'
 
-const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-const RANKS = ['1', '2', '3', '4', '5', '6', '7', '8']
 const BEST_SCORE_KEY = 'chessgrind-notation-best'
 const ROUND_DURATION = 30
-
-const PIECE_SYMBOLS: Record<string, string> = {
-  wK: '♔', wQ: '♕', wR: '♖', wB: '♗', wN: '♘', wP: '♙',
-  bK: '♚', bQ: '♛', bR: '♜', bB: '♝', bN: '♞', bP: '♟',
-}
 
 type Mode = 'read' | 'write'
 

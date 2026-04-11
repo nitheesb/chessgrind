@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useId, useMemo } from 'react'
 
 // SVG sparkline for rating history
 
@@ -49,7 +49,7 @@ export function RatingGraph({ data, width = 300, height = 80, color = '#f59e0b' 
   const trendColor = diff > 5 ? 'text-amber-400' : diff < -5 ? 'text-red-400' : 'text-muted-foreground'
 
   const currentRating = data[data.length - 1].rating
-  const gradId = useMemo(() => `rg-${Math.random().toString(36).slice(2, 7)}`, [])
+  const gradId = `rg-${useId()}`
 
   return (
     <div className="flex flex-col gap-1">

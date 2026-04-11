@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Chess } from 'chess.js'
+import { Chess, type Square } from 'chess.js'
 import { ChessPiece, parseFEN } from './chess-pieces'
 import { getGlobalSoundHaptics } from '@/lib/use-sound-haptics'
 
@@ -56,10 +56,7 @@ function getPieceName(piece: string): string {
   return names[piece[1]] || piece
 }
 
-const PIECE_SYMBOLS: Record<string, string> = {
-  wK: '♔', wQ: '♕', wR: '♖', wB: '♗', wN: '♘', wP: '♙',
-  bK: '♚', bQ: '♛', bR: '♜', bB: '♝', bN: '♞', bP: '♟',
-}
+import { PIECE_SYMBOLS } from '@/lib/chess-constants'
 const LONG_PRESS_VALUES: Record<string, number> = { K: 0, Q: 9, R: 5, B: 3, N: 3, P: 1 }
 
 // Memoized square component for performance
@@ -1016,7 +1013,7 @@ export function Chessboard({
     if (!selectedSquare || !interactive) return new Set<string>()
     try {
       const chess = new Chess(fen)
-      const moves = chess.moves({ square: selectedSquare as any, verbose: true })
+      const moves = chess.moves({ square: selectedSquare as Square, verbose: true })
       return new Set(moves.map(m => m.to))
     } catch {
       return new Set<string>()

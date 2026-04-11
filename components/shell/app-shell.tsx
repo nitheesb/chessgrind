@@ -65,8 +65,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'traps', label: 'Traps', icon: <Target className="w-5 h-5" /> },
 ]
 
-const NAV_ORDER: Page[] = ['dashboard', 'puzzles', 'openings', 'play', 'traps', 'profile', 'settings']
-
 export function AppShell() {
   const {
     isLoggedIn,
@@ -166,6 +164,7 @@ export function AppShell() {
 
       {/* Bottom Navigation Bar — Apple Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
+        aria-label="Main navigation"
         style={{
           background: 'rgba(12, 14, 20, 0.92)',
           borderTop: '0.5px solid rgba(255, 255, 255, 0.10)',
@@ -178,6 +177,7 @@ export function AppShell() {
               <button
                 key={navItem.id}
                 onClick={() => handleNavClick(navItem.id)}
+                aria-current={isActive ? 'page' : undefined}
                 className={`relative flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors duration-200 ${isActive ? 'text-primary' : 'text-muted-foreground'
                   }`}
               >
@@ -195,6 +195,7 @@ export function AppShell() {
           })}
           <button
             onClick={() => handleNavClick('profile')}
+            aria-current={currentPage === 'profile' ? 'page' : undefined}
             className={`relative flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors duration-200 ${currentPage === 'profile' ? 'text-primary' : 'text-muted-foreground'
               }`}
           >

@@ -3,9 +3,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, Target, X, Play, Timer, Trophy } from 'lucide-react'
-
-const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-const RANKS = ['1', '2', '3', '4', '5', '6', '7', '8']
+import { FILES, RANKS } from '@/lib/chess-constants'
+import { shuffleArray } from '@/lib/utils'
 const BEST_SCORE_KEY = 'board-vision-best-score'
 const ROUND_DURATION = 30
 
@@ -20,7 +19,7 @@ function generateChoices(correct: string): string[] {
   while (choices.size < 4) {
     choices.add(randomSquare())
   }
-  return Array.from(choices).sort(() => Math.random() - 0.5)
+  return shuffleArray(Array.from(choices))
 }
 
 interface BoardVisionTrainerProps {

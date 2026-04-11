@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
-import { Chess } from 'chess.js'
+import { Chess, type Square } from 'chess.js'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calculator, X, Brain, Trophy, CheckCircle } from 'lucide-react'
 import { MiniChessboard } from '@/components/chess/chessboard'
 import { useSettings } from '@/lib/settings-context'
+import { shuffleArray } from '@/lib/utils'
 
 interface Position {
   fen: string
@@ -39,7 +40,7 @@ const BEST_KEY = 'chessgrind-movecalc-best'
 
 function countLegalMoves(fen: string, square: string): number {
   const game = new Chess(fen)
-  const moves = game.moves({ square: square as never, verbose: true })
+  const moves = game.moves({ square: square as Square, verbose: true })
   return moves.length
 }
 
@@ -72,7 +73,7 @@ export function MoveCalculator({ onClose }: { onClose: () => void }) {
   })
 
   const shuffledPositions = useMemo(() => {
-    const shuffled = [...POSITIONS].sort(() => Math.random() - 0.5)
+    const shuffled = shuffleArray([...POSITIONS])
     return shuffled.slice(0, QUESTIONS_PER_ROUND)
   }, [phase]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -105,7 +106,7 @@ export function MoveCalculator({ onClose }: { onClose: () => void }) {
 
   const nextQuestion = useCallback(() => {
     if (questionIndex + 1 >= QUESTIONS_PER_ROUND) {
-      const finalScore = score + (selected === correctAnswer ? 0 : 0)
+      const finalScore = score + (selected === correctAnswer ? 1 : 0)
       if (finalScore > best) {
         setBest(finalScore)
         if (typeof window !== 'undefined') {

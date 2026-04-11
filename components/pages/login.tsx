@@ -186,7 +186,7 @@ export function LoginPage({ onBack }: { onBack?: () => void }) {
               )}
 
               {/* Form */}
-              <div className="space-y-5">
+              <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); handleSubmit() }}>
                 <div>
                   <label htmlFor="username" className="block text-sm font-semibold text-foreground mb-2.5">
                     Username
@@ -246,7 +246,7 @@ export function LoginPage({ onBack }: { onBack?: () => void }) {
 
                 {/* Submit button with shimmer overlay */}
                 <motion.button
-                  onClick={handleSubmit}
+                  type="submit"
                   disabled={!username.trim() || isSubmitting || (isBackendEnabled && !password)}
                   whileTap={{ scale: 0.97 }}
                   className="relative w-full h-14 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-bold text-base flex items-center justify-center gap-2.5 disabled:opacity-40 shadow-lg shadow-amber-500/20 active:shadow-sm transition-shadow overflow-hidden btn-shine"
@@ -273,7 +273,7 @@ export function LoginPage({ onBack }: { onBack?: () => void }) {
                     Demo mode – your progress saves locally
                   </p>
                 )}
-              </div>
+              </form>
             </div>
           </div>
 

@@ -180,7 +180,7 @@ export function DesktopShell() {
           <span className="font-bold shimmer-text" style={{ fontSize: 'var(--fs-sm)' }}>ChessGrind</span>
         </div>
 
-        <nav className="flex items-center gap-0.5 flex-none">
+        <nav className="flex items-center gap-0.5 flex-none" aria-label="Main navigation">
           {PRIMARY_TABS.map(tab => {
             const Icon = tab.icon
             const isActive = currentPage === tab.id
@@ -189,6 +189,7 @@ export function DesktopShell() {
                 key={tab.id}
                 onClick={() => handleNavigate(tab.id)}
                 onMouseEnter={() => handleNavHover(tab.id)}
+                aria-current={isActive ? 'page' : undefined}
                 className={'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors duration-150 ' + (isActive ? 'text-primary border-b-2 border-primary -mb-px' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]')}
                 style={{ fontSize: 'var(--fs-sm)' }}
               >

@@ -68,9 +68,8 @@ export function parseFEN(fen: string): (string | null)[][] {
   return board
 }
 
+import { WHITE_PIECE_SYMBOLS } from '@/lib/chess-constants'
+
 export function getPieceSymbol(type: string): string {
-  const symbols: Record<string, string> = {
-    'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
-  }
-  return symbols[type.toUpperCase()] || ''
+  return WHITE_PIECE_SYMBOLS[type.toUpperCase()] || ''
 }

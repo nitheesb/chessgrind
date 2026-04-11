@@ -147,6 +147,9 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
                 </div>
                 <motion.button
                   onClick={() => toggleSetting(settingItem.key)}
+                  role="switch"
+                  aria-checked={!!settings[settingItem.key]}
+                  aria-label={settingItem.label}
                   className={`relative w-14 h-8 rounded-full transition-colors ${settings[settingItem.key] ? 'bg-primary' : 'bg-secondary'
                     }`}
                 >
@@ -302,7 +305,7 @@ export function DesktopSettings({ onNavigate }: DesktopSettingsProps) {
               </div>
             </div>
             <input
-              type="text"
+              type="password"
               value={settings.lichessToken}
               onChange={(e) => updateSetting('lichessToken', e.target.value)}
               placeholder="lip_..."

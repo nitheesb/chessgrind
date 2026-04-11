@@ -384,41 +384,39 @@ export function useSoundAndHaptics() {
 }
 
 // Singleton instance for use outside React components
-let globalSoundHaptics: ReturnType<typeof useSoundAndHaptics> | null = null
-
-export function getGlobalSoundHaptics() {
-  if (!globalSoundHaptics) {
-    // Create a simple implementation for non-hook usage
-    let soundEnabled = true
-    let hapticEnabled = true
-    
-    if (typeof window !== 'undefined') {
-      const settings = localStorage.getItem('chessgrind_settings')
-      if (settings) {
-        try {
-          const parsed = JSON.parse(settings)
-          soundEnabled = parsed.soundEnabled ?? true
-          hapticEnabled = parsed.hapticEnabled ?? true
-        } catch {}
+// Reads settings on every call to stay in sync with user preferences
+function readSoundSettings(): { soundEnabled: boolean; hapticEnabled: boolean } {
+  if (typeof window === 'undefined') return { soundEnabled: true, hapticEnabled: true }
+  try {
+    const settings = localStorage.getItem('chessgrind_settings')
+    if (settings) {
+      const parsed = JSON.parse(settings)
+      return {
+        soundEnabled: parsed.soundEnabled ?? true,
+        hapticEnabled: parsed.hapticEnabled ?? true,
       }
     }
-    
-    globalSoundHaptics = {
-      playSound: (type: SoundType) => {
-        if (!soundEnabled) return
-        const ctx = getAudioContext()
-        if (!ctx) return
-        if (ctx.state === 'suspended') ctx.resume()
-        try { generateSound(type)(ctx) } catch {}
-      },
-      triggerHaptic: (type: HapticType = 'light') => {
-        if (!hapticEnabled) return
-        if (typeof navigator === 'undefined' || !navigator.vibrate) return
-        try { navigator.vibrate(hapticPatterns[type]) } catch {}
-      },
-      setSoundEnabled: (enabled: boolean) => { soundEnabled = enabled },
-      setHapticEnabled: (enabled: boolean) => { hapticEnabled = enabled },
-    }
-  }
+  } catch {}
+  return { soundEnabled: true, hapticEnabled: true }
+}
+
+const globalSoundHaptics = {
+  playSound: (type: SoundType) => {
+    if (!readSoundSettings().soundEnabled) return
+    const ctx = getAudioContext()
+    if (!ctx) return
+    if (ctx.state === 'suspended') ctx.resume()
+    try { generateSound(type)(ctx) } catch {}
+  },
+  triggerHaptic: (type: HapticType = 'light') => {
+    if (!readSoundSettings().hapticEnabled) return
+    if (typeof navigator === 'undefined' || !navigator.vibrate) return
+    try { navigator.vibrate(hapticPatterns[type]) } catch {}
+  },
+  setSoundEnabled: () => {},
+  setHapticEnabled: () => {},
+}
+
+export function getGlobalSoundHaptics() {
   return globalSoundHaptics
 }

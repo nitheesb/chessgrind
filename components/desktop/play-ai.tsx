@@ -12,6 +12,7 @@ import { getEngineConfig } from '@/lib/chess-engine'
 import { getBestMoveAsync, analyzePositionAsync } from '@/lib/chess-worker-client'
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
+import { formatTime } from '@/lib/utils'
 import {
   Swords,
   RotateCcw,
@@ -39,17 +40,7 @@ interface DesktopPlayAIProps {
 
 type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'master'
 
-type TimeControl = { label: string; minutes: number; increment: number }
-
-const TIME_CONTROLS: TimeControl[] = [
-  { label: 'Unlimited', minutes: 0, increment: 0 },
-  { label: '1 min', minutes: 1, increment: 0 },
-  { label: '3 min', minutes: 3, increment: 0 },
-  { label: '5 min', minutes: 5, increment: 0 },
-  { label: '10 min', minutes: 10, increment: 0 },
-  { label: '5|3', minutes: 5, increment: 3 },
-  { label: '10|5', minutes: 10, increment: 5 },
-]
+import { TIME_CONTROLS } from '@/lib/chess-constants'
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string; useStockfish: boolean }> = {
   beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'amber', useStockfish: false },
@@ -310,12 +301,6 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     setAnalysis(null)
     if (timerRef.current) clearInterval(timerRef.current)
   }, [playSound])
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
 
   const generatePGN = useCallback(() => {
     const date = new Date().toISOString().split('T')[0].replace(/-/g, '.')

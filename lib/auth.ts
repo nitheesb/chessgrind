@@ -1,9 +1,13 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-)
+function getJWTSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production')
+  }
+  return new TextEncoder().encode(secret || 'dev-only-insecure-secret')
+}
 
 const COOKIE_NAME = 'chessgrind_session'
 
@@ -18,12 +22,12 @@ export async function signToken(payload: Omit<JWTPayload, 'exp'>): Promise<strin
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
-    .sign(JWT_SECRET)
+    .sign(getJWTSecret())
 }
 
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
+    const { payload } = await jwtVerify(token, getJWTSecret())
     return payload as unknown as JWTPayload
   } catch {
     return null
@@ -54,5 +58,5 @@ export async function clearSessionCookie(): Promise<void> {
 }
 
 export function generateUserId(): string {
-  return `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+  return `user_${crypto.randomUUID()}`
 }

@@ -309,13 +309,20 @@ export async function getStockfishMove(
     sendUCI(goCmd)
 
     // Safety timeout: resolve null if no response in 30s
-    setTimeout(() => {
+    const safetyTimeout = setTimeout(() => {
       if (bestMoveResolver && currentRequestId === requestId) {
         bestMoveResolver(null)
         bestMoveResolver = null
         sendUCI('stop')
       }
     }, 30000)
+
+    // Store original resolver so we can clear timeout on normal resolution
+    const originalResolver = bestMoveResolver
+    bestMoveResolver = (result) => {
+      clearTimeout(safetyTimeout)
+      originalResolver(result)
+    }
   })
 }
 
@@ -355,7 +362,7 @@ export async function analyzeWithStockfish(
     sendUCI(goCmd)
 
     // Safety timeout
-    setTimeout(() => {
+    const safetyTimeout = setTimeout(() => {
       if (analysisResolver) {
         currentAnalysisCallback = null
         analysisResolver({ ...latestAnalysis })
@@ -363,6 +370,12 @@ export async function analyzeWithStockfish(
         sendUCI('stop')
       }
     }, 30000)
+
+    const originalResolver = analysisResolver
+    analysisResolver = (result) => {
+      clearTimeout(safetyTimeout)
+      originalResolver(result)
+    }
   })
 }
 

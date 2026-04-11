@@ -323,8 +323,9 @@ export function TypewriterText({
     setDisplayed('')
     setDone(false)
     let i = 0
+    let interval: ReturnType<typeof setInterval> | undefined
     const startTimeout = setTimeout(() => {
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         i++
         setDisplayed(text.slice(0, i))
         if (i >= text.length) {
@@ -332,9 +333,11 @@ export function TypewriterText({
           setDone(true)
         }
       }, speed)
-      return () => clearInterval(interval)
     }, delay)
-    return () => clearTimeout(startTimeout)
+    return () => {
+      clearTimeout(startTimeout)
+      if (interval) clearInterval(interval)
+    }
   }, [text, speed, delay])
 
   // Blink cursor

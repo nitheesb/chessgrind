@@ -7,9 +7,16 @@ const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_RE
 export const isRedisConfigured = !!(redisUrl && redisToken)
 
 // Initialize Redis client only if configured
-const redis = isRedisConfigured 
+const redis = isRedisConfigured
   ? new Redis({ url: redisUrl!, token: redisToken! })
-  : null as unknown as Redis // Type assertion for when not configured
+  : null
+
+function getRedis(): Redis {
+  if (!redis) {
+    throw new Error('Redis is not configured. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables.')
+  }
+  return redis
+}
 
 export default redis
 
@@ -39,20 +46,19 @@ export interface StoredUserProfile {
 }
 
 export async function getUserById(userId: string): Promise<StoredUserProfile | null> {
-  return redis.get<StoredUserProfile>(`${USER_PREFIX}${userId}`)
+  return getRedis().get<StoredUserProfile>(`${USER_PREFIX}${userId}`)
 }
 
 export async function getUserByUsername(username: string): Promise<StoredUserProfile | null> {
-  const userId = await redis.get<string>(`username:${username.toLowerCase()}`)
+  const userId = await getRedis().get<string>(`username:${username.toLowerCase()}`)
   if (!userId) return null
   return getUserById(userId)
 }
 
 export async function createUser(user: StoredUserProfile): Promise<void> {
-  // Store user by ID
-  await redis.set(`${USER_PREFIX}${user.id}`, user)
-  // Store username -> ID mapping for lookups
-  await redis.set(`username:${user.username.toLowerCase()}`, user.id)
+  const r = getRedis()
+  await r.set(`${USER_PREFIX}${user.id}`, user)
+  await r.set(`username:${user.username.toLowerCase()}`, user.id)
 }
 
 export async function updateUser(userId: string, updates: Partial<StoredUserProfile>): Promise<StoredUserProfile | null> {
@@ -60,20 +66,20 @@ export async function updateUser(userId: string, updates: Partial<StoredUserProf
   if (!user) return null
 
   const updatedUser = { ...user, ...updates, lastActive: new Date().toISOString() }
-  await redis.set(`${USER_PREFIX}${userId}`, updatedUser)
+  await getRedis().set(`${USER_PREFIX}${userId}`, updatedUser)
   return updatedUser
 }
 
 export async function createSession(userId: string, sessionId: string, expiresIn = 60 * 60 * 24 * 7): Promise<void> {
-  await redis.setex(`${SESSION_PREFIX}${sessionId}`, expiresIn, userId)
+  await getRedis().setex(`${SESSION_PREFIX}${sessionId}`, expiresIn, userId)
 }
 
 export async function getSession(sessionId: string): Promise<string | null> {
-  return redis.get<string>(`${SESSION_PREFIX}${sessionId}`)
+  return getRedis().get<string>(`${SESSION_PREFIX}${sessionId}`)
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {
-  await redis.del(`${SESSION_PREFIX}${sessionId}`)
+  await getRedis().del(`${SESSION_PREFIX}${sessionId}`)
 }
 
 // Daily streak management
@@ -102,11 +108,11 @@ export async function updateStreak(userId: string): Promise<{ streak: number; be
 
 // Leaderboard functions
 export async function updateLeaderboard(userId: string, xp: number): Promise<void> {
-  await redis.zadd('leaderboard:xp', { score: xp, member: userId })
+  await getRedis().zadd('leaderboard:xp', { score: xp, member: userId })
 }
 
 export async function getLeaderboard(limit = 10): Promise<{ userId: string; xp: number }[]> {
-  const results = await redis.zrange<string[]>('leaderboard:xp', 0, limit - 1, { rev: true, withScores: true })
+  const results = await getRedis().zrange<string[]>('leaderboard:xp', 0, limit - 1, { rev: true, withScores: true })
   
   const leaderboard: { userId: string; xp: number }[] = []
   for (let i = 0; i < results.length; i += 2) {

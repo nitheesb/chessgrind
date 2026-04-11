@@ -112,6 +112,24 @@ export interface UserProfileResponse {
   achievements: Achievement[]
   dailyChallengeCompleted: boolean
   joinDate: string
+  lastDailyDate?: string
+  puzzleRating?: number
+  puzzlesAttempted?: number
+  puzzlesCorrect?: number
+  failedPuzzleThemes?: Record<string, number>
+  bestCombo?: number
+  perfectSolves?: number
+  activityDates?: Record<string, number>
+  recentGames?: Array<{
+    id: string
+    date: string
+    result: 'win' | 'loss' | 'draw'
+    opponent: string
+    moves: number
+    pgn?: string
+  }>
+  puzzleRatingHistory?: Array<{ date: string; rating: number }>
+  weeklyMissions?: Array<{ id: string; title: string; progress: number; target: number; xpReward: number; completed: boolean }>
 }
 
 export interface Achievement {

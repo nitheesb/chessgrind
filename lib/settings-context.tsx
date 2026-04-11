@@ -74,19 +74,26 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     } catch { }
   }, [settings, loaded])
 
-  // Apply theme class to html element
+  // Apply theme class to html element, listen for system theme changes
   useEffect(() => {
     if (!loaded) return
     const root = document.documentElement
-    if (settings.theme === 'dark') {
-      root.classList.add('dark')
-    } else if (settings.theme === 'light') {
-      root.classList.remove('dark')
-    } else {
-      // system
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      if (prefersDark) root.classList.add('dark')
-      else root.classList.remove('dark')
+
+    const applyTheme = (prefersDark: boolean) => {
+      if (settings.theme === 'dark' || (settings.theme === 'system' && prefersDark)) {
+        root.classList.add('dark')
+      } else {
+        root.classList.remove('dark')
+      }
+    }
+
+    const mql = window.matchMedia('(prefers-color-scheme: dark)')
+    applyTheme(mql.matches)
+
+    if (settings.theme === 'system') {
+      const handler = (e: MediaQueryListEvent) => applyTheme(e.matches)
+      mql.addEventListener('change', handler)
+      return () => mql.removeEventListener('change', handler)
     }
   }, [settings.theme, loaded])
 

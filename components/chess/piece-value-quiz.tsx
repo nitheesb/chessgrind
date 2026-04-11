@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HelpCircle, Trophy, X, CheckCircle, XCircle } from 'lucide-react'
 import { Chess } from 'chess.js'
+import { shuffleArray } from '@/lib/utils'
 
 const BEST_SCORE_KEY = 'chessgrind-piece-quiz-best'
 const TOTAL_QUESTIONS = 20
@@ -59,7 +60,7 @@ function generateValueQuestion(): Question {
     if (s !== correct) wrongSet.add(s)
   }
   const options = [correct, ...wrongSet]
-  options.sort(() => Math.random() - 0.5)
+  shuffleArray(options)
   return {
     type: 'value',
     text: `What is the value of a ${PIECE_NAMES[piece]}?`,
@@ -69,7 +70,7 @@ function generateValueQuestion(): Question {
 }
 
 function generateCompareQuestion(): Question {
-  const shuffled = [...VALUE_PIECES].sort(() => Math.random() - 0.5)
+  const shuffled = shuffleArray([...VALUE_PIECES])
   const a = shuffled[0]
   let b = shuffled[1]
   // Ensure they have different values
@@ -82,7 +83,7 @@ function generateCompareQuestion(): Question {
   while (wrongSet.size < 4) {
     wrongSet.add(allNames[Math.floor(Math.random() * allNames.length)])
   }
-  const options = Array.from(wrongSet).sort(() => Math.random() - 0.5)
+  const options = shuffleArray(Array.from(wrongSet))
   return {
     type: 'compare',
     text: `Which piece is more valuable: ${PIECE_NAMES[a]} or ${PIECE_NAMES[b]}?`,
@@ -110,7 +111,7 @@ function generateMaterialQuestion(): Question {
     fallback++
   }
   const options = [correct, ...wrongSet]
-  options.sort(() => Math.random() - 0.5)
+  shuffleArray(options)
   return {
     type: 'material',
     text: `What's the total value of ${color === 'w' ? "White's" : "Black's"} remaining pieces (excl. King)?`,
@@ -133,7 +134,7 @@ function generateTradeQuestion(): Question {
   const trade = trades[Math.floor(Math.random() * trades.length)]
   const correct = trade.good ? 'Good trade' : 'Bad trade'
   const options = ['Good trade', 'Bad trade', 'Equal trade', 'Depends on position']
-  options.sort(() => Math.random() - 0.5)
+  shuffleArray(options)
   return {
     type: 'trade',
     text: `Is trading ${trade.desc} a good trade (material-wise)?`,

@@ -89,14 +89,14 @@ function mapApiUserToProfile(apiUser: UserProfileResponse): UserProfile {
     puzzlesCorrect: apiUser.puzzlesCorrect || 0,
     failedPuzzleThemes: apiUser.failedPuzzleThemes || {},
     combo: 0,
-    bestCombo: (apiUser as Record<string, unknown>).bestCombo as number || 0,
-    perfectSolves: (apiUser as Record<string, unknown>).perfectSolves as number || 0,
+    bestCombo: apiUser.bestCombo || 0,
+    perfectSolves: apiUser.perfectSolves || 0,
     lastActiveDate: '',
     dailyBonusClaimed: false,
-    activityDates: (apiUser as Record<string, unknown>).activityDates as Record<string, number> || {},
-    recentGames: (apiUser as Record<string, unknown>).recentGames as UserProfile['recentGames'] || [],
-    puzzleRatingHistory: (apiUser as Record<string, unknown>).puzzleRatingHistory as UserProfile['puzzleRatingHistory'] || [],
-    weeklyMissions: (apiUser as Record<string, unknown>).weeklyMissions as WeeklyMission[] || [],
+    activityDates: apiUser.activityDates || {},
+    recentGames: apiUser.recentGames || [],
+    puzzleRatingHistory: apiUser.puzzleRatingHistory || [],
+    weeklyMissions: apiUser.weeklyMissions || [],
   }
 }
 

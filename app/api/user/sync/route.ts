@@ -31,6 +31,56 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Validate numeric fields: must be non-negative integers within sane ranges
+    const numericLimits: Record<string, number> = {
+      xp: 1_000_000,
+      gamesPlayed: 100_000,
+      puzzlesSolved: 100_000,
+      openingsLearned: 1_000,
+      trapsLearned: 1_000,
+    }
+    for (const [field, max] of Object.entries(numericLimits)) {
+      if (sanitizedUpdates[field] !== undefined) {
+        const val = sanitizedUpdates[field]
+        if (typeof val !== 'number' || !Number.isInteger(val) || val < 0) {
+          return NextResponse.json(
+            { error: `Invalid value for ${field}` },
+            { status: 400 },
+          )
+        }
+        sanitizedUpdates[field] = Math.min(val, max)
+      }
+    }
+
+    // Validate achievements: must be an array of non-empty strings
+    if (sanitizedUpdates.achievements !== undefined) {
+      if (
+        !Array.isArray(sanitizedUpdates.achievements) ||
+        !sanitizedUpdates.achievements.every(
+          (a: unknown) => typeof a === 'string' && a.length > 0 && a.length <= 64,
+        )
+      ) {
+        return NextResponse.json(
+          { error: 'Invalid achievements format' },
+          { status: 400 },
+        )
+      }
+      if (sanitizedUpdates.achievements.length > 200) {
+        sanitizedUpdates.achievements = (sanitizedUpdates.achievements as string[]).slice(0, 200)
+      }
+    }
+
+    // Validate dailyChallengeCompleted: must be boolean
+    if (
+      sanitizedUpdates.dailyChallengeCompleted !== undefined &&
+      typeof sanitizedUpdates.dailyChallengeCompleted !== 'boolean'
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid value for dailyChallengeCompleted' },
+        { status: 400 },
+      )
+    }
+
     // Update daily challenge date if completing today
     if (sanitizedUpdates.dailyChallengeCompleted) {
       sanitizedUpdates.dailyChallengeDate = new Date().toISOString().split('T')[0]

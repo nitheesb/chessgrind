@@ -70,8 +70,7 @@ export interface LichessGame {
 // --- Rate Limiter ---
 
 class RateLimiter {
-  private queue: Array<() => void> = []
-  private lastCall = 0
+  private pending: Promise<void> = Promise.resolve()
   private minInterval: number
 
   constructor(requestsPerSecond: number) {
@@ -79,38 +78,10 @@ class RateLimiter {
   }
 
   async wait(): Promise<void> {
-    return new Promise((resolve) => {
-      const execute = () => {
-        const now = Date.now()
-        const elapsed = now - this.lastCall
-        if (elapsed >= this.minInterval) {
-          this.lastCall = now
-          resolve()
-        } else {
-          setTimeout(() => {
-            this.lastCall = Date.now()
-            resolve()
-          }, this.minInterval - elapsed)
-        }
-      }
-
-      if (this.queue.length === 0) {
-        this.queue.push(execute)
-        execute()
-        this.queue.shift()
-      } else {
-        this.queue.push(execute)
-        // Process queue
-        const idx = this.queue.length - 1
-        const prev = this.queue[idx - 1]
-        if (prev) {
-          setTimeout(() => {
-            execute()
-            this.queue.splice(this.queue.indexOf(execute), 1)
-          }, this.minInterval * idx)
-        }
-      }
-    })
+    this.pending = this.pending.then(
+      () => new Promise((resolve) => setTimeout(resolve, this.minInterval))
+    )
+    return this.pending
   }
 }
 
@@ -182,8 +153,10 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, limiter: R
   const res = await fetch(url, options)
 
   if (res.status === 429) {
-    // Rate limited — wait and retry once
-    await new Promise(r => setTimeout(r, 2000))
+    // Respect Retry-After header, default 2s, cap at 60s
+    const retryAfter = res.headers.get('Retry-After')
+    const waitMs = Math.min((retryAfter ? parseInt(retryAfter, 10) * 1000 : 2000) || 2000, 60_000)
+    await new Promise(r => setTimeout(r, waitMs))
     await limiter.wait()
     return fetch(url, options)
   }
@@ -213,7 +186,7 @@ export async function getDailyPuzzle(): Promise<LichessDailyPuzzle | null> {
     const puzzle: LichessDailyPuzzle = {
       puzzle: {
         id: data.puzzle?.id || '',
-        fen: data.game?.pgn ? '' : (data.puzzle?.initialPly != null ? '' : ''),
+        fen: '',
         moves: data.puzzle?.solution || [],
         rating: data.puzzle?.rating || 1500,
         themes: data.puzzle?.themes || [],
@@ -464,6 +437,8 @@ export function lichessPuzzleToAppPuzzle(lp: LichessPuzzle): {
   description: string
   difficulty: 'easy' | 'medium' | 'hard' | 'expert'
   xpReward: number
+  source: 'lichess'
+  lichessId: string
 } {
   const difficulty = lp.rating < 1200 ? 'easy'
     : lp.rating < 1600 ? 'medium'

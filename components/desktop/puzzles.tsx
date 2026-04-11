@@ -12,6 +12,7 @@ import type { Puzzle } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
+import { formatTime } from '@/lib/utils'
 import { ShareButtons } from '@/components/ui/share-buttons'
 import { TacticalRadar } from '@/components/ui/tactical-radar'
 import { useDailyPuzzle } from '@/lib/use-daily-puzzle'
@@ -552,12 +553,6 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
     hintLevel === 2 ? 'Hint: Full' : 'Active'
   const hintXPCost = hintLevel * 5
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
   // Player's color is determined by whose turn it is in the initial FEN
   const playerColor = puzzle.fen.split(' ')[1] === 'w' ? 'white' : 'black'
 
@@ -946,7 +941,6 @@ function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => voi
     } catch { processingRef.current = false; return false }
   }, [status, game, moveIndex, puzzle, addXP, incrementPuzzlesSolved, nextPuzzle, playSound])
 
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
 
   if (status === 'done') {
     return (

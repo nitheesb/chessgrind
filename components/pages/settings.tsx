@@ -38,11 +38,14 @@ interface SettingsPageProps {
 }
 
 // Toggle switch component
-function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ enabled, onChange, label }: { enabled: boolean; onChange: (v: boolean) => void; label?: string }) {
   const { playSound, triggerHaptic } = useSoundAndHaptics()
-  
+
   return (
     <button
+      role="switch"
+      aria-checked={enabled}
+      aria-label={label}
       onClick={() => {
         playSound('click')
         triggerHaptic('selection')
@@ -216,6 +219,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           <Toggle
             enabled={settings.soundEnabled}
             onChange={(v) => updateSetting('soundEnabled', v)}
+            label="Sound Effects"
           />
         </SettingRow>
 
@@ -227,6 +231,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           <Toggle
             enabled={settings.hapticEnabled}
             onChange={(v) => updateSetting('hapticEnabled', v)}
+            label="Haptic Feedback"
           />
         </SettingRow>
       </motion.div>
@@ -245,6 +250,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           <Toggle
             enabled={settings.showCoordinates}
             onChange={(v) => updateSetting('showCoordinates', v)}
+            label="Show Coordinates"
           />
         </SettingRow>
 
@@ -256,6 +262,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           <Toggle
             enabled={settings.autoQueen}
             onChange={(v) => updateSetting('autoQueen', v)}
+            label="Auto-Queen"
           />
         </SettingRow>
 
@@ -267,6 +274,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           <Toggle
             enabled={settings.showHints}
             onChange={(v) => updateSetting('showHints', v)}
+            label="Show Hints"
           />
         </SettingRow>
       </motion.div>
@@ -314,6 +322,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           <Toggle
             enabled={settings.reducedMotion}
             onChange={(v) => updateSetting('reducedMotion', v)}
+            label="Reduce Motion"
           />
         </SettingRow>
 
@@ -325,6 +334,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           <Toggle
             enabled={settings.blindfoldMode}
             onChange={(v) => updateSetting('blindfoldMode', v)}
+            label="Blindfold Mode"
           />
         </SettingRow>
 
@@ -336,6 +346,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           <Toggle
             enabled={settings.zenMode}
             onChange={(v) => updateSetting('zenMode', v)}
+            label="Zen Mode"
           />
         </SettingRow>
       </motion.div>
@@ -425,7 +436,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
             </div>
           </div>
           <input
-            type="text"
+            type="password"
             value={settings.lichessToken}
             onChange={(e) => updateSetting('lichessToken', e.target.value)}
             placeholder="lip_..."

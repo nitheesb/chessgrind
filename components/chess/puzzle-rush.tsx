@@ -8,6 +8,7 @@ import { PUZZLES } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import { Chessboard } from '@/components/chess/chessboard'
+import { formatTime } from '@/lib/utils'
 
 type Phase = 'select' | 'playing' | 'gameover'
 
@@ -123,12 +124,6 @@ export function PuzzleRush({ onClose }: { onClose: () => void }) {
     },
     [phase, expectedMove, incrementPuzzlesSolved, addXP]
   )
-
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60)
-    const sec = s % 60
-    return `${m}:${sec.toString().padStart(2, '0')}`
-  }
 
   return (
     <motion.div

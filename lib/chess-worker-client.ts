@@ -24,10 +24,13 @@ function getWorker(): Worker {
   // next/webpack and turbopack both handle `new URL('...', import.meta.url)`
   worker = new Worker(new URL('./engine.worker', import.meta.url))
   worker.onmessage = (e: MessageEvent) => {
-    const { id, result } = e.data
+    const { id, result, error } = e.data
     const resolve = pending.get(id)
     if (resolve) {
-      resolve(result)
+      if (error) {
+        console.warn('[chess-worker] worker error for request', id, error)
+      }
+      resolve(error ? null : result)
       pending.delete(id)
     }
   }

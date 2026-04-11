@@ -13,6 +13,7 @@ import { getBestMoveAsync, analyzePositionAsync } from '@/lib/chess-worker-clien
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
 import { staggerContainer, staggerItem } from '@/components/ui/animated-components'
+import { formatTime } from '@/lib/utils'
 import {
   ArrowLeft,
   Swords,
@@ -70,17 +71,7 @@ function CheckmateCelebration({ show }: { show: boolean }) {
   )
 }
 
-type TimeControl = { label: string; minutes: number; increment: number }
-
-const TIME_CONTROLS: TimeControl[] = [
-  { label: 'Unlimited', minutes: 0, increment: 0 },
-  { label: '1 min', minutes: 1, increment: 0 },
-  { label: '3 min', minutes: 3, increment: 0 },
-  { label: '5 min', minutes: 5, increment: 0 },
-  { label: '10 min', minutes: 10, increment: 0 },
-  { label: '5|3', minutes: 5, increment: 3 },
-  { label: '10|5', minutes: 10, increment: 5 },
-]
+import { TIME_CONTROLS } from '@/lib/chess-constants'
 
 export function PlayAIPage({ onBack }: PlayAIProps) {
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
@@ -598,12 +589,6 @@ function GameSession({
       notationRef.current.scrollTop = notationRef.current.scrollHeight
     }
   }, [moveHistory.length])
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
-    return `${m}:${s.toString().padStart(2, '0')}`
-  }
 
   return (
     <motion.div

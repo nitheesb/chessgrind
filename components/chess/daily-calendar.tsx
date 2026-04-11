@@ -127,7 +127,7 @@ export function DailyCalendar({ onClose }: { onClose: () => void }) {
     }
 
     return { totalActiveDays: activeDays, totalXP: xpSum, currentStreak: current, longestStreak: longest }
-  }, [viewYear, viewMonth, daysInMonth, activityDates, todayKey, today])
+  }, [viewYear, viewMonth, daysInMonth, activityDates, todayKey])
 
   // Build set of dates that are part of consecutive streaks for the viewed month
   const streakDays = useMemo(() => {
