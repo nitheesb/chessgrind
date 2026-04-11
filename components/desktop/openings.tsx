@@ -163,7 +163,7 @@ function DesktopOpeningViewer({ opening, onBack }: { opening: Opening; onBack: (
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
   const [incorrectMove, setIncorrectMove] = useState(false)
   const [boardFlipped, setBoardFlipped] = useState(false)
-  const [boardSize, setBoardSize] = useState(580)
+  const [boardSize, setBoardSize] = useState(700)
 
   useEffect(() => {
     const update = () => {

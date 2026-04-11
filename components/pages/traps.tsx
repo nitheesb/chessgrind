@@ -8,6 +8,7 @@ import { TRAPS, getDifficultyBg } from '@/lib/chess-data'
 import type { Trap } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
+import { useMobileBoardSize } from '@/lib/use-mobile-board-size'
 import { AnimatedCounter, staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
@@ -154,6 +155,7 @@ export function TrapsPage({ onBack }: TrapsPageProps) {
 function TrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
   const { addXP, incrementTrapsLearned } = useGame()
   const { settings } = useSettings()
+  const boardSize = useMobileBoardSize(440)
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0)
   const [isCompleted, setIsCompleted] = useState(false)
   const [isAutoPlaying, setIsAutoPlaying] = useState(false)
@@ -244,7 +246,6 @@ function TrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleNext, handlePrev, handleAutoPlay, handleReset, onBack])
 
-  const boardSize = typeof window !== 'undefined' ? Math.min(360, window.innerWidth - 48) : 360
 
   return (
     <motion.div

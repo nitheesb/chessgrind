@@ -342,7 +342,7 @@ function DesktopPuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBac
   const hadWrongMoveRef = useRef(false)
   const [wrongMoveHint, setWrongMoveHint] = useState<string | null>(null)
   const [earnedXP, setEarnedXP] = useState(0)
-  const [boardSize, setBoardSize] = useState(580)
+  const [boardSize, setBoardSize] = useState(700)
 
   useEffect(() => {
     const update = () => {

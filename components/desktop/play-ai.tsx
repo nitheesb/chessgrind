@@ -73,7 +73,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const [whiteTime, setWhiteTime] = useState(0)
   const [blackTime, setBlackTime] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const [boardSize, setBoardSize] = useState(580)
+  const [boardSize, setBoardSize] = useState(700)
 
   useEffect(() => {
     const update = () => {

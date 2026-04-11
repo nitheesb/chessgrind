@@ -14,6 +14,7 @@ import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
 import { staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import { formatTime } from '@/lib/utils'
+import { useMobileBoardSize } from '@/lib/use-mobile-board-size'
 import {
   ArrowLeft,
   Swords,
@@ -80,6 +81,7 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
   const [timeControl, setTimeControl] = useState<TimeControl>(TIME_CONTROLS[0])
   const [showAdvanced, setShowAdvanced] = useState(false)
   const { settings } = useSettings()
+  const setupBoardSize = useMobileBoardSize(360)
 
   // Auto-start from board: use level 3 (Club Player), white, unlimited
   const handleSetupMove = useCallback((from: string, to: string, promotion?: string): boolean => {
@@ -136,7 +138,7 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
           fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
           interactive={true}
           onMove={handleSetupMove}
-          size={Math.min(320, typeof window !== 'undefined' ? window.innerWidth - 48 : 320)}
+          size={setupBoardSize}
           boardStyle={settings.boardStyle}
           pieceStyle={settings.pieceStyle}
         />
@@ -302,6 +304,7 @@ function GameSession({
 }) {
   const { addXP, incrementGamesPlayed, addRecentGame } = useGame()
   const { settings, updateSetting } = useSettings()
+  const boardSize = useMobileBoardSize(520)
   const [game, setGame] = useState(() => new Chess())
   const [gameOver, setGameOver] = useState(false)
   const [result, setResult] = useState<string>('')
@@ -340,12 +343,6 @@ function GameSession({
   }, [gameOver, moveHistory])
 
   const [lastMoveIsPlayer, setLastMoveIsPlayer] = useState(false)
-
-  // Board size — responsive, no manual controls
-  const [boardSize] = useState(() => {
-    if (typeof window === 'undefined') return 360
-    return Math.min(480, window.innerWidth - 48)
-  })
 
 
   // Timer state

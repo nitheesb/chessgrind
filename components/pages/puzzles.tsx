@@ -14,6 +14,7 @@ import { formatTime, shuffleArray } from '@/lib/utils'
 import { ShareButtons } from '@/components/ui/share-buttons'
 import { TacticalRadar } from '@/components/ui/tactical-radar'
 import { useDailyPuzzle } from '@/lib/use-daily-puzzle'
+import { useMobileBoardSize } from '@/lib/use-mobile-board-size'
 import { AnimatedCounter, staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import {
   ArrowLeft,
@@ -301,6 +302,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
   const { playSound, triggerHaptic, setSoundEnabled } = useSoundAndHaptics()
   // Sync sound toggle from settings into hook instance
   useEffect(() => { setSoundEnabled(settings.soundEnabled) }, [settings.soundEnabled, setSoundEnabled])
+  const mobileBoardSize = useMobileBoardSize(520)
   const [game, setGame] = useState(() => new Chess(puzzle.fen))
   const [moveIndex, setMoveIndex] = useState(0)
   const [status, setStatus] = useState<'playing' | 'correct' | 'wrong' | 'complete' | 'opponent-moving'>('playing')
@@ -323,7 +325,7 @@ function PuzzleSolver({ puzzle, onBack, onNext }: { puzzle: Puzzle; onBack: () =
     if (typeof window === 'undefined') return 360
     const stored = localStorage.getItem('chessgrind_board_size')
     if (stored) return Math.min(Math.max(parseInt(stored), 280), 600)
-    return Math.min(480, window.innerWidth - 48)
+    return mobileBoardSize
   })
   const updateBoardSize = (delta: number) => {
     setBoardSize(prev => {
@@ -906,6 +908,7 @@ function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => voi
   const { playSound, triggerHaptic, setSoundEnabled } = useSoundAndHaptics()
   // Sync sound toggle from settings into hook instance
   useEffect(() => { setSoundEnabled(settings.soundEnabled) }, [settings.soundEnabled, setSoundEnabled])
+  const rushBoardSize = useMobileBoardSize(440)
 
   // Shuffle puzzles for rush mode
   const shuffled = useMemo(() => shuffleArray([...PUZZLES]), [])
@@ -1077,7 +1080,6 @@ function PuzzleRushMode({ minutes, onBack }: { minutes: 3 | 5; onBack: () => voi
     )
   }
 
-  const rushBoardSize = typeof window !== 'undefined' ? Math.min(380, window.innerWidth - 48) : 360
 
   return (
     <motion.div

@@ -126,7 +126,7 @@ function DesktopTrapViewer({ trap, onBack }: { trap: Trap; onBack: () => void })
   const [showExplanation, setShowExplanation] = useState(false)
   const [boardFlipOverride, setBoardFlipOverride] = useState(false)
   const [showCoords, setShowCoords] = useState(true)
-  const [boardSize, setBoardSize] = useState(580)
+  const [boardSize, setBoardSize] = useState(700)
 
   useEffect(() => {
     const update = () => {

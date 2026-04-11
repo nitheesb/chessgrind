@@ -8,6 +8,7 @@ import { OPENINGS, getDifficultyBg } from '@/lib/chess-data'
 import type { Opening } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
+import { useMobileBoardSize } from '@/lib/use-mobile-board-size'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import { OpeningExplorer } from '@/components/chess/opening-explorer'
@@ -146,6 +147,7 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
   const { addXP, incrementOpeningsLearned } = useGame()
   const { settings } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
+  const boardSize = useMobileBoardSize(400)
   const [game, setGame] = useState(() => new Chess())
   const [moveIndex, setMoveIndex] = useState(0)
   const [isCompleted, setIsCompleted] = useState(false)
@@ -292,7 +294,7 @@ function OpeningPractice({ opening, onBack }: { opening: Opening; onBack: () => 
         <div className={`transition-transform duration-100 ${incorrectMove ? 'animate-shake' : ''}`}>
           <Chessboard
             fen={game.fen()}
-            size={Math.min(340, typeof window !== 'undefined' ? window.innerWidth - 48 : 340)}
+            size={boardSize}
             interactive={isUserTurn && !isCompleted}
             onMove={handleMove}
             lastMove={lastMove || undefined}

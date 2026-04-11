@@ -220,6 +220,7 @@ function AnimatedPiece({
   flipped,
   onComplete,
   pieceStyle,
+  fast,
 }: {
   piece: string
   from: string
@@ -228,6 +229,7 @@ function AnimatedPiece({
   flipped: boolean
   onComplete: () => void
   pieceStyle?: 'neo' | 'classic'
+  fast?: boolean
 }) {
   const getPos = useCallback((square: string) => {
     const { row, col } = squareToIndex(square)
@@ -246,7 +248,7 @@ function AnimatedPiece({
     <motion.div
       initial={{ x: fromPos.x, y: fromPos.y }}
       animate={{ x: toPos.x, y: toPos.y }}
-      transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+      transition={{ type: 'tween', duration: fast ? 0.2 : 0.28, ease: [0.25, 0.1, 0.25, 1.0] }}
       onAnimationComplete={onComplete}
       style={{
         position: 'absolute',
@@ -298,7 +300,7 @@ function SnapBackPiece({
     <motion.div
       initial={{ x: fromX - pieceHalf, y: fromY - pieceHalf, scale: 1.1 }}
       animate={{ x: targetX, y: targetY, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.7 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 28, mass: 0.8 }}
       onAnimationComplete={onComplete}
       style={{
         position: 'fixed',
@@ -323,7 +325,6 @@ function CapturedPieceAnim({
   square,
   squareSize,
   flipped,
-  capturedByColor,
   onComplete,
   pieceStyle,
 }: {
@@ -331,7 +332,6 @@ function CapturedPieceAnim({
   square: string
   squareSize: number
   flipped: boolean
-  capturedByColor: 'w' | 'b'
   onComplete: () => void
   pieceStyle?: 'neo' | 'classic'
 }) {
@@ -340,14 +340,12 @@ function CapturedPieceAnim({
   const displayRow = flipped ? 7 - row : row
   const x = displayCol * squareSize
   const y = displayRow * squareSize
-  // Fly toward the capturing side (top or bottom of board)
-  const exitY = capturedByColor === 'w' ? -squareSize * 1.5 : squareSize * 9.5
 
   return (
     <motion.div
-      initial={{ x, y, opacity: 1, scale: 1, rotate: 0 }}
-      animate={{ x: x + (Math.random() - 0.5) * squareSize, y: exitY, opacity: 0, scale: 0.4, rotate: (Math.random() - 0.5) * 30 }}
-      transition={{ duration: 0.45, ease: 'easeIn' }}
+      initial={{ x, y, opacity: 1, scale: 1 }}
+      animate={{ x, y, opacity: 0, scale: 0.85 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
       onAnimationComplete={onComplete}
       style={{
         position: 'absolute',
@@ -483,8 +481,8 @@ export function Chessboard({
   const dragNodeRef = useRef<HTMLDivElement>(null)
   const dragPosRef = useRef({ x: 0, y: 0 })
   const dragOffsetRef = useRef({ x: 0, y: 0 }) // Offset from click to piece center
-  const [animating, setAnimating] = useState<{ piece: string; from: string; to: string } | null>(null)
-  const [captureAnim, setCaptureAnim] = useState<{ piece: string; square: string; byColor: 'w' | 'b' } | null>(null)
+  const [animating, setAnimating] = useState<{ piece: string; from: string; to: string; fast?: boolean } | null>(null)
+  const [captureAnim, setCaptureAnim] = useState<{ piece: string; square: string } | null>(null)
   const [snapBack, setSnapBack] = useState<{ piece: string; from: string; x: number; y: number } | null>(null)
   const [promotionPending, setPromotionPending] = useState<{ from: string; to: string; color: 'w' | 'b' } | null>(null)
   const [longPressTooltip, setLongPressTooltip] = useState<{ piece: string; x: number; y: number } | null>(null)
@@ -512,7 +510,7 @@ export function Chessboard({
     if (dragNodeRef.current) {
       const ox = dragOffsetRef.current.x
       const oy = dragOffsetRef.current.y
-      dragNodeRef.current.style.transform = `translate3d(${x - ox}px, ${y - oy}px, 0) scale(1.1)`
+      dragNodeRef.current.style.transform = `translate3d(${x - ox}px, ${y - oy}px, 0) scale(1.12)`
     }
   }, [])
 
@@ -570,23 +568,20 @@ export function Chessboard({
   // Detect moves, animate piece, and trigger capture animation
   useEffect(() => {
     if (prevFenRef.current !== fen && lastMove) {
-      // Skip animation for the player's own move (instant feedback)
-      if (!isPlayerMove) {
-        const prevBoard = parseFEN(prevFenRef.current)
-        const { row, col } = squareToIndex(lastMove.from)
-        const piece = prevBoard[row]?.[col]
-        if (piece) {
-          setAnimating({ piece, from: lastMove.from, to: lastMove.to })
-        }
+      // Animate both player and opponent moves
+      const prevBoard = parseFEN(prevFenRef.current)
+      const { row, col } = squareToIndex(lastMove.from)
+      const piece = prevBoard[row]?.[col]
+      if (piece) {
+        setAnimating({ piece, from: lastMove.from, to: lastMove.to, fast: isPlayerMove })
       }
       // Check for capture: was there an opponent piece on the target square?
-      const prevBoard = parseFEN(prevFenRef.current)
       const { row: toRow, col: toCol } = squareToIndex(lastMove.to)
       const { row: fromRow, col: fromCol } = squareToIndex(lastMove.from)
       const capturedPiece = prevBoard[toRow]?.[toCol]
       const movingPiece = prevBoard[fromRow]?.[fromCol]
       if (capturedPiece && movingPiece && capturedPiece[0] !== movingPiece[0]) {
-        setCaptureAnim({ piece: capturedPiece, square: lastMove.to, byColor: movingPiece[0] as 'w' | 'b' })
+        setCaptureAnim({ piece: capturedPiece, square: lastMove.to })
       }
     }
     prevFenRef.current = fen
@@ -1128,6 +1123,7 @@ export function Chessboard({
             flipped={isFlipped}
             onComplete={() => setAnimating(null)}
             pieceStyle={pieceStyle}
+            fast={animating.fast}
           />
         )}
 
@@ -1139,7 +1135,6 @@ export function Chessboard({
               square={captureAnim.square}
               squareSize={squareSize}
               flipped={isFlipped}
-              capturedByColor={captureAnim.byColor}
               onComplete={() => setCaptureAnim(null)}
               pieceStyle={pieceStyle}
             />
@@ -1227,7 +1222,7 @@ export function Chessboard({
             zIndex: 100,
             pointerEvents: 'none',
             willChange: 'transform',
-            filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(245,158,11,0.15))',
+            filter: 'drop-shadow(0 16px 32px rgba(0,0,0,0.55)) drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
           }}
         >
           <ChessPiece piece={dragInfo.piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />

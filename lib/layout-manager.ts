@@ -49,12 +49,12 @@ function calculate(vw: number, vh: number): LayoutVars {
   // Board panel: contains eval-bar (18px) + gap (8px) + board + padding
   // Board itself fills as much content height as feasible (square)
   // We leave padding top+bottom of 32px inside the panel
-  const maxBoardFromH = contentH - 32
-  // Width budget: we want board panel ~46% of viewport, min 420px, max 700px
-  const boardPanelW = snap(Math.min(700, Math.max(420, vw * 0.46)))
+  const maxBoardFromH = contentH - 24
+  // Width budget: we want board panel ~55% of viewport, min 420px, max 900px
+  const boardPanelW = snap(Math.min(900, Math.max(420, vw * 0.55)))
   // Actual board fits inside panel accounting for eval-bar (18px) + 2×gap (8px each side) + panel padding (2×20px)
   const boardFitW = boardPanelW - 18 - 8 - 40
-  const boardSize = snap(Math.min(boardFitW, maxBoardFromH, 620))
+  const boardSize = snap(Math.min(boardFitW, maxBoardFromH))
 
   // Right panel: remainder of viewport
   const rightPanelW = snap(vw - boardPanelW - gap)
@@ -136,7 +136,7 @@ export function readLayoutVar(name: keyof LayoutVars): number {
     // SSR fallbacks
     const fallbacks: Record<string, number> = {
       vw: 1440, vh: 900, topbarH: 56, contentH: 844,
-      boardPanelW: 660, boardSize: 580, rightPanelW: 780,
+      boardPanelW: 790, boardSize: 700, rightPanelW: 640,
       sidebarW: 320, gap: 0, scale: 1,
     }
     return fallbacks[name] ?? 0

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useMobileBoardSize } from '@/lib/use-mobile-board-size'
 import { Chess } from 'chess.js'
 import { Chessboard } from '@/components/chess/chessboard'
 import { ENDGAME_POSITIONS, type EndgamePosition } from '@/lib/endgame-positions'
@@ -18,6 +19,7 @@ export function EndgamePractice({ onBack }: EndgamePracticeProps) {
   const { settings } = useSettings()
   const { addXP } = useGame()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
+  const boardSize = useMobileBoardSize(480)
   const [activePosition, setActivePosition] = useState<EndgamePosition | null>(null)
   const [game, setGame] = useState<Chess | null>(null)
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
@@ -118,7 +120,6 @@ export function EndgamePractice({ onBack }: EndgamePracticeProps) {
     )
   }
 
-  const boardSize = typeof window !== 'undefined' ? Math.min(420, window.innerWidth - 48) : 360
 
   return (
     <div className="flex flex-col gap-3 pb-6">
