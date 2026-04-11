@@ -57,11 +57,11 @@ export const AI_LEVELS = [
   { level: 1, name: 'Beginner Bot', rating: 400, description: 'Makes random moves, perfect for learning', depth: 1, icon: 'P', color: '#4ade80', useStockfish: false },
   { level: 2, name: 'Casual Player', rating: 600, description: 'Knows basic tactics but misses a lot', depth: 2, icon: 'P', color: '#4ade80', useStockfish: false },
   { level: 3, name: 'Club Player', rating: 800, description: 'Understands basic strategy and openings', depth: 3, icon: 'N', color: '#60a5fa', useStockfish: false },
-  { level: 4, name: 'Tournament Player', rating: 1200, description: 'Solid player with real tactical vision', depth: 4, icon: 'N', color: '#60a5fa', useStockfish: true },
-  { level: 5, name: 'Expert', rating: 1500, description: 'Stockfish engine — strong and precise', depth: 4, icon: 'B', color: '#a78bfa', useStockfish: true },
-  { level: 6, name: 'Master', rating: 1800, description: 'Stockfish engine — master-level depth', depth: 5, icon: 'R', color: '#f59e0b', useStockfish: true },
-  { level: 7, name: 'Grandmaster', rating: 2200, description: 'Stockfish engine — devastating attacks', depth: 5, icon: 'Q', color: '#f59e0b', useStockfish: true },
-  { level: 8, name: 'Stockfish Max', rating: 2800, description: 'Full-strength Stockfish 18. Good luck!', depth: 6, icon: 'K', color: '#ef4444', useStockfish: true },
+  { level: 4, name: 'Tournament Player', rating: 1200, description: 'Solid player with real tactical vision', depth: 4, icon: 'N', color: '#60a5fa', useStockfish: true, stockfishSkill: 5 },
+  { level: 5, name: 'Expert', rating: 1500, description: 'Stockfish engine — strong and precise', depth: 4, icon: 'B', color: '#a78bfa', useStockfish: true, stockfishSkill: 10 },
+  { level: 6, name: 'Master', rating: 1800, description: 'Stockfish engine — master-level depth', depth: 5, icon: 'R', color: '#f59e0b', useStockfish: true, stockfishSkill: 15 },
+  { level: 7, name: 'Grandmaster', rating: 2200, description: 'Stockfish engine — devastating attacks', depth: 5, icon: 'Q', color: '#f59e0b', useStockfish: true, stockfishSkill: 18 },
+  { level: 8, name: 'Stockfish Max', rating: 2800, description: 'Full-strength Stockfish 18. Good luck!', depth: 6, icon: 'K', color: '#ef4444', useStockfish: true, stockfishSkill: 20 },
 ]
 
 export const PUZZLE_THEMES = [

@@ -417,7 +417,7 @@ function GameSession({
     setIsThinking(true)
     // Scale artificial delay with difficulty - easy levels respond faster
     const delay = aiConfig.depth <= 2 ? 100 + Math.random() * 200 : 300 + Math.random() * 400
-    const config = getEngineConfig(aiConfig.depth, aiConfig.useStockfish)
+    const config = getEngineConfig(aiConfig.depth, aiConfig.useStockfish, aiConfig.stockfishSkill)
     const fen = currentGame.fen()
 
     setTimeout(async () => {

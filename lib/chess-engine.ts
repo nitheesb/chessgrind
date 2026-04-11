@@ -322,15 +322,16 @@ export interface EngineConfig {
   useOpeningBook: boolean
   timeBudgetMs: number // max time in ms for the search (0 = unlimited)
   useStockfish?: boolean // if true, route to Stockfish WASM instead of custom engine
+  stockfishSkill?: number // Stockfish Skill Level (0-20), only used when useStockfish is true
 }
 
 // Preset configs mapped to depth values for backward compatibility
 const DEPTH_PRESETS: Record<number, Partial<EngineConfig>> = {
-  1: { randomness: 300, useQuiescence: false, useOpeningBook: false, timeBudgetMs: 500 },
-  2: { randomness: 150, useQuiescence: false, useOpeningBook: false, timeBudgetMs: 1000 },
-  3: { randomness: 80, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 2000 },
-  4: { randomness: 30, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 3000 },
-  5: { randomness: 10, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 5000 },
+  1: { randomness: 200, useQuiescence: false, useOpeningBook: false, timeBudgetMs: 500 },
+  2: { randomness: 80, useQuiescence: false, useOpeningBook: true, timeBudgetMs: 1000 },
+  3: { randomness: 30, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 3000 },
+  4: { randomness: 10, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 4000 },
+  5: { randomness: 5, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 5000 },
   6: { randomness: 0, useQuiescence: true, useOpeningBook: true, timeBudgetMs: 8000 },
 }
 
@@ -398,7 +399,7 @@ export function getBestMove(game: Chess, config: EngineConfig): string | null {
       bestScore = score
       bestMoves = [move]
       if (rawScore > alpha) alpha = rawScore
-    } else if (config.randomness > 0 && score > bestScore - config.randomness) {
+    } else if (config.randomness > 0 && score > bestScore - config.randomness / 2) {
       bestMoves.push(move)
     }
   }
@@ -410,7 +411,7 @@ export function getBestMove(game: Chess, config: EngineConfig): string | null {
  * Get engine config for a given depth level.
  * Convenience function for backward compatibility.
  */
-export function getEngineConfig(depth: number, useStockfish = false): EngineConfig {
+export function getEngineConfig(depth: number, useStockfish = false, stockfishSkill?: number): EngineConfig {
   const preset = DEPTH_PRESETS[Math.min(depth, 6)] || DEPTH_PRESETS[6]
   return {
     depth: Math.max(1, depth),
@@ -419,6 +420,7 @@ export function getEngineConfig(depth: number, useStockfish = false): EngineConf
     useOpeningBook: preset.useOpeningBook ?? true,
     timeBudgetMs: preset.timeBudgetMs ?? 5000,
     useStockfish,
+    stockfishSkill,
   }
 }
 

@@ -24,6 +24,7 @@ export interface StockfishSearchOptions {
   depth?: number // search to this depth
   movetime?: number // search for this many ms
   nodes?: number // search this many nodes
+  skillLevel?: number // Stockfish Skill Level 0-20 (default 20 = max strength)
 }
 
 // --- State ---
@@ -292,6 +293,11 @@ export async function getStockfishMove(
         return
       }
       resolve(result?.bestMove ?? null)
+    }
+
+    // Set Skill Level if specified (0-20, default 20 = max strength)
+    if (options.skillLevel !== undefined) {
+      sendUCI('setoption name Skill Level value ' + Math.max(0, Math.min(20, options.skillLevel)))
     }
 
     sendUCI('position fen ' + fen)

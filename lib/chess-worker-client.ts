@@ -46,13 +46,13 @@ function getWorker(): Worker {
 /** Stockfish search options mapped from engine config */
 function stockfishOptionsFromConfig(config: EngineConfig): StockfishSearchOptions {
   // Map custom engine depth to Stockfish parameters
-  // Custom depth 4 → SF depth 10, depth 5 → SF depth 15, depth 6+ → SF depth 20
+  const skillLevel = config.stockfishSkill ?? 20
   if (config.depth <= 4) {
-    return { depth: 10, movetime: 800 }
+    return { depth: 8, movetime: 500, skillLevel }
   } else if (config.depth <= 5) {
-    return { depth: 15, movetime: 2000 }
+    return { depth: 15, movetime: 2000, skillLevel }
   } else {
-    return { depth: 20, movetime: 5000 }
+    return { depth: 20, movetime: 5000, skillLevel }
   }
 }
 

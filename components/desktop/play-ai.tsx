@@ -42,11 +42,11 @@ type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'master'
 
 import { TIME_CONTROLS } from '@/lib/chess-constants'
 
-const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string; useStockfish: boolean }> = {
+const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string; useStockfish: boolean; stockfishSkill?: number }> = {
   beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'amber', useStockfish: false },
   intermediate: { name: 'Intermediate', depth: 3, description: 'A fair challenge', color: 'blue', useStockfish: false },
-  advanced: { name: 'Advanced', depth: 5, description: 'Stockfish engine', color: 'purple', useStockfish: true },
-  master: { name: 'Master', depth: 6, description: 'Full Stockfish 18', color: 'red', useStockfish: true },
+  advanced: { name: 'Advanced', depth: 5, description: 'Stockfish engine', color: 'purple', useStockfish: true, stockfishSkill: 13 },
+  master: { name: 'Master', depth: 6, description: 'Full Stockfish 18', color: 'red', useStockfish: true, stockfishSkill: 20 },
 }
 
 const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string; activeStyle: string }> = {
@@ -168,7 +168,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     // Scale artificial delay with difficulty - easy levels respond faster
     const depthVal = DIFFICULTY_CONFIG[difficulty].depth
     const delay = depthVal <= 2 ? 100 + Math.random() * 200 : 300 + Math.random() * 400
-    const config = getEngineConfig(depthVal, DIFFICULTY_CONFIG[difficulty].useStockfish)
+    const config = getEngineConfig(depthVal, DIFFICULTY_CONFIG[difficulty].useStockfish, DIFFICULTY_CONFIG[difficulty].stockfishSkill)
     const fen = currentGame.fen()
 
     setTimeout(async () => {
