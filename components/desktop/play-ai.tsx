@@ -758,10 +758,53 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           </div>
         )}
 
-        {/* Notation Panel — fills available space */}
+        {/* Main Panel — Engine Analysis + Moves */}
         <div className="flex-1 mx-4 mt-1 mb-2 flex flex-col min-h-0 rounded-lg border border-white/[0.06] bg-black/20 overflow-hidden">
-          {/* Notation header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.06] flex-shrink-0">
+          {/* Engine Analysis — always visible */}
+          <div className="flex-shrink-0 px-3 py-2.5 border-b border-white/[0.06]">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Zap className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Engine Analysis</span>
+            </div>
+            {analysis ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className={`text-lg font-bold font-mono ${
+                    analysis.isMate ? 'text-red-400' :
+                    analysis.eval > 0.5 ? 'text-white' :
+                    analysis.eval < -0.5 ? 'text-zinc-500' : 'text-muted-foreground'
+                  }`}>
+                    {analysis.isMate
+                      ? `M${analysis.mateIn ?? '?'}`
+                      : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">depth 4</span>
+                </div>
+                <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${Math.max(5, Math.min(95, 50 + analysis.eval * 10))}%`,
+                      background: analysis.eval >= 0
+                        ? 'linear-gradient(90deg, #f0f0f0, #e0e0e0)'
+                        : 'linear-gradient(90deg, #3a3a3a, #4a4a4a)',
+                    }}
+                  />
+                </div>
+                {analysis.bestLine.length > 0 && (
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Best line</span>
+                    <p className="text-xs font-mono text-foreground/80 mt-0.5">{analysis.bestLine.slice(0, 6).join(' ')}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">Make a move to see analysis</p>
+            )}
+          </div>
+
+          {/* Compact move list */}
+          <div className="flex-shrink-0 px-3 py-1.5 border-b border-white/[0.06] flex items-center justify-between">
             <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Moves</span>
             <div className="flex items-center gap-1">
               <button
@@ -778,8 +821,6 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
               </button>
             </div>
           </div>
-
-          {/* Move list */}
           <div ref={notationRef} className="flex-1 overflow-y-auto scrollbar-hide">
             {moveHistory.length === 0 ? (
               <p className="text-sm text-muted-foreground italic p-4 text-center">No moves yet</p>
@@ -952,51 +993,6 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           }}
         />
 
-        {/* Collapsible Analysis */}
-        <div className="flex-shrink-0 px-4 pb-4">
-          <details className="rounded-lg border border-white/[0.06] bg-black/20 overflow-hidden">
-            <summary className="px-3 py-2 cursor-pointer text-[11px] font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors select-none flex items-center gap-1.5">
-              <Zap className="w-3 h-3 text-primary" /> Engine Analysis
-            </summary>
-            <div className="px-3 pb-3 pt-1">
-              {analysis ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Eval</span>
-                    <span className={`text-sm font-bold font-mono ${
-                      analysis.isMate ? 'text-red-400' :
-                      analysis.eval > 0.5 ? 'text-white' :
-                      analysis.eval < -0.5 ? 'text-zinc-500' : 'text-muted-foreground'
-                    }`}>
-                      {analysis.isMate
-                        ? `M${analysis.mateIn ?? '?'}`
-                        : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`}
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500 ease-out"
-                      style={{
-                        width: `${Math.max(5, Math.min(95, 50 + analysis.eval * 10))}%`,
-                        background: analysis.eval >= 0
-                          ? 'linear-gradient(90deg, #f0f0f0, #e0e0e0)'
-                          : 'linear-gradient(90deg, #3a3a3a, #4a4a4a)',
-                      }}
-                    />
-                  </div>
-                  {analysis.bestLine.length > 0 && (
-                    <div>
-                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Best line</span>
-                      <p className="text-xs font-mono text-foreground/80 mt-0.5">{analysis.bestLine.join(' ')}</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground italic">Make a move to see analysis</p>
-              )}
-            </div>
-          </details>
-        </div>
       </div>
     </div>
   )
