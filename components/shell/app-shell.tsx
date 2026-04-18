@@ -25,6 +25,8 @@ const BlunderSpotterPage = lazy(() => import('@/components/chess/blunder-spotter
 const MoveCalculatorPage = lazy(() => import('@/components/chess/move-calculator').then(m => ({ default: m.MoveCalculator })))
 const PGNViewerPage = lazy(() => import('@/components/chess/pgn-viewer').then(m => ({ default: m.PGNViewer })))
 const DailyCalendarPage = lazy(() => import('@/components/chess/daily-calendar').then(m => ({ default: m.DailyCalendar })))
+const AnalysisPage = lazy(() => import('@/components/pages/analysis').then(m => ({ default: m.AnalysisPage })))
+const LessonsPage = lazy(() => import('@/components/pages/lessons').then(m => ({ default: m.LessonsPage })))
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
 import { ComboOverlay, DailyBonusPopup, PerfectSolveFlash } from '@/components/ui/game-rewards'
@@ -36,9 +38,15 @@ import {
   Swords,
   Target,
   User,
+  Volume2,
+  VolumeX,
+  X,
+  LogIn,
+  BarChart3,
 } from 'lucide-react'
+import { useSettings } from '@/lib/settings-context'
 
-type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'coords' | 'endgame' | 'puzzle-rush' | 'board-vision' | 'checkmate-patterns' | 'piece-quiz' | 'notation-trainer' | 'pawn-structures' | 'blunder-spotter' | 'move-calculator' | 'pgn-viewer' | 'daily-calendar'
+type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'analysis' | 'lessons' | 'coords' | 'endgame' | 'puzzle-rush' | 'board-vision' | 'checkmate-patterns' | 'piece-quiz' | 'notation-trainer' | 'pawn-structures' | 'blunder-spotter' | 'move-calculator' | 'pgn-viewer' | 'daily-calendar'
 
 function PageSkeleton() {
   return (
@@ -58,11 +66,10 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Home', icon: <Home className="w-5 h-5" /> },
+  { id: 'play', label: 'Play', icon: <Swords className="w-5 h-5" /> },
   { id: 'puzzles', label: 'Puzzles', icon: <Puzzle className="w-5 h-5" /> },
   { id: 'openings', label: 'Learn', icon: <BookOpen className="w-5 h-5" /> },
-  { id: 'play', label: 'Play', icon: <Swords className="w-5 h-5" /> },
-  { id: 'traps', label: 'Traps', icon: <Target className="w-5 h-5" /> },
+  { id: 'analysis', label: 'Analysis', icon: <BarChart3 className="w-5 h-5" /> },
 ]
 
 export function AppShell() {
@@ -73,8 +80,10 @@ export function AppShell() {
     checkAndUpdateStreak,
   } = useGame()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
+  const { settings, updateSetting } = useSettings()
   const [currentPage, setCurrentPage] = useState<Page>('play')
   const [showSplash, setShowSplash] = useState(true)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
   const [, startTransition] = useTransition()
 
   useEffect(() => {
@@ -113,8 +122,8 @@ export function AppShell() {
     return <SplashScreen onComplete={handleSplashComplete} />
   }
 
-  // Allow Play AI without login; gate other pages
-  if (!isLoggedIn && currentPage !== 'play') {
+  // Gate only the profile page behind login
+  if (!isLoggedIn && currentPage === 'profile') {
     return <LoginPage onBack={() => handleNavigate('play')} />
   }
 
@@ -133,9 +142,37 @@ export function AppShell() {
         onDismiss={dismissAchievement}
       />
 
+      {/* Sound toggle — fixed top-right */}
+      <button
+        onClick={() => { playSound('click'); updateSetting('soundEnabled', !settings.soundEnabled) }}
+        className="fixed top-3 right-3 z-50 p-2 rounded-xl bg-black/40 backdrop-blur-sm border border-white/[0.08] text-muted-foreground hover:text-foreground transition-colors"
+        title={settings.soundEnabled ? 'Mute sounds' : 'Unmute sounds'}
+      >
+        {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+      </button>
+
+      {/* Sign-in banner for guests */}
+      {!isLoggedIn && !bannerDismissed && (
+        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-primary/5 border-b border-primary/10 z-30">
+          <span className="text-xs text-muted-foreground">Sign in to save progress</span>
+          <button
+            onClick={() => handleNavigate('profile')}
+            className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => setBannerDismissed(true)}
+            className="p-0.5 rounded text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
       {/* Main content area */}
       <main className="flex-1 overflow-y-auto px-4 pt-3 pb-20 relative z-10">
-        <div key={currentPage}>
+        <div key={currentPage} className="page-fade-in">
           {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
           {currentPage !== 'dashboard' && (
             <Suspense fallback={<PageSkeleton />}>
@@ -157,6 +194,8 @@ export function AppShell() {
               {currentPage === 'move-calculator' && <MoveCalculatorPage onClose={handleBack} />}
               {currentPage === 'pgn-viewer' && <PGNViewerPage onClose={handleBack} />}
               {currentPage === 'daily-calendar' && <DailyCalendarPage onClose={handleBack} />}
+              {currentPage === 'analysis' && <AnalysisPage onBack={handleBack} />}
+              {currentPage === 'lessons' && <LessonsPage onBack={handleBack} />}
             </Suspense>
           )}
         </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
-import { type UserProfile, DEFAULT_PROFILE, getLevelInfo, LEVELS, ALL_ACHIEVEMENTS, calculatePuzzleRating, getComboMultiplier, getDailyBonusXP, type WeeklyMission } from './chess-store'
+import { type UserProfile, DEFAULT_PROFILE, getLevelInfo, LEVELS, ALL_ACHIEVEMENTS, calculatePuzzleRating, calculateGameRating, getComboMultiplier, getDailyBonusXP, type WeeklyMission } from './chess-store'
 import { authApi, userApi, type UserProfileResponse } from './api-client'
 import { generateWeeklyMissions, getWeekStart } from './weekly-missions'
 
@@ -46,7 +46,8 @@ interface GameContextType {
   hasSeenOnboarding: boolean
   setHasSeenOnboarding: (seen: boolean) => void
   recordActivity: () => void
-  addRecentGame: (game: { id: string; date: string; result: 'win' | 'loss' | 'draw'; opponent: string; moves: number; pgn?: string }) => void
+  addRecentGame: (game: { id: string; date: string; result: 'win' | 'loss' | 'draw'; opponent: string; moves: number; pgn?: string; ratingChange?: number }) => void
+  updateGameRating: (opponentRating: number, result: 'win' | 'loss' | 'draw') => void
   updateWeeklyMission: (id: string, increment: number) => void
 }
 
@@ -96,6 +97,7 @@ function mapApiUserToProfile(apiUser: UserProfileResponse): UserProfile {
     activityDates: apiUser.activityDates || {},
     recentGames: apiUser.recentGames || [],
     puzzleRatingHistory: apiUser.puzzleRatingHistory || [],
+    gameRatingHistory: apiUser.gameRatingHistory || [],
     weeklyMissions: apiUser.weeklyMissions || [],
   }
 }
@@ -119,6 +121,7 @@ function loadProfileFromStorage(): UserProfile | null {
       if (!parsed.activityDates) parsed.activityDates = {}
       if (!parsed.recentGames) parsed.recentGames = []
       if (!parsed.puzzleRatingHistory) parsed.puzzleRatingHistory = []
+      if (!parsed.gameRatingHistory) parsed.gameRatingHistory = []
       if (!parsed.weeklyMissions) parsed.weeklyMissions = []
       if (parsed.puzzlesSolved == null) parsed.puzzlesSolved = 0
       if (parsed.puzzlesAttempted == null) parsed.puzzlesAttempted = 0
@@ -172,12 +175,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Auto-save profile to localStorage on every change
+  // Auto-save profile to localStorage on every change (including guests)
   useEffect(() => {
-    if (isLoggedIn && profile.username !== 'ChessLearner') {
+    if (profile.username !== 'ChessLearner') {
       saveProfileToStorage(profile)
     }
-  }, [isLoggedIn, profile])
+  }, [profile])
 
   // Load onboarding state
   useEffect(() => {
@@ -555,11 +558,24 @@ export function GameProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const addRecentGame = useCallback((game: { id: string; date: string; result: 'win' | 'loss' | 'draw'; opponent: string; moves: number; pgn?: string }) => {
+  const addRecentGame = useCallback((game: { id: string; date: string; result: 'win' | 'loss' | 'draw'; opponent: string; moves: number; pgn?: string; ratingChange?: number }) => {
     setProfile(prev => ({
       ...prev,
       recentGames: [game, ...prev.recentGames].slice(0, 10),
     }))
+    setPendingSync(true)
+  }, [])
+
+  const updateGameRating = useCallback((opponentRating: number, result: 'win' | 'loss' | 'draw') => {
+    setProfile(prev => {
+      const { newRating, change } = calculateGameRating(prev.rating, opponentRating, result)
+      const newHistory = [...prev.gameRatingHistory, { date: new Date().toISOString(), rating: newRating }]
+      return {
+        ...prev,
+        rating: newRating,
+        gameRatingHistory: newHistory.slice(-100),
+      }
+    })
     setPendingSync(true)
   }, [])
 
@@ -690,6 +706,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setHasSeenOnboarding,
         recordActivity,
         addRecentGame,
+        updateGameRating,
         updateWeeklyMission,
       }}
     >

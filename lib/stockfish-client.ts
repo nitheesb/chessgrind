@@ -20,6 +20,21 @@ export interface StockfishAnalysis {
   mateIn: number | null
 }
 
+/** Extended info event with search statistics */
+export interface StockfishInfoEvent extends StockfishAnalysis {
+  nodes?: number
+  nps?: number // nodes per second
+  time?: number // search time in ms
+  multipv?: number // which PV line (1-indexed)
+  seldepth?: number
+}
+
+/** Multi-PV analysis result: array of lines ordered by rank */
+export interface MultiPVAnalysis {
+  lines: StockfishInfoEvent[]
+  depth: number
+}
+
 export interface StockfishSearchOptions {
   depth?: number // search to this depth
   movetime?: number // search for this many ms
@@ -34,9 +49,13 @@ let isReady = false
 let initPromise: Promise<void> | null = null
 let initRejecter: ((err: Error) => void) | null = null
 let currentAnalysisCallback: ((info: StockfishAnalysis) => void) | null = null
+let currentInfoCallback: ((info: StockfishInfoEvent) => void) | null = null
 let bestMoveResolver: ((result: StockfishMoveResult | null) => void) | null = null
 let analysisResolver: ((result: StockfishAnalysis) => void) | null = null
+let multiPVResolver: ((result: MultiPVAnalysis) => void) | null = null
 let latestAnalysis: StockfishAnalysis = { eval: 0, bestLine: [], depth: 0, isMate: false, mateIn: null }
+let multiPVLines: Map<number, StockfishInfoEvent> = new Map()
+let currentMultiPV = 1 // current MultiPV setting
 let currentFen = '' // FEN being analyzed, for SAN conversion
 let currentRequestId = 0 // Prevents stale responses resolving wrong promises
 
@@ -48,12 +67,16 @@ function parseBestMove(line: string): { bestMove: string; ponder?: string } | nu
   return { bestMove: match[1], ponder: match[2] }
 }
 
-function parseInfoLine(line: string): Partial<StockfishAnalysis> & { pvMoves?: string[] } {
-  const result: Partial<StockfishAnalysis> & { pvMoves?: string[] } = {}
+function parseInfoLine(line: string): Partial<StockfishInfoEvent> & { pvMoves?: string[] } {
+  const result: Partial<StockfishInfoEvent> & { pvMoves?: string[] } = {}
 
   // Depth
   const depthMatch = line.match(/\bdepth\s+(\d+)/)
   if (depthMatch) result.depth = parseInt(depthMatch[1])
+
+  // Seldepth
+  const seldepthMatch = line.match(/\bseldepth\s+(\d+)/)
+  if (seldepthMatch) result.seldepth = parseInt(seldepthMatch[1])
 
   // Score
   const cpMatch = line.match(/\bscore\s+cp\s+(-?\d+)/)
@@ -69,6 +92,22 @@ function parseInfoLine(line: string): Partial<StockfishAnalysis> & { pvMoves?: s
     result.mateIn = mateIn
     result.eval = mateIn > 0 ? 100 : -100 // large value for mate
   }
+
+  // Nodes
+  const nodesMatch = line.match(/\bnodes\s+(\d+)/)
+  if (nodesMatch) result.nodes = parseInt(nodesMatch[1])
+
+  // NPS
+  const npsMatch = line.match(/\bnps\s+(\d+)/)
+  if (npsMatch) result.nps = parseInt(npsMatch[1])
+
+  // Time
+  const timeMatch = line.match(/\btime\s+(\d+)/)
+  if (timeMatch) result.time = parseInt(timeMatch[1])
+
+  // MultiPV index
+  const mpvMatch = line.match(/\bmultipv\s+(\d+)/)
+  if (mpvMatch) result.multipv = parseInt(mpvMatch[1])
 
   // PV (principal variation) - long algebraic moves
   const pvMatch = line.match(/\bpv\s+(.+)$/)
@@ -161,21 +200,65 @@ function handleMessage(e: MessageEvent) {
     return
   }
 
-  // Info lines during search
-  if (line.startsWith('info') && line.includes(' pv ')) {
+  // Info lines during search — process all info lines with pv or useful stats
+  if (line.startsWith('info')) {
     const parsed = parseInfoLine(line)
-    if (parsed.depth !== undefined) {
+
+    // Stream raw info events (depth, nodes, nps) even without PV
+    if (currentInfoCallback && parsed.depth !== undefined) {
+      const infoEvent: StockfishInfoEvent = {
+        eval: parsed.eval ?? latestAnalysis.eval,
+        bestLine: [],
+        depth: parsed.depth,
+        isMate: parsed.isMate ?? latestAnalysis.isMate,
+        mateIn: parsed.mateIn !== undefined ? parsed.mateIn : latestAnalysis.mateIn,
+        nodes: parsed.nodes,
+        nps: parsed.nps,
+        time: parsed.time,
+        seldepth: parsed.seldepth,
+        multipv: parsed.multipv,
+      }
+      // Only convert PV moves if present
+      if (parsed.pvMoves) {
+        infoEvent.bestLine = uciToSan(currentFen, parsed.pvMoves)
+      }
+      currentInfoCallback(infoEvent)
+    }
+
+    // Process PV lines for analysis results
+    if (line.includes(' pv ') && parsed.depth !== undefined) {
       const sanMoves = parsed.pvMoves ? uciToSan(currentFen, parsed.pvMoves) : latestAnalysis.bestLine
-      latestAnalysis = {
+      const pvIndex = parsed.multipv ?? 1
+
+      const lineResult: StockfishInfoEvent = {
         eval: parsed.eval ?? latestAnalysis.eval,
         bestLine: sanMoves.length > 0 ? sanMoves : latestAnalysis.bestLine,
         depth: parsed.depth,
         isMate: parsed.isMate ?? latestAnalysis.isMate,
         mateIn: parsed.mateIn !== undefined ? parsed.mateIn : latestAnalysis.mateIn,
+        nodes: parsed.nodes,
+        nps: parsed.nps,
+        time: parsed.time,
+        seldepth: parsed.seldepth,
+        multipv: pvIndex,
       }
-      // Stream updates to callback if registered
-      if (currentAnalysisCallback) {
-        currentAnalysisCallback({ ...latestAnalysis })
+
+      // Store Multi-PV lines
+      multiPVLines.set(pvIndex, lineResult)
+
+      // Update latestAnalysis with PV1 (best line)
+      if (pvIndex === 1) {
+        latestAnalysis = {
+          eval: lineResult.eval,
+          bestLine: lineResult.bestLine,
+          depth: lineResult.depth,
+          isMate: lineResult.isMate,
+          mateIn: lineResult.mateIn,
+        }
+        // Stream updates to callback if registered
+        if (currentAnalysisCallback) {
+          currentAnalysisCallback({ ...latestAnalysis })
+        }
       }
     }
     return
@@ -198,6 +281,14 @@ function handleMessage(e: MessageEvent) {
       analysisResolver({ ...latestAnalysis })
       analysisResolver = null
     }
+
+    if (multiPVResolver) {
+      const lines = Array.from(multiPVLines.values()).sort((a, b) => (a.multipv ?? 1) - (b.multipv ?? 1))
+      multiPVResolver({ lines, depth: latestAnalysis.depth })
+      multiPVResolver = null
+    }
+
+    currentInfoCallback = null
     return
   }
 }
@@ -340,6 +431,7 @@ export async function analyzeWithStockfish(
   fen: string,
   options: StockfishSearchOptions = {},
   onProgress?: (info: StockfishAnalysis) => void,
+  onInfoEvent?: (info: StockfishInfoEvent) => void,
 ): Promise<StockfishAnalysis> {
   await initStockfish()
 
@@ -349,10 +441,19 @@ export async function analyzeWithStockfish(
   return new Promise<StockfishAnalysis>((resolve) => {
     currentFen = fen
     currentAnalysisCallback = onProgress || null
+    currentInfoCallback = onInfoEvent || null
     latestAnalysis = { eval: 0, bestLine: [], depth: 0, isMate: false, mateIn: null }
+    multiPVLines.clear()
+
+    // Reset MultiPV to 1 for single-line analysis
+    if (currentMultiPV !== 1) {
+      sendUCI('setoption name MultiPV value 1')
+      currentMultiPV = 1
+    }
 
     analysisResolver = (result) => {
       currentAnalysisCallback = null
+      currentInfoCallback = null
       resolve(result)
     }
 
@@ -371,6 +472,7 @@ export async function analyzeWithStockfish(
     const safetyTimeout = setTimeout(() => {
       if (analysisResolver) {
         currentAnalysisCallback = null
+        currentInfoCallback = null
         analysisResolver({ ...latestAnalysis })
         analysisResolver = null
         sendUCI('stop')
@@ -386,6 +488,74 @@ export async function analyzeWithStockfish(
 }
 
 /**
+ * Analyze a position with Stockfish using Multi-PV mode.
+ * Returns top N lines with eval for each.
+ */
+export async function analyzeMultiPV(
+  fen: string,
+  options: StockfishSearchOptions = {},
+  multiPV: number = 3,
+  onProgress?: (info: StockfishAnalysis) => void,
+  onInfoEvent?: (info: StockfishInfoEvent) => void,
+): Promise<MultiPVAnalysis> {
+  await initStockfish()
+
+  // Cancel any ongoing search
+  sendUCI('stop')
+
+  const pvCount = Math.max(1, Math.min(multiPV, 5))
+
+  return new Promise<MultiPVAnalysis>((resolve) => {
+    currentFen = fen
+    currentAnalysisCallback = onProgress || null
+    currentInfoCallback = onInfoEvent || null
+    latestAnalysis = { eval: 0, bestLine: [], depth: 0, isMate: false, mateIn: null }
+    multiPVLines.clear()
+
+    // Set MultiPV
+    if (currentMultiPV !== pvCount) {
+      sendUCI('setoption name MultiPV value ' + pvCount)
+      currentMultiPV = pvCount
+    }
+
+    multiPVResolver = (result) => {
+      currentAnalysisCallback = null
+      currentInfoCallback = null
+      resolve(result)
+    }
+
+    sendUCI('position fen ' + fen)
+
+    let goCmd = 'go'
+    if (options.depth) goCmd += ' depth ' + options.depth
+    if (options.movetime) goCmd += ' movetime ' + options.movetime
+    if (!options.depth && !options.movetime) {
+      goCmd += ' depth 20'
+    }
+
+    sendUCI(goCmd)
+
+    // Safety timeout
+    const safetyTimeout = setTimeout(() => {
+      if (multiPVResolver) {
+        currentAnalysisCallback = null
+        currentInfoCallback = null
+        const lines = Array.from(multiPVLines.values()).sort((a, b) => (a.multipv ?? 1) - (b.multipv ?? 1))
+        multiPVResolver({ lines, depth: latestAnalysis.depth })
+        multiPVResolver = null
+        sendUCI('stop')
+      }
+    }, 30000)
+
+    const originalResolver = multiPVResolver
+    multiPVResolver = (result) => {
+      clearTimeout(safetyTimeout)
+      originalResolver(result)
+    }
+  })
+}
+
+/**
  * Stop the current Stockfish search.
  */
 export function stopStockfish() {
@@ -393,8 +563,10 @@ export function stopStockfish() {
     sendUCI('stop')
   }
   currentAnalysisCallback = null
+  currentInfoCallback = null
   bestMoveResolver = null
   analysisResolver = null
+  multiPVResolver = null
 }
 
 /**

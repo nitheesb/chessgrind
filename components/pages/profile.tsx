@@ -227,22 +227,30 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
 
             {/* Rating display */}
             <div className="pt-2 border-t border-border/30">
-              <div className="flex flex-col gap-2">
-                <p className="text-xs text-muted-foreground font-medium">Puzzle Rating History</p>
-                {profile.puzzleRatingHistory.length > 2 ? (
-                  <RatingGraph data={profile.puzzleRatingHistory} width={280} height={70} />
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Puzzle Rating</p>
-                      <p className="text-lg font-bold text-foreground">{profile.puzzleRating}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Games Rating</p>
-                      <p className="text-lg font-bold text-foreground">{profile.rating}</p>
-                    </div>
+              <div className="flex flex-col gap-3">
+                {profile.gameRatingHistory && profile.gameRatingHistory.length > 2 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium mb-1">Game Rating</p>
+                    <RatingGraph data={profile.gameRatingHistory} width={280} height={70} />
                   </div>
                 )}
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium mb-1">Puzzle Rating</p>
+                  {profile.puzzleRatingHistory.length > 2 ? (
+                    <RatingGraph data={profile.puzzleRatingHistory} width={280} height={70} color="#3b82f6" />
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Puzzle Rating</p>
+                        <p className="text-lg font-bold text-foreground">{profile.puzzleRating}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">Game Rating</p>
+                        <p className="text-lg font-bold text-foreground">{profile.rating}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -284,6 +292,11 @@ export function ProfilePage({ onBack, onNavigate }: ProfilePageProps) {
                       <p className="text-xs font-medium text-foreground truncate">vs {game.opponent}</p>
                       <p className="text-[10px] text-muted-foreground">{game.moves} moves</p>
                     </div>
+                    {game.ratingChange != null && (
+                      <span className={`text-[10px] font-bold tabular-nums ${game.ratingChange > 0 ? 'text-amber-400' : game.ratingChange < 0 ? 'text-red-400' : 'text-muted-foreground'}`}>
+                        {game.ratingChange > 0 ? '+' : ''}{game.ratingChange}
+                      </span>
+                    )}
                     <span className="text-[10px] text-muted-foreground shrink-0">{dateAgo}</span>
                   </div>
                 )

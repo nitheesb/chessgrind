@@ -50,9 +50,12 @@ export interface UserProfile {
     opponent: string
     moves: number
     pgn?: string
+    ratingChange?: number
   }>
   // Puzzle rating history
   puzzleRatingHistory: Array<{ date: string; rating: number }>
+  // Game rating history
+  gameRatingHistory: Array<{ date: string; rating: number }>
   // Weekly missions
   weeklyMissions: WeeklyMission[]
 }
@@ -150,6 +153,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   activityDates: {},
   recentGames: [],
   puzzleRatingHistory: [],
+  gameRatingHistory: [],
   weeklyMissions: [],
 }
 
@@ -191,6 +195,20 @@ export function calculatePuzzleRating(
   
   const change = Math.round(K * (actual - expected) * timeFactor)
   return Math.max(100, currentRating + change) // Minimum rating 100
+}
+
+// Calculate new game rating using ELO formula
+export function calculateGameRating(
+  currentRating: number,
+  opponentRating: number,
+  result: 'win' | 'loss' | 'draw'
+): { newRating: number; change: number } {
+  const K = 32
+  const expected = 1 / (1 + Math.pow(10, (opponentRating - currentRating) / 400))
+  const actual = result === 'win' ? 1 : result === 'draw' ? 0.5 : 0
+  const change = Math.round(K * (actual - expected))
+  const newRating = Math.max(100, currentRating + change)
+  return { newRating, change }
 }
 
 // Get daily puzzle based on date

@@ -5,13 +5,16 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard, CapturedPieces } from '@/components/chess/chessboard'
 import { EvalBar } from '@/components/chess/eval-bar'
+import { CoachPanel, BlunderCheckNudge, type CoachArrow } from '@/components/chess/coach-panel'
 import { AI_LEVELS } from '@/lib/chess-data'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
+import type { CoachMode } from '@/lib/settings-context'
 import { getEngineConfig } from '@/lib/chess-engine'
 import { getBestMoveAsync, analyzePositionAsync } from '@/lib/chess-worker-client'
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
+import { GameReview } from '@/components/chess/game-review'
 import { staggerContainer, staggerItem } from '@/components/ui/animated-components'
 import { formatTime } from '@/lib/utils'
 import { useMobileBoardSize } from '@/lib/use-mobile-board-size'
@@ -35,6 +38,7 @@ import {
   EyeOff,
   Copy,
   BookOpen,
+  BarChart3,
 } from 'lucide-react'
 
 interface PlayAIProps {
@@ -262,23 +266,26 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
 
                 {/* Level indicator */}
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border relative z-10"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border relative z-10 text-2xl"
                   style={{
                     backgroundColor: `${level.color}10`,
                     borderColor: `${level.color}30`,
                   }}
                 >
-                  <Cpu className={`w-6 h-6 transition-colors`} style={{ color: isActive ? level.color : undefined }} color={isActive ? undefined : 'currentColor'} />
+                  {level.botEmoji || <Cpu className="w-6 h-6" style={{ color: isActive ? level.color : undefined }} />}
                 </div>
 
                 <div className="flex-1 min-w-0 relative z-10">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-semibold text-foreground tracking-wide">{level.name}</span>
+                    <span className="text-sm font-semibold text-foreground tracking-wide">{level.botName || level.name}</span>
                     <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary text-muted-foreground">
                       {level.rating}
                     </span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground line-clamp-1">{level.description}</p>
+                  <p className="text-[11px] text-muted-foreground line-clamp-1">{level.botPersonality || level.description}</p>
+                  {level.botStyle && (
+                    <p className="text-[10px] text-primary/70 mt-0.5">{level.botStyle}</p>
+                  )}
                 </div>
 
                 <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 group-hover:translate-x-1 group-hover:text-primary transition-all relative z-10" />
@@ -302,7 +309,7 @@ function GameSession({
   timeControl: TimeControl
   onBack: () => void
 }) {
-  const { addXP, incrementGamesPlayed, addRecentGame } = useGame()
+  const { addXP, incrementGamesPlayed, addRecentGame, updateGameRating, profile } = useGame()
   const { settings, updateSetting } = useSettings()
   const boardSize = useMobileBoardSize(520)
   const [game, setGame] = useState(() => new Chess())
@@ -319,9 +326,16 @@ function GameSession({
   const [copiedPGN, setCopiedPGN] = useState(false)
   const [copiedFEN, setCopiedFEN] = useState(false)
   const notationRef = useRef<HTMLDivElement>(null)
+  const [showGameReview, setShowGameReview] = useState(false)
 
   // Opening detection
   const currentOpening = useMemo(() => detectOpening(moveHistory), [moveHistory])
+
+  // Coach mode state
+  const [coachArrows, setCoachArrows] = useState<CoachArrow[]>([])
+  const [blunderCheck, setBlunderCheck] = useState<{ show: boolean; message: string; pendingMove: { from: string; to: string; promotion?: string } | null }>({
+    show: false, message: '', pendingMove: null,
+  })
 
   // Real-time analysis
   const [analysis, setAnalysis] = useState<{ eval: number; bestLine: string[]; isMate: boolean; mateIn: number | null } | null>(null)
@@ -391,6 +405,19 @@ function GameSession({
     setPlayerWon(playerIsWinner)
     setPremove(null)
     incrementGamesPlayed()
+
+    const gameResult = playerIsWinner ? 'win' as const : (reason === 'Draw' || reason === 'Stalemate') ? 'draw' as const : 'loss' as const
+    const opponentRating = aiConfig.rating || 800
+
+    // Update game rating
+    updateGameRating(opponentRating, gameResult)
+
+    // Calculate rating change for display
+    const K = 32
+    const expected = 1 / (1 + Math.pow(10, (opponentRating - profile.rating) / 400))
+    const actual = gameResult === 'win' ? 1 : gameResult === 'draw' ? 0.5 : 0
+    const ratingChange = Math.round(K * (actual - expected))
+
     if (playerIsWinner) {
       addXP(20 + aiLevel * 10)
       setShowCelebration(true)
@@ -402,11 +429,12 @@ function GameSession({
     addRecentGame({
       id: Date.now().toString(),
       date: new Date().toISOString(),
-      result: playerIsWinner ? 'win' : (reason === 'Draw' || reason === 'Stalemate') ? 'draw' : 'loss',
-      opponent: aiConfig.name,
+      result: gameResult,
+      opponent: aiConfig.botName || aiConfig.name,
       moves: moveHistory.length,
+      ratingChange,
     })
-  }, [addXP, incrementGamesPlayed, aiLevel, addRecentGame, aiConfig.name, moveHistory.length])
+  }, [addXP, incrementGamesPlayed, aiLevel, addRecentGame, updateGameRating, aiConfig, profile.rating, moveHistory.length])
 
   const [fallbackNotice, setFallbackNotice] = useState(false)
 
@@ -478,20 +506,14 @@ function GameSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlayerTurn, gameOver])
 
-  const handlePlayerMove = useCallback((from: string, to: string, promotion?: string): boolean => {
-    if (gameOver) return false
-    // Store as premove when it's AI's turn
-    if (!isPlayerTurn) {
-      setPremove({ from, to, promotion })
-      return true // optimistic
-    }
-
+  const executeMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     try {
       const gameCopy = new Chess(game.fen())
       const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
       if (!move) return false
 
       setLastMoveIsPlayer(true)
+      setCoachArrows([])
       setGame(gameCopy)
       setLastMove({ from, to })
       setMoveHistory(prev => [...prev, move.san])
@@ -518,7 +540,52 @@ function GameSession({
     } catch {
       return false
     }
-  }, [game, isPlayerTurn, gameOver, playerColor, timeControl.increment, handleGameEnd])
+  }, [game, playerColor, timeControl.increment, handleGameEnd])
+
+  const handlePlayerMove = useCallback((from: string, to: string, promotion?: string): boolean => {
+    if (gameOver) return false
+    // Store as premove when it's AI's turn
+    if (!isPlayerTurn) {
+      setPremove({ from, to, promotion })
+      return true // optimistic
+    }
+
+    // Blunder check: analyze the move before playing it
+    if (settings.blunderCheck && settings.coachMode !== 'off') {
+      const gameCopy = new Chess(game.fen())
+      try {
+        const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
+        if (!move) return false
+
+        // Quick eval check
+        analyzePositionAsync(game.fen(), 10, true).then(before => {
+          analyzePositionAsync(gameCopy.fen(), 10, true).then(after => {
+            const isWhite = game.turn() === 'w'
+            const beforeEval = isWhite ? before.eval : -before.eval
+            const afterEval = isWhite ? -after.eval : after.eval
+            const evalDrop = beforeEval - afterEval
+
+            if (evalDrop >= 1.5) {
+              // This is a blunder — show nudge
+              setBlunderCheck({
+                show: true,
+                message: evalDrop >= 3 ? 'Are you sure? This loses significant material.' :
+                  'Are you sure? This loses the exchange.',
+                pendingMove: { from, to, promotion },
+              })
+            } else {
+              executeMove(from, to, promotion)
+            }
+          })
+        })
+        return true // Optimistically return true while checking
+      } catch {
+        return false
+      }
+    }
+
+    return executeMove(from, to, promotion)
+  }, [game, isPlayerTurn, gameOver, settings.blunderCheck, settings.coachMode, executeMove])
 
   // Execute premove when it becomes player's turn
   useEffect(() => {
@@ -593,6 +660,19 @@ function GameSession({
       animate={{ opacity: 1, x: 0 }}
       className="flex flex-col gap-3 pb-8"
     >
+      {/* Game Review Modal */}
+      {showGameReview && (
+        <div className="fixed inset-0 z-[100] bg-background overflow-y-auto px-4 pt-4">
+          <GameReview
+            pgn={generatePGN()}
+            playerColor={playerColor}
+            opponent={aiConfig.name}
+            onClose={() => setShowGameReview(false)}
+            compact
+          />
+        </div>
+      )}
+
       <CheckmateCelebration show={showCelebration} />
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -671,7 +751,10 @@ function GameSession({
             isCheck={game.isCheck()}
             boardStyle={settings.boardStyle}
             pieceStyle={settings.pieceStyle}
-            arrows={premove ? [{ from: premove.from, to: premove.to, color: 'orange' }] : []}
+            arrows={[
+              ...(premove ? [{ from: premove.from, to: premove.to, color: 'orange' }] : []),
+              ...coachArrows.map(a => ({ from: a.from, to: a.to, color: a.color })),
+            ]}
             blindfoldMode={settings.blindfoldMode}
             isPlayerMove={lastMoveIsPlayer}
           />
@@ -679,7 +762,7 @@ function GameSession({
       </div>
 
       {/* Opening name display */}
-      {currentOpening && moveHistory.length <= 20 && (
+      {currentOpening && moveHistory.length <= 20 && settings.coachMode === 'off' && (
         <div className="flex items-center justify-center gap-2 px-2">
           <BookOpen className="w-3.5 h-3.5 text-primary" />
           <span className="text-xs text-primary font-medium">{currentOpening.eco}: {currentOpening.name}</span>
@@ -708,8 +791,26 @@ function GameSession({
         </button>
       </div>
 
-      {/* Live Analysis Panel */}
-      {!gameOver && analysis && (
+      {/* AI Coach Panel */}
+      {!gameOver && settings.coachMode !== 'off' && (
+        <div className="glass-card p-3">
+          <CoachPanel
+            fen={game.fen()}
+            moveHistory={moveHistory}
+            isPlayerTurn={isPlayerTurn}
+            isThinking={isThinking}
+            gameOver={gameOver}
+            coachMode={settings.coachMode}
+            onCoachModeChange={(mode) => updateSetting('coachMode', mode)}
+            blunderCheck={settings.blunderCheck}
+            compact
+            onArrows={setCoachArrows}
+          />
+        </div>
+      )}
+
+      {/* Legacy Live Analysis Panel (when coach is off) */}
+      {!gameOver && analysis && settings.coachMode === 'off' && (
         <div className="glass-card p-3">
           <button
             onClick={() => setShowAnalysis(!showAnalysis)}
@@ -859,6 +960,21 @@ function GameSession({
         )}
       </AnimatePresence>
 
+      {/* Blunder Check Nudge */}
+      <BlunderCheckNudge
+        show={blunderCheck.show}
+        message={blunderCheck.message}
+        onPlayAnyway={() => {
+          if (blunderCheck.pendingMove) {
+            executeMove(blunderCheck.pendingMove.from, blunderCheck.pendingMove.to, blunderCheck.pendingMove.promotion)
+          }
+          setBlunderCheck({ show: false, message: '', pendingMove: null })
+        }}
+        onTakeBack={() => {
+          setBlunderCheck({ show: false, message: '', pendingMove: null })
+        }}
+      />
+
       {/* Game Over Overlay */}
       <AnimatePresence>
         {gameOver && (
@@ -893,11 +1009,12 @@ function GameSession({
             </div>
             <div className="flex items-center gap-3 w-full">
               <button
-                onClick={onBack}
-                className="flex-1 py-3 rounded-lg font-semibold text-sm text-white/80"
-                style={{ background: '#454341', borderBottom: '3px solid #2b2927' }}
+                onClick={() => setShowGameReview(true)}
+                className="flex-1 py-3 rounded-lg font-bold text-sm text-white flex items-center justify-center gap-2"
+                style={{ background: '#5b9bd5', borderBottom: '3px solid #4178a8' }}
               >
-                Back
+                <BarChart3 className="w-4 h-4" />
+                Review
               </button>
               <button
                 onClick={handleNewGame}

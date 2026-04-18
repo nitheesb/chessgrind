@@ -5,13 +5,16 @@ import { motion } from 'framer-motion'
 import { Chess } from 'chess.js'
 import { Chessboard, CapturedPieces } from '@/components/chess/chessboard'
 import { EvalBar } from '@/components/chess/eval-bar'
+import { CoachPanel, BlunderCheckNudge, type CoachArrow } from '@/components/chess/coach-panel'
 import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
+import type { CoachMode } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { getEngineConfig } from '@/lib/chess-engine'
 import { getBestMoveAsync, analyzePositionAsync } from '@/lib/chess-worker-client'
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
+import { GameReview } from '@/components/chess/game-review'
 import { formatTime } from '@/lib/utils'
 import {
   Swords,
@@ -19,7 +22,6 @@ import {
   Flag,
   Clock,
   Trophy,
-  Cpu,
   User,
   ChevronLeft,
   ChevronRight,
@@ -30,6 +32,8 @@ import {
   EyeOff,
   Copy,
   BookOpen,
+  BarChart3,
+  TrendingUp,
 } from 'lucide-react'
 
 
@@ -42,11 +46,11 @@ type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'master'
 
 import { TIME_CONTROLS } from '@/lib/chess-constants'
 
-const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string; useStockfish: boolean; stockfishSkill?: number }> = {
-  beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'amber', useStockfish: false },
-  intermediate: { name: 'Intermediate', depth: 3, description: 'A fair challenge', color: 'blue', useStockfish: false },
-  advanced: { name: 'Advanced', depth: 5, description: 'Stockfish engine', color: 'purple', useStockfish: true, stockfishSkill: 13 },
-  master: { name: 'Master', depth: 6, description: 'Full Stockfish 18', color: 'red', useStockfish: true, stockfishSkill: 20 },
+const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string; useStockfish: boolean; stockfishSkill?: number; botName: string; botEmoji: string; botStyle: string; rating: number }> = {
+  beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'amber', useStockfish: false, botName: 'Pawny', botEmoji: '🐣', botStyle: 'Random and unpredictable', rating: 400 },
+  intermediate: { name: 'Intermediate', depth: 3, description: 'A fair challenge', color: 'blue', useStockfish: false, botName: 'Chester', botEmoji: '🎩', botStyle: 'Solid openings, shaky endgames', rating: 800 },
+  advanced: { name: 'Advanced', depth: 5, description: 'Stockfish engine', color: 'purple', useStockfish: true, stockfishSkill: 13, botName: 'Magnus Jr.', botEmoji: '🎯', botStyle: 'Positional and precise', rating: 1500 },
+  master: { name: 'Master', depth: 6, description: 'Full Stockfish 18', color: 'red', useStockfish: true, stockfishSkill: 20, botName: 'The Machine', botEmoji: '🤖', botStyle: 'Perfect play', rating: 2800 },
 }
 
 const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string; activeStyle: string }> = {
@@ -57,7 +61,7 @@ const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string; 
 }
 
 export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
-  const { addXP } = useGame()
+  const { addXP, addRecentGame, updateGameRating, profile } = useGame()
   const { settings, updateSetting } = useSettings()
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const [gameStarted, setGameStarted] = useState(false)
@@ -91,9 +95,17 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const [notationView, setNotationView] = useState<'list' | 'condensed'>('list')
   const [copiedPGN, setCopiedPGN] = useState(false)
   const [copiedFEN, setCopiedFEN] = useState(false)
+  const [showGameReview, setShowGameReview] = useState(false)
+  const [lastRatingChange, setLastRatingChange] = useState<number | null>(null)
   const notationRef = useRef<HTMLDivElement>(null)
   const isPlayerTurn = game.turn() === (playerColor === 'white' ? 'w' : 'b')
   const [lastMoveIsPlayer, setLastMoveIsPlayer] = useState(false)
+
+  // Coach mode state
+  const [coachArrows, setCoachArrows] = useState<CoachArrow[]>([])
+  const [blunderCheck, setBlunderCheck] = useState<{ show: boolean; message: string; pendingMove: { from: string; to: string; promotion?: string } | null }>({
+    show: false, message: '', pendingMove: null,
+  })
 
   // Opening detection
   const currentOpening = useMemo(() => detectOpening(moveHistory), [moveHistory])
@@ -149,6 +161,29 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const handleGameEnd = useCallback((result: 'won' | 'lost' | 'draw') => {
     if (timerRef.current) clearInterval(timerRef.current)
     setGameStatus(result)
+    const gameResult = result === 'won' ? 'win' as const : result === 'lost' ? 'loss' as const : 'draw' as const
+    const opponentRating = DIFFICULTY_CONFIG[difficulty].rating
+
+    // Update game rating
+    updateGameRating(opponentRating, gameResult)
+
+    // Calculate rating change for display
+    const K = 32
+    const expected = 1 / (1 + Math.pow(10, (opponentRating - profile.rating) / 400))
+    const actual = gameResult === 'win' ? 1 : gameResult === 'draw' ? 0.5 : 0
+    const ratingChange = Math.round(K * (actual - expected))
+    setLastRatingChange(ratingChange)
+
+    // Record game
+    addRecentGame({
+      id: `game-${Date.now()}`,
+      date: new Date().toISOString(),
+      result: gameResult,
+      opponent: DIFFICULTY_CONFIG[difficulty].botName,
+      moves: moveHistory.length,
+      ratingChange,
+    })
+
     if (result === 'won') {
       playSound('success')
       triggerHaptic('success')
@@ -156,7 +191,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     } else if (result === 'lost') {
       playSound('fail')
     }
-  }, [playSound, triggerHaptic, addXP, difficulty])
+  }, [playSound, triggerHaptic, addXP, difficulty, addRecentGame, updateGameRating, profile.rating, moveHistory.length])
 
   const [fallbackNotice, setFallbackNotice] = useState(false)
 
@@ -212,20 +247,14 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     }, delay)
   }, [difficulty, playSound, timeControl.increment, handleGameEnd])
 
-  const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
-    if (gameStatus !== 'playing' || thinking) return false
-    // Store as premove when it's AI's turn
-    if (!isPlayerTurn) {
-      setPremove({ from, to, promotion })
-      return true
-    }
-
+  const executeMove = useCallback((from: string, to: string, promotion?: string): boolean => {
     try {
       const newGame = new Chess(game.fen())
       const move = newGame.move({ from, to, promotion: promotion || 'q' })
 
       if (move) {
         setLastMoveIsPlayer(true)
+        setCoachArrows([])
         setGame(newGame)
         setLastMove({ from, to })
         setMoveHistory(prev => [...prev, move.san])
@@ -244,7 +273,50 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
       }
     } catch { }
     return false
-  }, [game, gameStatus, thinking, isPlayerTurn, playSound, triggerHaptic, makeAIMove, timeControl.increment, handleGameEnd])
+  }, [game, playSound, triggerHaptic, makeAIMove, timeControl.increment, handleGameEnd])
+
+  const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
+    if (gameStatus !== 'playing' || thinking) return false
+    // Store as premove when it's AI's turn
+    if (!isPlayerTurn) {
+      setPremove({ from, to, promotion })
+      return true
+    }
+
+    // Blunder check
+    if (settings.blunderCheck && settings.coachMode !== 'off') {
+      const gameCopy = new Chess(game.fen())
+      try {
+        const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
+        if (!move) return false
+
+        analyzePositionAsync(game.fen(), 10, true).then(before => {
+          analyzePositionAsync(gameCopy.fen(), 10, true).then(after => {
+            const isWhite = game.turn() === 'w'
+            const beforeEval = isWhite ? before.eval : -before.eval
+            const afterEval = isWhite ? -after.eval : after.eval
+            const evalDrop = beforeEval - afterEval
+
+            if (evalDrop >= 1.5) {
+              setBlunderCheck({
+                show: true,
+                message: evalDrop >= 3 ? 'Are you sure? This loses significant material.' :
+                  'Are you sure? This loses the exchange.',
+                pendingMove: { from, to, promotion },
+              })
+            } else {
+              executeMove(from, to, promotion)
+            }
+          })
+        })
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    return executeMove(from, to, promotion)
+  }, [game, gameStatus, thinking, isPlayerTurn, settings.blunderCheck, settings.coachMode, executeMove])
 
   // Execute premove when it becomes the player's turn
   useEffect(() => {
@@ -270,7 +342,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   }, [isPlayerTurn])
 
   const startGame = useCallback(() => {
-    playSound('click')
+    playSound('gamestart')
     setGameStarted(true)
     setGame(new Chess())
     setGameStatus('playing')
@@ -299,6 +371,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     setThinking(false)
     setPremove(null)
     setAnalysis(null)
+    setLastRatingChange(null)
     if (timerRef.current) clearInterval(timerRef.current)
   }, [playSound])
 
@@ -307,8 +380,8 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     const pgnResult = gameStatus === 'draw' ? '1/2-1/2' :
       gameStatus === 'won' ? (playerColor === 'white' ? '1-0' : '0-1') :
       gameStatus === 'lost' ? (playerColor === 'white' ? '0-1' : '1-0') : '*'
-    const whitePlayer = playerColor === 'white' ? 'You' : `${DIFFICULTY_CONFIG[difficulty].name} AI`
-    const blackPlayer = playerColor === 'black' ? 'You' : `${DIFFICULTY_CONFIG[difficulty].name} AI`
+    const whitePlayer = playerColor === 'white' ? 'You' : DIFFICULTY_CONFIG[difficulty].botName
+    const blackPlayer = playerColor === 'black' ? 'You' : DIFFICULTY_CONFIG[difficulty].botName
     const headers = [
       '[Event "ChessGrind Game"]',
       `[Date "${date}"]`,
@@ -413,9 +486,10 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                     {difficulty !== key && (
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
                     )}
-                    <Cpu className={`w-6 h-6 mb-2 mx-auto relative z-10 transition-colors ${difficulty === key ? COLOR_CLASSES[config.color].text : 'text-muted-foreground group-hover:text-foreground'}`} />
-                    <h3 className="font-semibold text-foreground mb-1 relative z-10 tracking-wide text-sm">{config.name}</h3>
-                    <p className="text-xs text-muted-foreground relative z-10">{config.description}</p>
+                    <span className="text-2xl mb-1 block relative z-10">{config.botEmoji}</span>
+                    <h3 className="font-semibold text-foreground mb-0.5 relative z-10 tracking-wide text-sm">{config.botName}</h3>
+                    <p className={`text-[11px] mb-1 relative z-10 ${difficulty === key ? COLOR_CLASSES[config.color].text : 'text-muted-foreground'}`}>{config.botStyle}</p>
+                    <p className="text-[10px] text-muted-foreground/60 relative z-10">{config.description}</p>
                   </motion.button>
                 ))}
               </div>
@@ -494,6 +568,18 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
   return (
     <div className="flex h-full overflow-hidden lm-gpu">
+      {/* Game Review Modal */}
+      {showGameReview && (
+        <div className="fixed inset-0 z-[100] bg-background">
+          <GameReview
+            pgn={generatePGN()}
+            playerColor={playerColor === 'white' ? 'w' : 'b'}
+            opponent={DIFFICULTY_CONFIG[difficulty].botName}
+            onClose={() => setShowGameReview(false)}
+          />
+        </div>
+      )}
+
       {/* Left: board + eval bar */}
       <div className="lm-board-panel flex items-center justify-center bg-black/20 border-r border-white/[0.06]">
         <div className="flex flex-col items-center gap-3 py-4">
@@ -538,7 +624,10 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 interactive={gameStatus === 'playing' && !thinking}
                 size={boardSize}
                 highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
-                arrows={premove ? [{ from: premove.from, to: premove.to, color: 'orange' }] : []}
+                arrows={[
+                  ...(premove ? [{ from: premove.from, to: premove.to, color: 'orange' }] : []),
+                  ...coachArrows.map(a => ({ from: a.from, to: a.to, color: a.color })),
+                ]}
                 isCheck={game.isCheck()}
                 boardStyle={settings.boardStyle}
                 pieceStyle={settings.pieceStyle}
@@ -591,12 +680,12 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
             game.turn() === (playerColor === 'white' ? 'b' : 'w') ? 'bg-white/[0.08]' : ''
           }`}>
-            <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0">
-              <Cpu className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0 text-lg">
+              {DIFFICULTY_CONFIG[difficulty].botEmoji}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-foreground truncate">{DIFFICULTY_CONFIG[difficulty].name} AI</span>
+                <span className="text-sm font-semibold text-foreground truncate">{DIFFICULTY_CONFIG[difficulty].botName}</span>
                 {thinking && <span className="text-[11px] text-muted-foreground">Thinking...</span>}
               </div>
               <CapturedPieces fen={game.fen()} color={playerColor === 'white' ? 'b' : 'w'} pieceSize={12} />
@@ -646,11 +735,18 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
             {gameStatus === 'won' && <span className="flex items-center justify-center gap-2"><Trophy className="w-4 h-4" /> You won!</span>}
             {gameStatus === 'lost' && 'AI wins'}
             {gameStatus === 'draw' && 'Draw'}
-            {gameStatus === 'won' && (
-              <div className="text-xs mt-1 font-normal flex items-center justify-center gap-1">
-                <Zap className="w-3 h-3" /> +{50 * (Object.keys(DIFFICULTY_CONFIG).indexOf(difficulty) + 1)} XP
-              </div>
-            )}
+            <div className="text-xs mt-1 font-normal flex items-center justify-center gap-3">
+              {gameStatus === 'won' && (
+                <span className="flex items-center gap-1">
+                  <Zap className="w-3 h-3" /> +{50 * (Object.keys(DIFFICULTY_CONFIG).indexOf(difficulty) + 1)} XP
+                </span>
+              )}
+              {lastRatingChange != null && (
+                <span className={`flex items-center gap-1 font-bold ${lastRatingChange > 0 ? 'text-amber-400' : lastRatingChange < 0 ? 'text-red-400' : 'text-muted-foreground'}`}>
+                  <TrendingUp className="w-3 h-3" /> {lastRatingChange > 0 ? '+' : ''}{lastRatingChange} Rating
+                </span>
+              )}
+            </div>
           </motion.div>
         )}
 
@@ -772,6 +868,15 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
             <div className="flex flex-col gap-2">
               <div className="flex gap-2">
                 <motion.button
+                  onClick={() => setShowGameReview(true)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 py-2.5 rounded-md font-bold text-sm text-white flex items-center justify-center gap-2"
+                  style={{ background: '#5b9bd5', borderBottom: '3px solid #4178a8' }}
+                >
+                  <BarChart3 className="w-4 h-4" /> Review Game
+                </motion.button>
+                <motion.button
                   onClick={resetGame}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -812,6 +917,40 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
             </div>
           )}
         </div>
+
+        {/* AI Coach Panel */}
+        {gameStatus === 'playing' && settings.coachMode !== 'off' && (
+          <div className="flex-shrink-0 px-4 pb-2">
+            <div className="rounded-lg border border-white/[0.06] bg-black/20 p-3">
+              <CoachPanel
+                fen={game.fen()}
+                moveHistory={moveHistory}
+                isPlayerTurn={isPlayerTurn}
+                isThinking={thinking}
+                gameOver={gameStatus !== 'playing'}
+                coachMode={settings.coachMode}
+                onCoachModeChange={(mode) => updateSetting('coachMode', mode)}
+                blunderCheck={settings.blunderCheck}
+                onArrows={setCoachArrows}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Blunder Check Nudge */}
+        <BlunderCheckNudge
+          show={blunderCheck.show}
+          message={blunderCheck.message}
+          onPlayAnyway={() => {
+            if (blunderCheck.pendingMove) {
+              executeMove(blunderCheck.pendingMove.from, blunderCheck.pendingMove.to, blunderCheck.pendingMove.promotion)
+            }
+            setBlunderCheck({ show: false, message: '', pendingMove: null })
+          }}
+          onTakeBack={() => {
+            setBlunderCheck({ show: false, message: '', pendingMove: null })
+          }}
+        />
 
         {/* Collapsible Analysis */}
         <div className="flex-shrink-0 px-4 pb-4">

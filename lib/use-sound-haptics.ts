@@ -3,7 +3,7 @@
 import { useCallback, useRef, useEffect } from 'react'
 
 // Sound types available in the app
-export type SoundType = 'move' | 'capture' | 'check' | 'castle' | 'promote' | 'illegal' | 'success' | 'fail' | 'click' | 'levelup'
+export type SoundType = 'move' | 'capture' | 'check' | 'castle' | 'promote' | 'illegal' | 'success' | 'fail' | 'click' | 'levelup' | 'gamestart' | 'gameend' | 'notify'
 
 // Audio context singleton
 let audioContext: AudioContext | null = null
@@ -301,6 +301,71 @@ const generateSound = (type: SoundType): ((ctx: AudioContext) => void) => {
           osc.start(t + time)
           osc.stop(t + time + 0.25)
         })
+      }
+    case 'gamestart':
+      return (ctx) => {
+        // Crisp two-note "ready" chime
+        const t = ctx.currentTime
+        const notes = [
+          { freq: 440, time: 0, dur: 0.1 },
+          { freq: 660, time: 0.12, dur: 0.15 },
+        ]
+        notes.forEach(({ freq, time, dur }) => {
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.type = 'sine'
+          osc.connect(gain)
+          gain.connect(ctx.destination)
+          osc.frequency.setValueAtTime(freq, t + time)
+          gain.gain.setValueAtTime(0.15, t + time)
+          gain.gain.exponentialRampToValueAtTime(0.001, t + time + dur)
+          osc.start(t + time)
+          osc.stop(t + time + dur)
+        })
+      }
+    case 'gameend':
+      return (ctx) => {
+        // Low resonant gong — game conclusion
+        const t = ctx.currentTime
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.setValueAtTime(165, t)
+        osc.frequency.exponentialRampToValueAtTime(110, t + 0.5)
+        gain.gain.setValueAtTime(0.2, t)
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6)
+        osc.start(t)
+        osc.stop(t + 0.6)
+        // Overtone shimmer
+        const osc2 = ctx.createOscillator()
+        const gain2 = ctx.createGain()
+        osc2.type = 'sine'
+        osc2.connect(gain2)
+        gain2.connect(ctx.destination)
+        osc2.frequency.setValueAtTime(330, t)
+        osc2.frequency.exponentialRampToValueAtTime(220, t + 0.4)
+        gain2.gain.setValueAtTime(0.08, t)
+        gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.5)
+        osc2.start(t)
+        osc2.stop(t + 0.5)
+      }
+    case 'notify':
+      return (ctx) => {
+        // Soft notification ping
+        const t = ctx.currentTime
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.setValueAtTime(880, t)
+        osc.frequency.exponentialRampToValueAtTime(660, t + 0.15)
+        gain.gain.setValueAtTime(0.1, t)
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2)
+        osc.start(t)
+        osc.stop(t + 0.2)
       }
     default:
       return () => {}

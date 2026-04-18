@@ -47,6 +47,7 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
     { label: 'Puzzles Solved', value: profile.puzzlesSolved, icon: <Puzzle className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
     { label: 'Current Streak', value: profile.streak, icon: <Flame className="w-5 h-5" />, colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10', hoverCard: 'stat-card-orange' },
     { label: 'Best Streak', value: profile.bestStreak || 0, icon: <Flame className="w-5 h-5" />, colorClass: 'text-red-400', bgClass: 'bg-red-500/10', hoverCard: 'stat-card-orange' },
+    { label: 'Game Rating', value: profile.rating || 800, icon: <Trophy className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
     { label: 'Puzzle Rating', value: profile.puzzleRating || 800, icon: <TrendingUp className="w-5 h-5" />, colorClass: 'text-blue-400', bgClass: 'bg-blue-500/10', hoverCard: 'stat-card-blue' },
     { label: 'Total XP', value: profile.xp, icon: <Zap className="w-5 h-5" />, colorClass: 'text-primary', bgClass: 'bg-primary/10', hoverCard: 'stat-card-amber' },
     { label: 'Games Played', value: profile.gamesPlayed || 0, icon: <Trophy className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
@@ -163,12 +164,29 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
         </div>
       </div>
 
-      {/* Rating Graph */}
-      {profile.puzzleRatingHistory && profile.puzzleRatingHistory.length > 2 && (
+      {/* Rating Graphs */}
+      {((profile.puzzleRatingHistory && profile.puzzleRatingHistory.length > 2) || (profile.gameRatingHistory && profile.gameRatingHistory.length > 2)) && (
         <div className="mb-8">
-          <h2 className="text-lg font-display font-semibold text-foreground mb-4">Puzzle Rating History</h2>
-          <div className="glass-card p-6">
-            <RatingGraph data={profile.puzzleRatingHistory} width={600} height={120} />
+          <h2 className="text-lg font-display font-semibold text-foreground mb-4">Rating History</h2>
+          <div className={`grid gap-4 ${profile.puzzleRatingHistory?.length > 2 && profile.gameRatingHistory?.length > 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {profile.gameRatingHistory && profile.gameRatingHistory.length > 2 && (
+              <div className="glass-card p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy className="w-4 h-4 text-amber-400" />
+                  <span className="text-sm font-semibold text-foreground">Game Rating</span>
+                </div>
+                <RatingGraph data={profile.gameRatingHistory} width={500} height={120} showTimeFilters />
+              </div>
+            )}
+            {profile.puzzleRatingHistory && profile.puzzleRatingHistory.length > 2 && (
+              <div className="glass-card p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Puzzle className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm font-semibold text-foreground">Puzzle Rating</span>
+                </div>
+                <RatingGraph data={profile.puzzleRatingHistory} width={500} height={120} color="#3b82f6" showTimeFilters />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -192,6 +210,11 @@ export function DesktopProfile({ onNavigate }: DesktopProfileProps) {
                     <p className="text-sm font-medium text-foreground truncate">vs {game.opponent}</p>
                     <p className="text-xs text-muted-foreground">{game.moves} moves</p>
                   </div>
+                  {game.ratingChange != null && (
+                    <span className={`text-xs font-bold tabular-nums ${game.ratingChange > 0 ? 'text-amber-400' : game.ratingChange < 0 ? 'text-red-400' : 'text-muted-foreground'}`}>
+                      {game.ratingChange > 0 ? '+' : ''}{game.ratingChange}
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground shrink-0">{getTimeAgo(game.date)}</span>
                 </div>
               ))}

@@ -21,7 +21,13 @@ import {
   Crown,
   Flame,
   Zap,
+  Volume2,
+  VolumeX,
+  X,
+  LogIn,
+  BarChart3,
 } from 'lucide-react'
+import { useSettings } from '@/lib/settings-context'
 import { CommandPalette } from '@/components/ui/command-palette'
 
 // Desktop pages
@@ -47,12 +53,14 @@ const BlunderSpotterPage = lazy(() => import('@/components/chess/blunder-spotter
 const MoveCalculatorPage = lazy(() => import('@/components/chess/move-calculator').then(m => ({ default: m.MoveCalculator })))
 const PGNViewerPage = lazy(() => import('@/components/chess/pgn-viewer').then(m => ({ default: m.PGNViewer })))
 const DailyCalendarPage = lazy(() => import('@/components/chess/daily-calendar').then(m => ({ default: m.DailyCalendar })))
+const DesktopAnalysis = lazy(() => import('@/components/desktop/analysis').then(m => ({ default: m.DesktopAnalysis })))
+const DesktopLessons = lazy(() => import('@/components/desktop/lessons').then(m => ({ default: m.DesktopLessons })))
 
-type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'coords' | 'endgame' | 'puzzle-rush' | 'board-vision' | 'checkmate-patterns' | 'piece-quiz' | 'notation-trainer' | 'pawn-structures' | 'blunder-spotter' | 'move-calculator' | 'pgn-viewer' | 'daily-calendar'
+type Page = 'dashboard' | 'puzzles' | 'openings' | 'play' | 'traps' | 'profile' | 'settings' | 'analysis' | 'lessons' | 'coords' | 'endgame' | 'puzzle-rush' | 'board-vision' | 'checkmate-patterns' | 'piece-quiz' | 'notation-trainer' | 'pawn-structures' | 'blunder-spotter' | 'move-calculator' | 'pgn-viewer' | 'daily-calendar'
 
 
 // Board-mode pages use the board-left layout (lm-board-panel + lm-right-panel)
-const BOARD_PAGES = new Set<Page>(['play', 'puzzles', 'openings', 'traps'])
+const BOARD_PAGES = new Set<Page>(['play', 'puzzles', 'openings', 'traps', 'analysis'])
 
 function BoardPageSkeleton() {
   return (
@@ -83,6 +91,7 @@ const PRIMARY_TABS = [
   { id: 'puzzles' as Page,  label: 'Puzzles',   icon: Puzzle },
   { id: 'openings' as Page, label: 'Openings',  icon: BookOpen },
   { id: 'traps' as Page,    label: 'Traps',     icon: Target },
+  { id: 'analysis' as Page, label: 'Analysis',  icon: BarChart3 },
   { id: 'dashboard' as Page,label: 'Dashboard', icon: Home },
 ]
 
@@ -96,8 +105,10 @@ export function DesktopShell() {
     checkAndUpdateStreak,
   } = useGame()
   const { playSound } = useSoundAndHaptics()
+  const { settings, updateSetting } = useSettings()
   const [currentPage, setCurrentPage] = useState<Page>('play')
   const [showSplash, setShowSplash] = useState(true)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
   const [, startTransition] = useTransition()
   const { progress } = getLevelInfo(profile.xp)
   const preloadedRef = useRef<Set<string>>(new Set(['play']))
@@ -121,6 +132,8 @@ export function DesktopShell() {
       settings: () => import('@/components/desktop/settings'),
       puzzles:  () => import('@/components/desktop/puzzles'),
       play:     () => import('@/components/desktop/play-ai'),
+      analysis: () => import('@/components/desktop/analysis'),
+      lessons:  () => import('@/components/desktop/lessons'),
     }
     importMap[pageId]?.()
   }, [])
@@ -130,7 +143,7 @@ export function DesktopShell() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey)) return
-      const map: Record<string, Page> = { '1': 'play', '2': 'puzzles', '3': 'openings', '4': 'traps', '5': 'dashboard' }
+      const map: Record<string, Page> = { '1': 'play', '2': 'puzzles', '3': 'openings', '4': 'traps', '5': 'analysis', '6': 'dashboard' }
       if (map[e.key]) { e.preventDefault(); handleNavigate(map[e.key]) }
     }
     window.addEventListener('keydown', handler)
@@ -138,7 +151,8 @@ export function DesktopShell() {
   }, [handleNavigate])
 
   if (showSplash) return <SplashScreen onComplete={handleSplashComplete} />
-  if (!isLoggedIn && currentPage !== 'play') return <DesktopLogin onBack={() => handleNavigate('play')} />
+  // Gate only the profile page behind login
+  if (!isLoggedIn && currentPage === 'profile') return <DesktopLogin onBack={() => handleNavigate('play')} />
 
   const isBoardPage = BOARD_PAGES.has(currentPage)
 
@@ -201,6 +215,13 @@ export function DesktopShell() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 flex-none">
+          <button
+            onClick={() => { playSound('click'); updateSetting('soundEnabled', !settings.soundEnabled) }}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
+            title={settings.soundEnabled ? 'Mute sounds' : 'Unmute sounds'}
+          >
+            {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </button>
           {isLoggedIn ? (
             <>
               <div className="flex items-center gap-3 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
@@ -237,26 +258,45 @@ export function DesktopShell() {
             </>
           ) : (
             <>
-              <button onClick={() => handleNavigate('dashboard')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors" style={{ fontSize: 'var(--fs-sm)' }}>
-                <User className="w-3.5 h-3.5" /> Sign In
-              </button>
-              <button onClick={() => handleNavigate('settings')} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors">
+              <button onClick={() => handleNavigate('settings')} onMouseEnter={() => handleNavHover('settings')} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors" title="Settings">
                 <Settings className="w-4 h-4" />
+              </button>
+              <button onClick={() => handleNavigate('profile')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors" style={{ fontSize: 'var(--fs-sm)' }}>
+                <LogIn className="w-3.5 h-3.5" /> Sign In
               </button>
             </>
           )}
         </div>
       </header>
 
+      {!isLoggedIn && !bannerDismissed && (
+        <div className="flex-none flex items-center justify-center gap-3 px-4 py-2 bg-primary/5 border-b border-primary/10 z-30">
+          <span className="text-sm text-muted-foreground">Sign in to save your progress and track your stats</span>
+          <button
+            onClick={() => handleNavigate('profile')}
+            className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => setBannerDismissed(true)}
+            className="p-0.5 rounded text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+            title="Dismiss"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       <main className="lm-content flex-none relative z-10">
         <AnimatePresence mode="popLayout">
           <motion.div
             key={currentPage}
             className="h-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1, ease: 'easeOut' }}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
           >
             {isBoardPage && (
               <Suspense fallback={<BoardPageSkeleton />}>
@@ -264,10 +304,11 @@ export function DesktopShell() {
                 {currentPage === 'puzzles'  && <DesktopPuzzles  onNavigate={handleNavigate} />}
                 {currentPage === 'openings' && <DesktopOpenings onNavigate={handleNavigate} />}
                 {currentPage === 'traps'    && <DesktopTraps    onNavigate={handleNavigate} />}
+                {currentPage === 'analysis' && <DesktopAnalysis onNavigate={handleNavigate} />}
               </Suspense>
             )}
             {!isBoardPage && (
-              <div className="h-full overflow-y-auto overflow-x-hidden">
+              <div className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin">
                 {currentPage === 'dashboard' && <DesktopDashboard onNavigate={handleNavigate} />}
                 <Suspense fallback={<ScrollPageSkeleton />}>
                   {currentPage === 'profile'  && <DesktopProfile  onNavigate={handleNavigate} />}
@@ -284,6 +325,7 @@ export function DesktopShell() {
                   {currentPage === 'move-calculator'    && <div className="p-8 max-w-4xl mx-auto"><MoveCalculatorPage     onClose={() => handleNavigate('dashboard')} /></div>}
                   {currentPage === 'pgn-viewer'         && <div className="p-8 max-w-5xl mx-auto"><PGNViewerPage          onClose={() => handleNavigate('dashboard')} /></div>}
                   {currentPage === 'daily-calendar'     && <div className="p-8 max-w-4xl mx-auto"><DailyCalendarPage      onClose={() => handleNavigate('dashboard')} /></div>}
+                  {currentPage === 'lessons' && <DesktopLessons onNavigate={handleNavigate} />}
                 </Suspense>
               </div>
             )}

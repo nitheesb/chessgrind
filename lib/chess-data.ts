@@ -54,14 +54,14 @@ export { PUZZLES } from './chess-data/puzzles'
 export { TRAPS } from './chess-data/traps'
 
 export const AI_LEVELS = [
-  { level: 1, name: 'Beginner Bot', rating: 400, description: 'Makes random moves, perfect for learning', depth: 1, icon: 'P', color: '#4ade80', useStockfish: false },
-  { level: 2, name: 'Casual Player', rating: 600, description: 'Knows basic tactics but misses a lot', depth: 2, icon: 'P', color: '#4ade80', useStockfish: false },
-  { level: 3, name: 'Club Player', rating: 800, description: 'Understands basic strategy and openings', depth: 3, icon: 'N', color: '#60a5fa', useStockfish: false },
-  { level: 4, name: 'Tournament Player', rating: 1200, description: 'Solid player with real tactical vision', depth: 4, icon: 'N', color: '#60a5fa', useStockfish: true, stockfishSkill: 5 },
-  { level: 5, name: 'Expert', rating: 1500, description: 'Stockfish engine — strong and precise', depth: 4, icon: 'B', color: '#a78bfa', useStockfish: true, stockfishSkill: 10 },
-  { level: 6, name: 'Master', rating: 1800, description: 'Stockfish engine — master-level depth', depth: 5, icon: 'R', color: '#f59e0b', useStockfish: true, stockfishSkill: 15 },
-  { level: 7, name: 'Grandmaster', rating: 2200, description: 'Stockfish engine — devastating attacks', depth: 5, icon: 'Q', color: '#f59e0b', useStockfish: true, stockfishSkill: 18 },
-  { level: 8, name: 'Stockfish Max', rating: 2800, description: 'Full-strength Stockfish 18. Good luck!', depth: 6, icon: 'K', color: '#ef4444', useStockfish: true, stockfishSkill: 20 },
+  { level: 1, name: 'Beginner Bot', rating: 400, description: 'Makes random moves, perfect for learning', depth: 1, icon: 'P', color: '#4ade80', useStockfish: false, botName: 'Pawny', botEmoji: '🐣', botPersonality: 'Enthusiastic beginner who loves chess but keeps forgetting how pieces move.', botStyle: 'Random and unpredictable' },
+  { level: 2, name: 'Casual Player', rating: 600, description: 'Knows basic tactics but misses a lot', depth: 2, icon: 'P', color: '#4ade80', useStockfish: false, botName: 'Woody', botEmoji: '🪵', botPersonality: 'A chill player who enjoys the game but gets distracted easily.', botStyle: 'Slow and steady' },
+  { level: 3, name: 'Club Player', rating: 800, description: 'Understands basic strategy and openings', depth: 3, icon: 'N', color: '#60a5fa', useStockfish: false, botName: 'Chester', botEmoji: '🎩', botPersonality: 'Polite club regular who studies openings but panics in the middlegame.', botStyle: 'Solid openings, shaky endgames' },
+  { level: 4, name: 'Tournament Player', rating: 1200, description: 'Solid player with real tactical vision', depth: 4, icon: 'N', color: '#60a5fa', useStockfish: true, stockfishSkill: 5, botName: 'Vera', botEmoji: '⚔️', botPersonality: 'Competitive tournament player with tactical tricks up her sleeve.', botStyle: 'Tactical and aggressive' },
+  { level: 5, name: 'Expert', rating: 1500, description: 'Stockfish engine — strong and precise', depth: 4, icon: 'B', color: '#a78bfa', useStockfish: true, stockfishSkill: 10, botName: 'Magnus Jr.', botEmoji: '🎯', botPersonality: 'Precise and methodical. Punishes every inaccuracy.', botStyle: 'Positional and precise' },
+  { level: 6, name: 'Master', rating: 1800, description: 'Stockfish engine — master-level depth', depth: 5, icon: 'R', color: '#f59e0b', useStockfish: true, stockfishSkill: 15, botName: 'Grandmistress', botEmoji: '👑', botPersonality: 'A seasoned master with deep strategic understanding and killer endgame technique.', botStyle: 'Strategic and patient' },
+  { level: 7, name: 'Grandmaster', rating: 2200, description: 'Stockfish engine — devastating attacks', depth: 5, icon: 'Q', color: '#f59e0b', useStockfish: true, stockfishSkill: 18, botName: 'Tal\'s Ghost', botEmoji: '🔥', botPersonality: 'Channels the spirit of Mikhail Tal. Sacrifices everywhere.', botStyle: 'Sacrificial and attacking' },
+  { level: 8, name: 'Stockfish Max', rating: 2800, description: 'Full-strength Stockfish 18. Good luck!', depth: 6, icon: 'K', color: '#ef4444', useStockfish: true, stockfishSkill: 20, botName: 'The Machine', botEmoji: '🤖', botPersonality: 'Full-strength Stockfish 18. No mercy. No mistakes.', botStyle: 'Perfect play' },
 ]
 
 export const PUZZLE_THEMES = [

@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { setLichessToken } from './lichess-api'
 
+export type CoachMode = 'off' | 'hints' | 'full'
+
 export interface AppSettings {
   soundEnabled: boolean
   hapticEnabled: boolean
@@ -17,6 +19,8 @@ export interface AppSettings {
   zenMode: boolean
   lichessToken: string
   lichessUsername: string
+  coachMode: CoachMode
+  blunderCheck: boolean
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -33,6 +37,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   zenMode: false,
   lichessToken: '',
   lichessUsername: '',
+  coachMode: 'off',
+  blunderCheck: true,
 }
 
 interface SettingsContextType {

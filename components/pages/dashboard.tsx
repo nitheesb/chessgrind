@@ -113,9 +113,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   }
 
   const quickActions = [
+    { id: 'play', label: 'Play AI', desc: 'Test skills', icon: <Swords className="w-5 h-5" />, gradient: 'from-violet-500 to-purple-600', page: 'play' },
     { id: 'puzzles', label: 'Puzzles', desc: 'Train tactics', icon: <Puzzle className="w-5 h-5" />, gradient: 'from-amber-500 to-orange-600', page: 'puzzles' },
     { id: 'openings', label: 'Learn', desc: 'Opening theory', icon: <BookOpen className="w-5 h-5" />, gradient: 'from-blue-500 to-indigo-600', page: 'openings' },
-    { id: 'play', label: 'Play AI', desc: 'Test skills', icon: <Swords className="w-5 h-5" />, gradient: 'from-violet-500 to-purple-600', page: 'play' },
+    { id: 'analysis', label: 'Analysis', desc: 'Free analysis', icon: <TrendingUp className="w-5 h-5" />, gradient: 'from-emerald-500 to-teal-600', page: 'analysis' },
+    { id: 'lessons', label: 'Lessons', desc: 'Learn step-by-step', icon: <BookOpen className="w-5 h-5" />, gradient: 'from-sky-500 to-blue-600', page: 'lessons' },
     { id: 'traps', label: 'Traps', desc: 'Learn tricks', icon: <Target className="w-5 h-5" />, gradient: 'from-rose-500 to-pink-600', page: 'traps' },
     { id: 'coords', label: 'Coords', desc: 'Board vision', icon: <Crosshair className="w-5 h-5" />, gradient: 'from-cyan-500 to-teal-600', page: 'coords' },
     { id: 'endgame', label: 'Endgames', desc: 'Practice endings', icon: <Crown className="w-5 h-5" />, gradient: 'from-yellow-500 to-amber-600', page: 'endgame' },

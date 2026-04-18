@@ -115,16 +115,18 @@ export function DesktopDashboard({ onNavigate }: DesktopDashboardProps) {
   }, [playSound, onNavigate])
 
   const stats = [
-    { label: 'Puzzles Solved', value: profile.puzzlesSolved, icon: <Puzzle className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
-    { label: 'Current Streak', value: profile.streak, icon: <Flame className="w-5 h-5" />, colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10', hoverCard: 'stat-card-orange' },
+    { label: 'Game Rating', value: profile.rating || 800, icon: <Swords className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
     { label: 'Puzzle Rating', value: profile.puzzleRating || 800, icon: <TrendingUp className="w-5 h-5" />, colorClass: 'text-blue-400', bgClass: 'bg-blue-500/10', hoverCard: 'stat-card-blue' },
+    { label: 'Current Streak', value: profile.streak, icon: <Flame className="w-5 h-5" />, colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10', hoverCard: 'stat-card-orange' },
     { label: 'Achievements', value: profile.achievements.filter(a => a.earned).length, icon: <Trophy className="w-5 h-5" />, colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', hoverCard: 'stat-card-amber' },
   ]
 
   const quickActions = [
+    { id: 'play', label: 'Play vs AI', description: 'Test your skills against computer', icon: <Swords className="w-7 h-7" />, gradient: 'from-violet-500 to-purple-600' },
     { id: 'puzzles', label: 'Tactical Puzzles', description: 'Sharpen your tactical vision', icon: <Puzzle className="w-7 h-7" />, gradient: 'from-amber-500 to-orange-600' },
     { id: 'openings', label: 'Opening Theory', description: 'Master the opening moves', icon: <BookOpen className="w-7 h-7" />, gradient: 'from-blue-500 to-indigo-600' },
-    { id: 'play', label: 'Play vs AI', description: 'Test your skills against computer', icon: <Swords className="w-7 h-7" />, gradient: 'from-violet-500 to-purple-600' },
+    { id: 'analysis', label: 'Analysis Board', description: 'Free analysis with Stockfish', icon: <TrendingUp className="w-7 h-7" />, gradient: 'from-emerald-500 to-teal-600' },
+    { id: 'lessons', label: 'Lessons', description: 'Structured courses for improvement', icon: <BookOpen className="w-7 h-7" />, gradient: 'from-sky-500 to-blue-600' },
     { id: 'traps', label: 'Opening Traps', description: 'Learn devastating traps', icon: <Target className="w-7 h-7" />, gradient: 'from-rose-500 to-pink-600' },
     { id: 'coords', label: 'Coord Trainer', description: 'Master board coordinates', icon: <Crosshair className="w-7 h-7" />, gradient: 'from-emerald-500 to-teal-600' },
     { id: 'endgame', label: 'Endgame Practice', description: 'Perfect your endgame technique', icon: <Gamepad2 className="w-7 h-7" />, gradient: 'from-cyan-500 to-sky-600' },
