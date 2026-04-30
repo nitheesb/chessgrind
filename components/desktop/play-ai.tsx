@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Chess } from 'chess.js'
+import { Chess, type Square } from 'chess.js'
 import { Chessboard, CapturedPieces } from '@/components/chess/chessboard'
 import { EvalBar } from '@/components/chess/eval-bar'
 import { CoachPanel, BlunderCheckNudge, type CoachArrow } from '@/components/chess/coach-panel'
@@ -11,7 +11,7 @@ import { useSettings } from '@/lib/settings-context'
 import type { CoachMode } from '@/lib/settings-context'
 import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { getEngineConfig } from '@/lib/chess-engine'
-import { getBestMoveAsync, analyzePositionAsync } from '@/lib/chess-worker-client'
+import { getBestMoveAsync, analyzePositionAsync, prewarmChessWorker } from '@/lib/chess-worker-client'
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
 import { GameReview } from '@/components/chess/game-review'
@@ -44,7 +44,7 @@ interface DesktopPlayAIProps {
 
 type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'master'
 
-import { TIME_CONTROLS } from '@/lib/chess-constants'
+import { TIME_CONTROLS, type TimeControl } from '@/lib/chess-constants'
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { name: string; depth: number; description: string; color: string; useStockfish: boolean; stockfishSkill?: number; botName: string; botEmoji: string; botStyle: string; rating: number }> = {
   beginner: { name: 'Beginner', depth: 1, description: 'Perfect for learning', color: 'amber', useStockfish: false, botName: 'Pawny', botEmoji: '🐣', botStyle: 'Random and unpredictable', rating: 400 },
@@ -77,6 +77,8 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const [whiteTime, setWhiteTime] = useState(0)
   const [blackTime, setBlackTime] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const sessionRef = useRef(0)
+  const aiRequestRef = useRef(0)
   const [boardSize, setBoardSize] = useState(700)
 
   useEffect(() => {
@@ -99,7 +101,16 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const [lastRatingChange, setLastRatingChange] = useState<number | null>(null)
   const notationRef = useRef<HTMLDivElement>(null)
   const isPlayerTurn = game.turn() === (playerColor === 'white' ? 'w' : 'b')
+  const playerColorCode = playerColor === 'white' ? 'w' : 'b'
   const [lastMoveIsPlayer, setLastMoveIsPlayer] = useState(false)
+
+  useEffect(() => {
+    prewarmChessWorker()
+    return () => {
+      sessionRef.current += 1
+      aiRequestRef.current += 1
+    }
+  }, [])
 
   // Coach mode state
   const [coachArrows, setCoachArrows] = useState<CoachArrow[]>([])
@@ -112,21 +123,26 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
   // Real-time analysis
   const [analysis, setAnalysis] = useState<{ eval: number; bestLine: string[]; isMate: boolean; mateIn: number | null } | null>(null)
+  const liveAnalysisEnabled = settings.coachMode === 'full'
 
-  // Run analysis after each move (debounced to avoid blocking the main thread)
+  // Live engine analysis is opt-in; normal play should keep the board instant.
   useEffect(() => {
-    if (!gameStarted || gameStatus !== 'playing' || moveHistory.length === 0) {
+    if (!liveAnalysisEnabled || !gameStarted || gameStatus !== 'playing' || moveHistory.length === 0) {
       setAnalysis(null)
       return
     }
+    let cancelled = false
     const tid = setTimeout(() => {
       analyzePositionAsync(game.fen(), 4).then(result => {
-        setAnalysis(result)
+        if (!cancelled) setAnalysis(result)
       })
-    }, 50)
-    return () => clearTimeout(tid)
+    }, 120)
+    return () => {
+      cancelled = true
+      clearTimeout(tid)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [moveHistory.length, gameStarted, gameStatus])
+  }, [moveHistory.length, gameStarted, gameStatus, liveAnalysisEnabled])
 
   // Move quality annotations
   const moveQualities = useMemo(() => {
@@ -195,10 +211,26 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
   const [fallbackNotice, setFallbackNotice] = useState(false)
 
-  const makeAIMove = useCallback((currentGame: Chess) => {
+  const canQueuePremove = useCallback((from: string, to: string, promotion?: string) => {
+    if (from === to) return false
+    const piece = game.get(from as Square)
+    if (!piece || piece.color !== playerColorCode) return false
+
+    try {
+      const parts = game.fen().split(' ')
+      parts[1] = playerColorCode
+      const premoveGame = new Chess(parts.join(' '))
+      return Boolean(premoveGame.move({ from, to, promotion: promotion || 'q' }))
+    } catch {
+      return false
+    }
+  }, [game, playerColorCode])
+
+  const makeAIMove = useCallback((currentGame: Chess, sessionId = sessionRef.current) => {
     if (currentGame.isGameOver()) return
 
     setThinking(true)
+    const requestId = ++aiRequestRef.current
 
     // Scale artificial delay with difficulty - easy levels respond faster
     const depthVal = DIFFICULTY_CONFIG[difficulty].depth
@@ -207,12 +239,15 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     const fen = currentGame.fen()
 
     setTimeout(async () => {
+      if (sessionRef.current !== sessionId || aiRequestRef.current !== requestId) return
       let bestMove = await getBestMoveAsync(fen, config)
+      if (sessionRef.current !== sessionId || aiRequestRef.current !== requestId) return
 
       // Retry once if Stockfish returned null
       if (!bestMove && config.useStockfish) {
         console.warn('[play-ai] Stockfish returned null, retrying...')
         bestMove = await getBestMoveAsync(fen, config)
+        if (sessionRef.current !== sessionId || aiRequestRef.current !== requestId) return
       }
 
       // Fallback to custom engine if still null
@@ -220,6 +255,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         console.warn('[play-ai] Stockfish retry failed, falling back to custom engine')
         const fallbackConfig = getEngineConfig(3, false)
         bestMove = await getBestMoveAsync(fen, fallbackConfig)
+        if (sessionRef.current !== sessionId || aiRequestRef.current !== requestId) return
         setFallbackNotice(true)
         setTimeout(() => setFallbackNotice(false), 3000)
       }
@@ -243,7 +279,9 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           }
         }
       }
-      setThinking(false)
+      if (sessionRef.current === sessionId && aiRequestRef.current === requestId) {
+        setThinking(false)
+      }
     }, delay)
   }, [difficulty, playSound, timeControl.increment, handleGameEnd])
 
@@ -261,27 +299,38 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         playSound(move.captured ? 'capture' : 'move')
         triggerHaptic('medium')
         if (timeControl.increment > 0) {
-          setWhiteTime(prev => prev + timeControl.increment)
+          if (playerColor === 'white') {
+            setWhiteTime(prev => prev + timeControl.increment)
+          } else {
+            setBlackTime(prev => prev + timeControl.increment)
+          }
         }
 
         if (newGame.isGameOver()) {
           handleGameEnd(newGame.isCheckmate() ? 'won' : 'draw')
         } else {
-          setTimeout(() => makeAIMove(newGame), 300)
+          const sessionId = sessionRef.current
+          setTimeout(() => {
+            if (sessionRef.current === sessionId) makeAIMove(newGame, sessionId)
+          }, 80)
         }
         return true
       }
     } catch { }
     return false
-  }, [game, playSound, triggerHaptic, makeAIMove, timeControl.increment, handleGameEnd])
+  }, [game, playSound, triggerHaptic, makeAIMove, timeControl.increment, handleGameEnd, playerColor])
 
   const handleMove = useCallback((from: string, to: string, promotion?: string): boolean => {
-    if (gameStatus !== 'playing' || thinking) return false
+    if (gameStatus !== 'playing') return false
     // Store as premove when it's AI's turn
     if (!isPlayerTurn) {
+      if (!canQueuePremove(from, to, promotion)) return false
       setPremove({ from, to, promotion })
+      playSound('click')
+      triggerHaptic('selection')
       return true
     }
+    if (thinking) return false
 
     // Blunder check
     if (settings.blunderCheck && settings.coachMode !== 'off') {
@@ -316,7 +365,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     }
 
     return executeMove(from, to, promotion)
-  }, [game, gameStatus, thinking, isPlayerTurn, settings.blunderCheck, settings.coachMode, executeMove])
+  }, [game, gameStatus, thinking, isPlayerTurn, settings.blunderCheck, settings.coachMode, executeMove, canQueuePremove, playSound, triggerHaptic])
 
   // Execute premove when it becomes the player's turn
   useEffect(() => {
@@ -327,14 +376,26 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
         const newGame = new Chess(game.fen())
         const move = newGame.move({ from, to, promotion: promotion || 'q' })
         if (!move) return
+        setLastMoveIsPlayer(true)
+        setCoachArrows([])
         setGame(newGame)
         setLastMove({ from, to })
         setMoveHistory(prev => [...prev, move.san])
         playSound(move.captured ? 'capture' : 'move')
+        if (timeControl.increment > 0) {
+          if (playerColor === 'white') {
+            setWhiteTime(prev => prev + timeControl.increment)
+          } else {
+            setBlackTime(prev => prev + timeControl.increment)
+          }
+        }
         if (newGame.isGameOver()) {
           handleGameEnd(newGame.isCheckmate() ? 'won' : 'draw')
         } else {
-          setTimeout(() => makeAIMove(newGame), 300)
+          const sessionId = sessionRef.current
+          setTimeout(() => {
+            if (sessionRef.current === sessionId) makeAIMove(newGame, sessionId)
+          }, 80)
         }
       } catch { /* illegal premove — discard */ }
     }
@@ -342,6 +403,9 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   }, [isPlayerTurn])
 
   const startGame = useCallback(() => {
+    sessionRef.current += 1
+    aiRequestRef.current += 1
+    const sessionId = sessionRef.current
     playSound('gamestart')
     setGameStarted(true)
     setGame(new Chess())
@@ -354,11 +418,15 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     setAnalysis(null)
 
     if (playerColor === 'black') {
-      setTimeout(() => makeAIMove(new Chess()), 500)
+      setTimeout(() => {
+        if (sessionRef.current === sessionId) makeAIMove(new Chess(), sessionId)
+      }, 250)
     }
   }, [playerColor, playSound, makeAIMove, timeControl.minutes])
 
   const resetGame = useCallback(() => {
+    sessionRef.current += 1
+    aiRequestRef.current += 1
     playSound('click')
     setGameStarted(false)
     setGame(new Chess())
@@ -421,12 +489,17 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
       setWhiteTime(timeControl.minutes * 60)
       setBlackTime(timeControl.minutes * 60)
       setAnalysis(null)
-        playSound(move.captured ? 'capture' : 'move')
+      sessionRef.current += 1
+      aiRequestRef.current += 1
+      const sessionId = sessionRef.current
+      playSound(move.captured ? 'capture' : 'move')
       triggerHaptic('medium')
 
       // Trigger AI response after a short delay
       if (!freshGame.isGameOver()) {
-        setTimeout(() => makeAIMove(freshGame), 300)
+        setTimeout(() => {
+          if (sessionRef.current === sessionId) makeAIMove(freshGame, sessionId)
+        }, 80)
       }
       return true
     } catch {
@@ -443,15 +516,19 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
             <div className="lm-board-wrap flex items-center justify-center">
               <Chessboard
                 fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-                interactive={true}
+                interactive={playerColor === 'white'}
                 onMove={handleSetupMove}
                 orientation={playerColor}
                 size={boardSize}
                 boardStyle={settings.boardStyle}
                 pieceStyle={settings.pieceStyle}
+                selectableColor={playerColorCode}
+                legalMoveColor={playerColorCode}
               />
             </div>
-            <p className="text-sm text-muted-foreground animate-pulse">Make a move to start playing</p>
+            <p className="text-sm text-muted-foreground animate-pulse">
+              {playerColor === 'white' ? 'Make a move to start playing' : 'Press Play to start as Black'}
+            </p>
           </div>
         </div>
         {/* Right: compact setup options */}
@@ -621,7 +698,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 fen={game.fen()}
                 onMove={handleMove}
                 orientation={playerColor}
-                interactive={gameStatus === 'playing' && !thinking}
+                interactive={gameStatus === 'playing'}
                 size={boardSize}
                 highlightSquares={lastMove ? [lastMove.from, lastMove.to] : []}
                 arrows={[
@@ -634,6 +711,8 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
                 allowArrowDrawing
                 blindfoldMode={settings.blindfoldMode}
                 isPlayerMove={lastMoveIsPlayer}
+                selectableColor={playerColorCode}
+                legalMoveColor={playerColorCode}
               />
             </div>
           </div>
@@ -758,50 +837,51 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           </div>
         )}
 
-        {/* Main Panel — Engine Analysis + Moves */}
+        {/* Main Panel — optional engine analysis + moves */}
         <div className="flex-1 mx-4 mt-1 mb-2 flex flex-col min-h-0 rounded-lg border border-white/[0.06] bg-black/20 overflow-hidden">
-          {/* Engine Analysis — always visible */}
-          <div className="flex-shrink-0 px-3 py-2.5 border-b border-white/[0.06]">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Zap className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Engine Analysis</span>
-            </div>
-            {analysis ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className={`text-lg font-bold font-mono ${
-                    analysis.isMate ? 'text-red-400' :
-                    analysis.eval > 0.5 ? 'text-white' :
-                    analysis.eval < -0.5 ? 'text-zinc-500' : 'text-muted-foreground'
-                  }`}>
-                    {analysis.isMate
-                      ? `M${analysis.mateIn ?? '?'}`
-                      : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">depth 4</span>
-                </div>
-                <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500 ease-out"
-                    style={{
-                      width: `${Math.max(5, Math.min(95, 50 + analysis.eval * 10))}%`,
-                      background: analysis.eval >= 0
-                        ? 'linear-gradient(90deg, #f0f0f0, #e0e0e0)'
-                        : 'linear-gradient(90deg, #3a3a3a, #4a4a4a)',
-                    }}
-                  />
-                </div>
-                {analysis.bestLine.length > 0 && (
-                  <div>
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Best line</span>
-                    <p className="text-xs font-mono text-foreground/80 mt-0.5">{analysis.bestLine.slice(0, 6).join(' ')}</p>
-                  </div>
-                )}
+          {liveAnalysisEnabled && (
+            <div className="flex-shrink-0 px-3 py-2.5 border-b border-white/[0.06]">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Zap className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Engine Analysis</span>
               </div>
-            ) : (
-              <p className="text-xs text-muted-foreground italic">Make a move to see analysis</p>
-            )}
-          </div>
+              {analysis ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className={`text-lg font-bold font-mono ${
+                      analysis.isMate ? 'text-red-400' :
+                      analysis.eval > 0.5 ? 'text-white' :
+                      analysis.eval < -0.5 ? 'text-zinc-500' : 'text-muted-foreground'
+                    }`}>
+                      {analysis.isMate
+                        ? `M${analysis.mateIn ?? '?'}`
+                        : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">depth 4</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500 ease-out"
+                      style={{
+                        width: `${Math.max(5, Math.min(95, 50 + analysis.eval * 10))}%`,
+                        background: analysis.eval >= 0
+                          ? 'linear-gradient(90deg, #f0f0f0, #e0e0e0)'
+                          : 'linear-gradient(90deg, #3a3a3a, #4a4a4a)',
+                      }}
+                    />
+                  </div>
+                  {analysis.bestLine.length > 0 && (
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Best line</span>
+                      <p className="text-xs font-mono text-foreground/80 mt-0.5">{analysis.bestLine.slice(0, 6).join(' ')}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">Make a move to see analysis</p>
+              )}
+            </div>
+          )}
 
           {/* Compact move list */}
           <div className="flex-shrink-0 px-3 py-1.5 border-b border-white/[0.06] flex items-center justify-between">

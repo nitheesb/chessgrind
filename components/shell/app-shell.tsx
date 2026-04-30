@@ -30,7 +30,6 @@ const LessonsPage = lazy(() => import('@/components/pages/lessons').then(m => ({
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
 import { ComboOverlay, DailyBonusPopup, PerfectSolveFlash } from '@/components/ui/game-rewards'
-import { SplashScreen } from '@/components/ui/splash-screen'
 import {
   Home,
   Puzzle,
@@ -82,17 +81,12 @@ export function AppShell() {
   const { playSound, triggerHaptic } = useSoundAndHaptics()
   const { settings, updateSetting } = useSettings()
   const [currentPage, setCurrentPage] = useState<Page>('play')
-  const [showSplash, setShowSplash] = useState(true)
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [, startTransition] = useTransition()
 
   useEffect(() => {
     checkAndUpdateStreak()
   }, [checkAndUpdateStreak])
-
-  const handleSplashComplete = useCallback(() => {
-    setShowSplash(false)
-  }, [])
 
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
@@ -117,10 +111,6 @@ export function AppShell() {
       setCurrentPage(pageId)
     })
   }, [playSound, triggerHaptic])
-
-  if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} />
-  }
 
   // Gate only the profile page behind login
   if (!isLoggedIn && currentPage === 'profile') {

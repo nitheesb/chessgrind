@@ -49,6 +49,14 @@ function getWorker(): Worker {
   return worker
 }
 
+export function prewarmChessWorker() {
+  try {
+    getWorker()
+  } catch (error) {
+    console.warn('[chess-worker] prewarm failed:', error)
+  }
+}
+
 /** Stockfish search options mapped from engine config */
 function stockfishOptionsFromConfig(config: EngineConfig): StockfishSearchOptions {
   // Map custom engine depth to Stockfish parameters

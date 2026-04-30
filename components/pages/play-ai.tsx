@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Chess } from 'chess.js'
+import { Chess, type Square } from 'chess.js'
 import { Chessboard, CapturedPieces } from '@/components/chess/chessboard'
 import { EvalBar } from '@/components/chess/eval-bar'
 import { CoachPanel, BlunderCheckNudge, type CoachArrow } from '@/components/chess/coach-panel'
@@ -11,7 +11,7 @@ import { useGame } from '@/lib/game-context'
 import { useSettings } from '@/lib/settings-context'
 import type { CoachMode } from '@/lib/settings-context'
 import { getEngineConfig } from '@/lib/chess-engine'
-import { getBestMoveAsync, analyzePositionAsync } from '@/lib/chess-worker-client'
+import { getBestMoveAsync, analyzePositionAsync, prewarmChessWorker } from '@/lib/chess-worker-client'
 import { detectOpening } from '@/lib/opening-detection'
 import { analyzeMoveQualities, getQualityColor } from '@/lib/move-quality'
 import { GameReview } from '@/components/chess/game-review'
@@ -76,12 +76,13 @@ function CheckmateCelebration({ show }: { show: boolean }) {
   )
 }
 
-import { TIME_CONTROLS } from '@/lib/chess-constants'
+import { TIME_CONTROLS, type TimeControl } from '@/lib/chess-constants'
 
 export function PlayAIPage({ onBack }: PlayAIProps) {
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
   const [gameStarted, setGameStarted] = useState(false)
   const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w')
+  const [initialMove, setInitialMove] = useState<{ from: string; to: string; promotion?: string } | null>(null)
   const [timeControl, setTimeControl] = useState<TimeControl>(TIME_CONTROLS[0])
   const [showAdvanced, setShowAdvanced] = useState(false)
   const { settings } = useSettings()
@@ -94,6 +95,7 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
       const move = freshGame.move({ from, to, promotion: promotion || 'q' })
       if (!move) return false
       setSelectedLevel(3)
+      setInitialMove({ from, to, promotion })
       setGameStarted(true)
       return true
     } catch {
@@ -107,9 +109,11 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
         aiLevel={selectedLevel}
         playerColor={playerColor}
         timeControl={timeControl}
+        initialMove={initialMove || undefined}
         onBack={() => {
           setGameStarted(false)
           setSelectedLevel(null)
+          setInitialMove(null)
         }}
       />
     )
@@ -140,13 +144,18 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
       <motion.div variants={staggerItem} className="flex flex-col items-center gap-2">
         <Chessboard
           fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-          interactive={true}
+          interactive={playerColor === 'w'}
           onMove={handleSetupMove}
           size={setupBoardSize}
+          flipped={playerColor === 'b'}
           boardStyle={settings.boardStyle}
           pieceStyle={settings.pieceStyle}
+          selectableColor={playerColor}
+          legalMoveColor={playerColor}
         />
-        <p className="text-xs text-muted-foreground animate-pulse">Make a move to start playing</p>
+        <p className="text-xs text-muted-foreground animate-pulse">
+          {playerColor === 'w' ? 'Make a move to start playing' : 'Choose a bot to start as Black'}
+        </p>
       </motion.div>
 
       {/* Color Selection */}
@@ -243,6 +252,7 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
                 key={level.level}
                 onClick={() => {
                   setSelectedLevel(level.level)
+                  setInitialMove(null)
                   setGameStarted(true)
                 }}
                 style={{
@@ -302,23 +312,36 @@ function GameSession({
   aiLevel,
   playerColor,
   timeControl,
+  initialMove,
   onBack,
 }: {
   aiLevel: number
   playerColor: 'w' | 'b'
   timeControl: TimeControl
+  initialMove?: { from: string; to: string; promotion?: string }
   onBack: () => void
 }) {
   const { addXP, incrementGamesPlayed, addRecentGame, updateGameRating, profile } = useGame()
   const { settings, updateSetting } = useSettings()
   const boardSize = useMobileBoardSize(520)
-  const [game, setGame] = useState(() => new Chess())
+  const initialGame = useMemo(() => {
+    const nextGame = new Chess()
+    if (initialMove) {
+      try {
+        nextGame.move({ from: initialMove.from, to: initialMove.to, promotion: initialMove.promotion || 'q' })
+      } catch {}
+    }
+    return nextGame
+  }, [initialMove])
+  const [game, setGame] = useState(() => initialGame)
   const [gameOver, setGameOver] = useState(false)
   const [result, setResult] = useState<string>('')
   const [playerWon, setPlayerWon] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
-  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
-  const [moveHistory, setMoveHistory] = useState<string[]>([])
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(
+    initialMove ? { from: initialMove.from, to: initialMove.to } : null,
+  )
+  const [moveHistory, setMoveHistory] = useState<string[]>(() => initialGame.history())
   const [isThinking, setIsThinking] = useState(false)
   const [showResignConfirm, setShowResignConfirm] = useState(false)
   const [premove, setPremove] = useState<{ from: string; to: string; promotion?: string } | null>(null)
@@ -326,7 +349,17 @@ function GameSession({
   const [copiedPGN, setCopiedPGN] = useState(false)
   const [copiedFEN, setCopiedFEN] = useState(false)
   const notationRef = useRef<HTMLDivElement>(null)
+  const sessionRef = useRef(0)
+  const aiRequestRef = useRef(0)
   const [showGameReview, setShowGameReview] = useState(false)
+
+  useEffect(() => {
+    prewarmChessWorker()
+    return () => {
+      sessionRef.current += 1
+      aiRequestRef.current += 1
+    }
+  }, [])
 
   // Opening detection
   const currentOpening = useMemo(() => detectOpening(moveHistory), [moveHistory])
@@ -339,16 +372,26 @@ function GameSession({
 
   // Real-time analysis
   const [analysis, setAnalysis] = useState<{ eval: number; bestLine: string[]; isMate: boolean; mateIn: number | null } | null>(null)
-  const [showAnalysis, setShowAnalysis] = useState(true)
+  const [showAnalysis, setShowAnalysis] = useState(false)
+  const liveAnalysisEnabled = settings.coachMode === 'full'
 
   useEffect(() => {
-    if (gameOver || moveHistory.length === 0) {
+    if (!liveAnalysisEnabled || !showAnalysis || gameOver || moveHistory.length === 0) {
       setAnalysis(null)
       return
     }
-    analyzePositionAsync(game.fen(), 4).then(result => setAnalysis(result))
+    let cancelled = false
+    const tid = setTimeout(() => {
+      analyzePositionAsync(game.fen(), 4).then(result => {
+        if (!cancelled) setAnalysis(result)
+      })
+    }, 120)
+    return () => {
+      cancelled = true
+      clearTimeout(tid)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [moveHistory.length, gameOver])
+  }, [moveHistory.length, gameOver, liveAnalysisEnabled, showAnalysis])
 
   // Move quality annotations (computed after game ends)
   const moveQualities = useMemo(() => {
@@ -438,23 +481,42 @@ function GameSession({
 
   const [fallbackNotice, setFallbackNotice] = useState(false)
 
+  const canQueuePremove = useCallback((from: string, to: string, promotion?: string) => {
+    if (from === to) return false
+    const piece = game.get(from as Square)
+    if (!piece || piece.color !== playerColor) return false
+
+    try {
+      const parts = game.fen().split(' ')
+      parts[1] = playerColor
+      const premoveGame = new Chess(parts.join(' '))
+      return Boolean(premoveGame.move({ from, to, promotion: promotion || 'q' }))
+    } catch {
+      return false
+    }
+  }, [game, playerColor])
+
   // AI move using shared chess engine (off main thread via Web Worker)
-  const makeAIMove = useCallback((currentGame: Chess) => {
+  const makeAIMove = useCallback((currentGame: Chess, sessionId = sessionRef.current) => {
     if (currentGame.isGameOver()) return
 
     setIsThinking(true)
+    const requestId = ++aiRequestRef.current
     // Scale artificial delay with difficulty - easy levels respond faster
     const delay = aiConfig.depth <= 2 ? 100 + Math.random() * 200 : 300 + Math.random() * 400
     const config = getEngineConfig(aiConfig.depth, aiConfig.useStockfish, aiConfig.stockfishSkill)
     const fen = currentGame.fen()
 
     setTimeout(async () => {
+      if (sessionRef.current !== sessionId || aiRequestRef.current !== requestId) return
       let bestMoveSan = await getBestMoveAsync(fen, config)
+      if (sessionRef.current !== sessionId || aiRequestRef.current !== requestId) return
 
       // Retry once if Stockfish returned null
       if (!bestMoveSan && config.useStockfish) {
         console.warn('[play-ai] Stockfish returned null, retrying...')
         bestMoveSan = await getBestMoveAsync(fen, config)
+        if (sessionRef.current !== sessionId || aiRequestRef.current !== requestId) return
       }
 
       // Fallback to custom engine if still null
@@ -462,6 +524,7 @@ function GameSession({
         console.warn('[play-ai] Stockfish retry failed, falling back to custom engine')
         const fallbackConfig = getEngineConfig(3, false)
         bestMoveSan = await getBestMoveAsync(fen, fallbackConfig)
+        if (sessionRef.current !== sessionId || aiRequestRef.current !== requestId) return
         setFallbackNotice(true)
         setTimeout(() => setFallbackNotice(false), 3000)
       }
@@ -494,14 +557,16 @@ function GameSession({
           }
         } catch { }
       }
-      setIsThinking(false)
+      if (sessionRef.current === sessionId && aiRequestRef.current === requestId) {
+        setIsThinking(false)
+      }
     }, delay)
-  }, [aiConfig.depth, aiConfig.useStockfish, playerColor, timeControl.increment, handleGameEnd])
+  }, [aiConfig.depth, aiConfig.useStockfish, aiConfig.stockfishSkill, playerColor, timeControl.increment, handleGameEnd])
 
   // Trigger AI move when it's AI's turn
   useEffect(() => {
     if (!isPlayerTurn && !gameOver && !isThinking) {
-      makeAIMove(game)
+      makeAIMove(game, sessionRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlayerTurn, gameOver])
@@ -546,6 +611,7 @@ function GameSession({
     if (gameOver) return false
     // Store as premove when it's AI's turn
     if (!isPlayerTurn) {
+      if (!canQueuePremove(from, to, promotion)) return false
       setPremove({ from, to, promotion })
       return true // optimistic
     }
@@ -585,7 +651,7 @@ function GameSession({
     }
 
     return executeMove(from, to, promotion)
-  }, [game, isPlayerTurn, gameOver, settings.blunderCheck, settings.coachMode, executeMove])
+  }, [game, isPlayerTurn, gameOver, settings.blunderCheck, settings.coachMode, executeMove, canQueuePremove])
 
   // Execute premove when it becomes player's turn
   useEffect(() => {
@@ -596,6 +662,8 @@ function GameSession({
         const gameCopy = new Chess(game.fen())
         const move = gameCopy.move({ from, to, promotion: promotion || 'q' })
         if (!move) return // premove was illegal, silently discard
+        setLastMoveIsPlayer(true)
+        setCoachArrows([])
         setGame(gameCopy)
         setLastMove({ from, to })
         setMoveHistory(prev => [...prev, move.san])
@@ -613,6 +681,8 @@ function GameSession({
   }, [handleGameEnd])
 
   const handleNewGame = useCallback(() => {
+    sessionRef.current += 1
+    aiRequestRef.current += 1
     setGame(new Chess())
     setGameOver(false)
     setResult('')
@@ -743,7 +813,7 @@ function GameSession({
           <Chessboard
             fen={game.fen()}
             size={boardSize}
-            interactive={isPlayerTurn && !gameOver}
+            interactive={!gameOver}
             flipped={playerColor === 'b'}
             onMove={handlePlayerMove}
             lastMove={lastMove || undefined}
@@ -757,6 +827,8 @@ function GameSession({
             ]}
             blindfoldMode={settings.blindfoldMode}
             isPlayerMove={lastMoveIsPlayer}
+            selectableColor={playerColor}
+            legalMoveColor={playerColor}
           />
         </div>
       </div>
@@ -809,8 +881,8 @@ function GameSession({
         </div>
       )}
 
-      {/* Legacy Live Analysis Panel (when coach is off) */}
-      {!gameOver && analysis && settings.coachMode === 'off' && (
+      {/* Live analysis stays opt-in so normal play remains responsive. */}
+      {!gameOver && liveAnalysisEnabled && (
         <div className="glass-card p-3">
           <button
             onClick={() => setShowAnalysis(!showAnalysis)}
@@ -822,14 +894,14 @@ function GameSession({
             </div>
             <div className="flex items-center gap-2">
               <span className={`text-sm font-bold font-mono ${
-                analysis.isMate ? 'text-red-400' : analysis.eval > 0 ? 'text-white' : analysis.eval < 0 ? 'text-zinc-500' : 'text-muted-foreground'
+                  analysis?.isMate ? 'text-red-400' : (analysis?.eval ?? 0) > 0 ? 'text-white' : (analysis?.eval ?? 0) < 0 ? 'text-zinc-500' : 'text-muted-foreground'
               }`}>
-                {analysis.isMate ? `M${analysis.mateIn}` : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`}
+                {analysis ? (analysis.isMate ? `M${analysis.mateIn}` : `${analysis.eval > 0 ? '+' : ''}${analysis.eval.toFixed(1)}`) : '--'}
               </span>
               {showAnalysis ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
             </div>
           </button>
-          {showAnalysis && (
+          {showAnalysis && analysis && (
             <div className="mt-2 pt-2 border-t border-white/[0.06] space-y-2">
               <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                 <div

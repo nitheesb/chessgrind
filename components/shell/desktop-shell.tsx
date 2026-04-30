@@ -8,7 +8,6 @@ import { useSoundAndHaptics } from '@/lib/use-sound-haptics'
 import { XPPopup, LevelUpOverlay } from '@/components/ui/xp-animations'
 import { AchievementPopup } from '@/components/ui/achievement-popup'
 import { ComboOverlay, DailyBonusPopup, PerfectSolveFlash } from '@/components/ui/game-rewards'
-import { SplashScreen } from '@/components/ui/splash-screen'
 import {
   Home,
   Puzzle,
@@ -107,15 +106,12 @@ export function DesktopShell() {
   const { playSound } = useSoundAndHaptics()
   const { settings, updateSetting } = useSettings()
   const [currentPage, setCurrentPage] = useState<Page>('play')
-  const [showSplash, setShowSplash] = useState(true)
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [, startTransition] = useTransition()
   const { progress } = getLevelInfo(profile.xp)
   const preloadedRef = useRef<Set<string>>(new Set(['play']))
 
   useEffect(() => { checkAndUpdateStreak() }, [checkAndUpdateStreak])
-
-  const handleSplashComplete = useCallback(() => setShowSplash(false), [])
 
   const handleNavigate = useCallback((page: string) => {
     playSound('click')
@@ -150,7 +146,6 @@ export function DesktopShell() {
     return () => window.removeEventListener('keydown', handler)
   }, [handleNavigate])
 
-  if (showSplash) return <SplashScreen onComplete={handleSplashComplete} />
   // Gate only the profile page behind login
   if (!isLoggedIn && currentPage === 'profile') return <DesktopLogin onBack={() => handleNavigate('play')} />
 
