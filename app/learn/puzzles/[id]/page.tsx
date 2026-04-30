@@ -5,6 +5,10 @@ import { PUZZLES } from '@/lib/chess-data/puzzles'
 
 const BASE_URL = 'https://chessgrind.vercel.app'
 
+function formatDifficulty(difficulty: string) {
+  return difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
+}
+
 export function generateStaticParams() {
   return PUZZLES.map(p => ({ id: p.id }))
 }
@@ -62,10 +66,10 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
         <header className="mb-10">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-              puzzle.difficulty === 'Easy' ? 'bg-amber-500/10 text-amber-400' :
-              puzzle.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-400' :
+              puzzle.difficulty === 'easy' ? 'bg-amber-500/10 text-amber-400' :
+              puzzle.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-400' :
               'bg-red-500/10 text-red-400'
-            }`}>{puzzle.difficulty}</span>
+            }`}>{formatDifficulty(puzzle.difficulty)}</span>
             <span className="px-2 py-1 rounded-md bg-white/[0.06] text-xs font-mono text-white/50">Rating {puzzle.rating}</span>
             <span className="px-2 py-1 rounded-md bg-primary/10 text-xs font-medium text-primary">+{puzzle.xpReward} XP</span>
           </div>

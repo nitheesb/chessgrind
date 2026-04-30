@@ -24,9 +24,9 @@ function formatName(id: string) {
 }
 
 export default function LearnPage() {
-  const easyPuzzles = PUZZLES.filter(p => p.difficulty === 'Easy')
-  const mediumPuzzles = PUZZLES.filter(p => p.difficulty === 'Medium')
-  const hardPuzzles = PUZZLES.filter(p => p.difficulty === 'Hard')
+  const easyPuzzles = PUZZLES.filter(p => p.difficulty === 'easy')
+  const mediumPuzzles = PUZZLES.filter(p => p.difficulty === 'medium')
+  const hardPuzzles = PUZZLES.filter(p => p.difficulty === 'hard')
 
   return (
     <div className="min-h-screen bg-[hsl(228,18%,3%)] text-white">

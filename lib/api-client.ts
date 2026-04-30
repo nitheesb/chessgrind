@@ -1,4 +1,6 @@
 // API client for communicating with backend
+import type { WeeklyMission } from './chess-store'
+
 const API_BASE = '/api'
 
 interface ApiResponse<T = unknown> {
@@ -129,7 +131,8 @@ export interface UserProfileResponse {
     pgn?: string
   }>
   puzzleRatingHistory?: Array<{ date: string; rating: number }>
-  weeklyMissions?: Array<{ id: string; title: string; progress: number; target: number; xpReward: number; completed: boolean }>
+  gameRatingHistory?: Array<{ date: string; rating: number }>
+  weeklyMissions?: WeeklyMission[]
 }
 
 export interface Achievement {

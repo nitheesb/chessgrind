@@ -9,13 +9,16 @@ const BEST_SCORE_KEY = 'board-vision-best-score'
 const ROUND_DURATION = 30
 
 type Mode = 'name' | 'find'
+type FileChar = typeof FILES[number]
+type RankChar = typeof RANKS[number]
+type BoardSquare = `${FileChar}${RankChar}`
 
-function randomSquare(): string {
-  return FILES[Math.floor(Math.random() * 8)] + RANKS[Math.floor(Math.random() * 8)]
+function randomSquare(): BoardSquare {
+  return `${FILES[Math.floor(Math.random() * 8)]}${RANKS[Math.floor(Math.random() * 8)]}` as BoardSquare
 }
 
-function generateChoices(correct: string): string[] {
-  const choices = new Set<string>([correct])
+function generateChoices(correct: BoardSquare): BoardSquare[] {
+  const choices = new Set<BoardSquare>([correct])
   while (choices.size < 4) {
     choices.add(randomSquare())
   }
@@ -31,14 +34,14 @@ export function BoardVisionTrainer({ onClose }: BoardVisionTrainerProps) {
   const [started, setStarted] = useState(false)
   const [finished, setFinished] = useState(false)
   const [target, setTarget] = useState(randomSquare)
-  const [choices, setChoices] = useState<string[]>(() => generateChoices(target))
+  const [choices, setChoices] = useState<BoardSquare[]>(() => generateChoices(target))
   const [correct, setCorrect] = useState(0)
   const [wrong, setWrong] = useState(0)
   const [score, setScore] = useState(0)
   const [bestScore, setBestScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(ROUND_DURATION)
-  const [flash, setFlash] = useState<{ square: string; ok: boolean } | null>(null)
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [flash, setFlash] = useState<{ square: BoardSquare; ok: boolean } | null>(null)
+  const [selectedAnswer, setSelectedAnswer] = useState<BoardSquare | null>(null)
   const questionStartRef = useRef(Date.now())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -88,14 +91,14 @@ export function BoardVisionTrainer({ onClose }: BoardVisionTrainerProps) {
     setTimeout(() => { setFlash(null); nextQuestion() }, 400)
   }, [target, nextQuestion])
 
-  const handleWrongAnswer = useCallback((square: string) => {
+  const handleWrongAnswer = useCallback((square: BoardSquare) => {
     setWrong(w => w + 1)
     setFlash({ square, ok: false })
     setTimeout(() => { setFlash(null); nextQuestion() }, 400)
   }, [nextQuestion])
 
   // "Name the Square" mode: click a choice button
-  const handleChoiceClick = useCallback((choice: string) => {
+  const handleChoiceClick = useCallback((choice: BoardSquare) => {
     if (!started || finished || selectedAnswer) return
     setSelectedAnswer(choice)
     if (choice === target) {
@@ -108,7 +111,7 @@ export function BoardVisionTrainer({ onClose }: BoardVisionTrainerProps) {
   // "Find the Square" mode: click a square on the board
   const handleBoardClick = useCallback((file: number, rank: number) => {
     if (!started || finished) return
-    const clicked = FILES[file] + RANKS[rank]
+    const clicked = `${FILES[file]}${RANKS[rank]}` as BoardSquare
     if (clicked === target) {
       handleCorrectAnswer()
     } else {
@@ -257,8 +260,8 @@ export function BoardVisionTrainer({ onClose }: BoardVisionTrainerProps) {
   // --- Game Board ---
   const boardSize = 288
   const squareSize = boardSize / 8
-  const targetFile = FILES.indexOf(target[0])
-  const targetRank = RANKS.indexOf(target[1])
+  const targetFile = FILES.indexOf(target[0] as FileChar)
+  const targetRank = RANKS.indexOf(target[1] as RankChar)
 
   return (
     <motion.div

@@ -505,6 +505,10 @@ function EvalChart({
 }) {
   if (data.length === 0) return null
 
+  type ChartClickState = {
+    activePayload?: Array<{ payload?: { ply?: number } }>
+  }
+
   return (
     <div className="w-full">
       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Evaluation</h3>
@@ -513,8 +517,9 @@ function EvalChart({
           <AreaChart
             data={data}
             onClick={(e) => {
-              if (e?.activePayload?.[0]) {
-                onClickPly(e.activePayload[0].payload.ply)
+              const ply = (e as ChartClickState | undefined)?.activePayload?.[0]?.payload?.ply
+              if (typeof ply === 'number') {
+                onClickPly(ply)
               }
             }}
           >
