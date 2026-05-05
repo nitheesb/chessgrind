@@ -133,17 +133,21 @@
       0 4px 24px -4px rgba(0, 0, 0, 0.4);
   }
 
-  /* Only apply blur on devices that can handle it */
-  @media (min-width: 768px) {
+  /* Keep glass lightweight; large blurred surfaces are a common source of UI jank. */
+  @media (min-width: 1024px) {
     .glass-card {
-      backdrop-filter: blur(16px) saturate(150%);
-      -webkit-backdrop-filter: blur(16px) saturate(150%);
+      backdrop-filter: blur(8px) saturate(130%);
+      -webkit-backdrop-filter: blur(8px) saturate(130%);
     }
   }
 
   .glass-card-hover {
     @apply glass-card;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
   }
 
   .glass-card-hover:hover {
@@ -807,7 +811,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmer 4s ease-in-out infinite;
+  animation: shimmer 7s ease-in-out infinite;
 }
 
 /* ── Pulse Ring — subtle ── */
@@ -1094,7 +1098,7 @@
 
 /* ── Breathing Glow — subtle pulse ── */
 .breathing-glow {
-  animation: breathing 4s ease-in-out infinite;
+  animation: breathing 7s ease-in-out infinite;
 }
 
 @keyframes breathing {
@@ -1198,7 +1202,7 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-  animation: shimmer 2s ease-in-out infinite;
+  animation: shimmer 4s ease-in-out infinite;
   background-size: 200% 100%;
 }
 
@@ -1243,7 +1247,7 @@
       hsl(43 96% 52%),
       hsl(38 92% 50%));
   background-size: 300% 100%;
-  animation: gradient-shift 3s ease infinite;
+  animation: gradient-shift 6s ease infinite;
 }
 
 .xp-bar-track {

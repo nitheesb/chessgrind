@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react'
+import React, { useState, useCallback, useMemo, useRef, useEffect, useLayoutEffect, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Chess, type Square } from 'chess.js'
 import { ChessPiece, parseFEN } from './chess-pieces'
@@ -201,8 +201,8 @@ const Square = memo(function Square({
           justifyContent: 'center',
           pointerEvents: 'none',
           filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-          transform: isSelected ? 'scale(1.08)' : 'scale(1)',
-          transition: 'transform 0.12s ease',
+          transform: isSelected ? 'scale(1.025)' : 'scale(1)',
+          transition: `transform 0.16s ${MOVE_EASE}`,
           zIndex: 3,
           opacity: blindfoldMode ? 0 : 1,
         }}>
@@ -213,7 +213,19 @@ const Square = memo(function Square({
   )
 })
 
-// Animated piece during movement — spring physics via framer-motion
+const MOVE_EASE = 'cubic-bezier(0.25, 0.1, 0.25, 1)'
+const PLAYER_BASE_MOVE_MS = 175
+const OPPONENT_BASE_MOVE_MS = 205
+
+function getMoveDurationMs(from: string, to: string, fast?: boolean) {
+  const fromIndex = squareToIndex(from)
+  const toIndex = squareToIndex(to)
+  const distance = Math.hypot(toIndex.row - fromIndex.row, toIndex.col - fromIndex.col)
+  const base = fast ? PLAYER_BASE_MOVE_MS : OPPONENT_BASE_MOVE_MS
+  return Math.round(Math.min(285, base + distance * 14))
+}
+
+// Animated piece during movement — CSS transform path for a steadier compositor-only animation
 function AnimatedPiece({
   piece,
   from,
@@ -233,6 +245,10 @@ function AnimatedPiece({
   pieceStyle?: 'neo' | 'classic'
   fast?: boolean
 }) {
+  const pieceRef = useRef<HTMLDivElement>(null)
+  const innerRef = useRef<HTMLDivElement>(null)
+  const duration = getMoveDurationMs(from, to, fast)
+
   const getPos = useCallback((square: string) => {
     const { row, col } = squareToIndex(square)
     const displayCol = flipped ? 7 - col : col
@@ -246,14 +262,40 @@ function AnimatedPiece({
   const fromPos = getPos(from)
   const toPos = getPos(to)
 
+  useLayoutEffect(() => {
+    const node = pieceRef.current
+    if (!node) return
+
+    node.style.transition = 'none'
+    node.style.transform = `translate3d(${fromPos.x}px, ${fromPos.y}px, 0)`
+    if (innerRef.current) {
+      innerRef.current.style.transition = 'none'
+      innerRef.current.style.transform = fast ? 'scale(1.025)' : 'scale(1)'
+    }
+
+    const raf = requestAnimationFrame(() => {
+      node.style.transition = `transform ${duration}ms ${MOVE_EASE}`
+      node.style.transform = `translate3d(${toPos.x}px, ${toPos.y}px, 0)`
+      if (innerRef.current) {
+        innerRef.current.style.transition = `transform ${Math.min(180, duration)}ms ${MOVE_EASE}`
+        innerRef.current.style.transform = 'scale(1)'
+      }
+    })
+    const timeout = window.setTimeout(onComplete, duration + 40)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      window.clearTimeout(timeout)
+    }
+  }, [duration, fromPos.x, fromPos.y, toPos.x, toPos.y, onComplete])
+
   return (
-    <motion.div
-      initial={{ x: fromPos.x, y: fromPos.y }}
-      animate={{ x: toPos.x, y: toPos.y }}
-      transition={{ type: 'tween', duration: fast ? 0.08 : 0.16, ease: [0.2, 0, 0, 1] }}
-      onAnimationComplete={onComplete}
+    <div
+      ref={pieceRef}
       style={{
         position: 'absolute',
+        left: 0,
+        top: 0,
         width: squareSize,
         height: squareSize,
         display: 'flex',
@@ -261,10 +303,27 @@ function AnimatedPiece({
         justifyContent: 'center',
         zIndex: 50,
         pointerEvents: 'none',
+        willChange: 'transform',
+        transform: `translate3d(${fromPos.x}px, ${fromPos.y}px, 0)`,
+        backfaceVisibility: 'hidden',
+        contain: 'layout paint style',
       }}
     >
-      <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
-    </motion.div>
+      <div
+        ref={innerRef}
+        style={{
+          width: squareSize,
+          height: squareSize,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transform: fast ? 'scale(1.025)' : 'scale(1)',
+          willChange: 'transform',
+        }}
+      >
+        <ChessPiece piece={piece} size={squareSize * 0.85} pieceStyle={pieceStyle} />
+      </div>
+    </div>
   )
 }
 
@@ -452,6 +511,7 @@ export function Chessboard({
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
   const prevFenRef = useRef(fen)
+  const handledMoveRef = useRef<string | null>(null)
   // Touch tap vs drag detection
   const wasTouchDragRef = useRef(false)
   const touchStartPosRef = useRef({ x: 0, y: 0 })
@@ -464,11 +524,36 @@ export function Chessboard({
   // Touch drag pending (deferred until 5px threshold in touchmove)
   const touchDragPendingRef = useRef<{ piece: string; from: string } | null>(null)
   const squareSize = size / 8
+  const board = useMemo(() => parseFEN(fen), [fen])
 
   const canInteractWithPiece = useCallback((piece: string | null | undefined): piece is string => {
     if (!piece) return false
     return !selectableColor || piece[0] === selectableColor
   }, [selectableColor])
+
+  const getMoveKey = useCallback((from: string, to: string) => `${from}-${to}`, [])
+
+  const isImmediateMove = useCallback((from: string) => {
+    const { row, col } = squareToIndex(from)
+    const piece = board[row]?.[col]
+    const turn = fen.split(' ')[1] || 'w'
+    return Boolean(piece && piece[0] === turn)
+  }, [board, fen])
+
+  const pulseMoveTarget = useCallback((to: string, captured: boolean) => {
+    setMovePulse({ square: to, captured, id: Date.now() })
+  }, [])
+
+  const beginMoveAnimation = useCallback((piece: string, from: string, to: string, fast: boolean, captured: boolean) => {
+    handledMoveRef.current = getMoveKey(from, to)
+    setAnimating({ piece, from, to, fast })
+    pulseMoveTarget(to, captured)
+  }, [getMoveKey, pulseMoveTarget])
+
+  const markMoveHandled = useCallback((from: string, to: string, captured: boolean) => {
+    handledMoveRef.current = getMoveKey(from, to)
+    pulseMoveTarget(to, captured)
+  }, [getMoveKey, pulseMoveTarget])
 
   // Direct DOM update for drag position — zero React re-renders
   const updateDragPos = useCallback((x: number, y: number) => {
@@ -506,8 +591,6 @@ export function Chessboard({
   // Use either hintArrow or showHint
   const activeHint = hintArrow || showHint
 
-  const board = useMemo(() => parseFEN(fen), [fen])
-
   // Find king square for check highlighting
   const checkSquare = useMemo(() => {
     if (!isCheck) return null
@@ -532,21 +615,26 @@ export function Chessboard({
   }, [board])
 
   // Detect moves, animate piece, and trigger capture animation
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (prevFenRef.current !== fen && lastMove) {
       // Animate both player and opponent moves
+      const moveKey = getMoveKey(lastMove.from, lastMove.to)
+      if (handledMoveRef.current === moveKey) {
+        handledMoveRef.current = null
+        prevFenRef.current = fen
+        return
+      }
       const prevBoard = parseFEN(prevFenRef.current)
       const { row, col } = squareToIndex(lastMove.from)
       const piece = prevBoard[row]?.[col]
       if (piece) {
         const { row: toRow, col: toCol } = squareToIndex(lastMove.to)
         const captured = Boolean(prevBoard[toRow]?.[toCol])
-        setAnimating({ piece, from: lastMove.from, to: lastMove.to, fast: isPlayerMove })
-        setMovePulse({ square: lastMove.to, captured, id: Date.now() })
+        beginMoveAnimation(piece, lastMove.from, lastMove.to, isPlayerMove, captured)
       }
     }
     prevFenRef.current = fen
-  }, [fen, lastMove, isPlayerMove])
+  }, [fen, lastMove, isPlayerMove, getMoveKey, beginMoveAnimation])
 
   const getActualCoords = useCallback((displayRow: number, displayCol: number) => ({
     row: isFlipped ? 7 - displayRow : displayRow,
@@ -676,6 +764,9 @@ export function Chessboard({
         }
         const success = onMove(dragInfo.from, targetSquare)
         if (success) {
+          if (isImmediateMove(dragInfo.from)) {
+            markMoveHandled(dragInfo.from, targetSquare, Boolean(targetPiece))
+          }
           soundHaptics.playSound(targetPiece ? 'capture' : 'move')
           soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
           moved = true
@@ -690,7 +781,7 @@ export function Chessboard({
     }
     setDragInfo(null)
     setSelectedSquare(null)
-  }, [dragInfo, squareSize, onMove, getActualCoords, board, isPromotionMove])
+  }, [dragInfo, squareSize, onMove, getActualCoords, board, isPromotionMove, isImmediateMove, markMoveHandled])
 
   const handleSquareClick = useCallback((displayRow: number, displayCol: number) => {
     if (!interactive) return
@@ -729,6 +820,11 @@ export function Chessboard({
         const targetPiece = board[row]?.[col]
         const success = onMove(selectedSquare, square)
         if (success) {
+          if (isImmediateMove(selectedSquare)) {
+            const { row: selectedRow, col: selectedCol } = squareToIndex(selectedSquare)
+            const movingPiece = board[selectedRow]?.[selectedCol]
+            if (movingPiece) beginMoveAnimation(movingPiece, selectedSquare, square, true, Boolean(targetPiece))
+          }
           // Play appropriate sound
           soundHaptics.playSound(targetPiece ? 'capture' : 'move')
           soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
@@ -750,7 +846,7 @@ export function Chessboard({
       soundHaptics.triggerHaptic('selection')
       setSelectedSquare(square)
     }
-  }, [interactive, selectedSquare, board, onMove, getActualCoords, allowArrowDrawing, drawnArrows.length, onArrowDraw, canInteractWithPiece])
+  }, [interactive, selectedSquare, board, onMove, getActualCoords, allowArrowDrawing, drawnArrows.length, onArrowDraw, canInteractWithPiece, isImmediateMove, beginMoveAnimation])
 
   const handleSquareKeyDown = useCallback((e: React.KeyboardEvent, sq: string) => {
     if (!interactive) return
@@ -824,6 +920,11 @@ export function Chessboard({
         const targetPiece = board[row]?.[col]
         const success = onMove(selectedSquare, square)
         if (success) {
+          if (isImmediateMove(selectedSquare)) {
+            const { row: selectedRow, col: selectedCol } = squareToIndex(selectedSquare)
+            const movingPiece = board[selectedRow]?.[selectedCol]
+            if (movingPiece) beginMoveAnimation(movingPiece, selectedSquare, square, true, Boolean(targetPiece))
+          }
           soundHaptics.playSound(targetPiece ? 'capture' : 'move')
           soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
           setSelectedSquare(null)
@@ -864,7 +965,7 @@ export function Chessboard({
       setSelectedSquare(square)
       tapActionRef.current = 'select'
     }
-  }, [interactive, board, selectedSquare, onMove, getActualCoords, isPromotionMove, canInteractWithPiece])
+  }, [interactive, board, selectedSquare, onMove, getActualCoords, isPromotionMove, canInteractWithPiece, isImmediateMove, beginMoveAnimation])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     e.preventDefault()
@@ -946,6 +1047,9 @@ export function Chessboard({
         }
         const success = onMove(dragInfo.from, targetSquare)
         if (success) {
+          if (isImmediateMove(dragInfo.from)) {
+            markMoveHandled(dragInfo.from, targetSquare, Boolean(targetPiece))
+          }
           soundHaptics.playSound(targetPiece ? 'capture' : 'move')
           soundHaptics.triggerHaptic(targetPiece ? 'medium' : 'light')
           moved = true
@@ -962,7 +1066,7 @@ export function Chessboard({
 
     setDragInfo(null)
     setSelectedSquare(null)
-  }, [dragInfo, squareSize, onMove, getActualCoords, board, isPromotionMove])
+  }, [dragInfo, squareSize, onMove, getActualCoords, board, isPromotionMove, isImmediateMove, markMoveHandled])
 
   // Pre-compute square states for performance
   const highlightSet = useMemo(() => new Set(highlightSquares), [highlightSquares])
@@ -1284,8 +1388,15 @@ export function Chessboard({
                 onClick={() => {
                   if (onMove && promotionPending) {
                     const soundHaptics = getGlobalSoundHaptics()
+                    const { row: fromRow, col: fromCol } = squareToIndex(promotionPending.from)
+                    const { row: toRow, col: toCol } = squareToIndex(promotionPending.to)
+                    const movingPiece = board[fromRow]?.[fromCol]
+                    const targetPiece = board[toRow]?.[toCol]
                     const success = onMove(promotionPending.from, promotionPending.to, p.toLowerCase())
                     if (success) {
+                      if (movingPiece && isImmediateMove(promotionPending.from)) {
+                        beginMoveAnimation(movingPiece, promotionPending.from, promotionPending.to, true, Boolean(targetPiece))
+                      }
                       soundHaptics.playSound('move')
                       soundHaptics.triggerHaptic('medium')
                     }
