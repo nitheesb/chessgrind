@@ -53,6 +53,37 @@ const squareToIndex = (square: string) => ({
 const indexToSquare = (row: number, col: number) =>
   String.fromCharCode(97 + col) + (8 - row)
 
+function inferMoveFromBoards(prevBoard: ReturnType<typeof parseFEN>, nextBoard: ReturnType<typeof parseFEN>) {
+  const emptied: Array<{ square: string; piece: string }> = []
+  const filled: Array<{ square: string; piece: string }> = []
+
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const prevPiece = prevBoard[row]?.[col]
+      const nextPiece = nextBoard[row]?.[col]
+      if (prevPiece === nextPiece) continue
+
+      const square = indexToSquare(row, col)
+      if (prevPiece && !nextPiece) {
+        emptied.push({ square, piece: prevPiece })
+      } else if (!prevPiece && nextPiece) {
+        filled.push({ square, piece: nextPiece })
+      } else if (prevPiece && nextPiece) {
+        emptied.push({ square, piece: prevPiece })
+        filled.push({ square, piece: nextPiece })
+      }
+    }
+  }
+
+  for (const from of emptied) {
+    const to = filled.find(target => target.piece === from.piece)
+      ?? filled.find(target => target.piece[0] === from.piece[0])
+    if (to) return { piece: from.piece, from: from.square, to: to.square }
+  }
+
+  return null
+}
+
 function getPieceName(piece: string): string {
   const names: Record<string, string> = { K: 'King', Q: 'Queen', R: 'Rook', B: 'Bishop', N: 'Knight', P: 'Pawn' }
   return names[piece[1]] || piece
@@ -213,16 +244,16 @@ const Square = memo(function Square({
   )
 })
 
-const MOVE_EASE = 'cubic-bezier(0.25, 0.1, 0.25, 1)'
-const PLAYER_BASE_MOVE_MS = 175
-const OPPONENT_BASE_MOVE_MS = 205
+const MOVE_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)'
+const PLAYER_BASE_MOVE_MS = 235
+const OPPONENT_BASE_MOVE_MS = 265
 
 function getMoveDurationMs(from: string, to: string, fast?: boolean) {
   const fromIndex = squareToIndex(from)
   const toIndex = squareToIndex(to)
   const distance = Math.hypot(toIndex.row - fromIndex.row, toIndex.col - fromIndex.col)
   const base = fast ? PLAYER_BASE_MOVE_MS : OPPONENT_BASE_MOVE_MS
-  return Math.round(Math.min(285, base + distance * 14))
+  return Math.round(Math.min(365, base + distance * 22))
 }
 
 // Animated piece during movement — CSS transform path for a steadier compositor-only animation
@@ -266,28 +297,78 @@ function AnimatedPiece({
     const node = pieceRef.current
     if (!node) return
 
-    node.style.transition = 'none'
-    node.style.transform = `translate3d(${fromPos.x}px, ${fromPos.y}px, 0)`
+    const fromTransform = `translate3d(${fromPos.x}px, ${fromPos.y}px, 0)`
+    const toTransform = `translate3d(${toPos.x}px, ${toPos.y}px, 0)`
+    node.style.transform = fromTransform
     if (innerRef.current) {
       innerRef.current.style.transition = 'none'
       innerRef.current.style.transform = fast ? 'scale(1.025)' : 'scale(1)'
     }
 
-    const raf = requestAnimationFrame(() => {
-      node.style.transition = `transform ${duration}ms ${MOVE_EASE}`
-      node.style.transform = `translate3d(${toPos.x}px, ${toPos.y}px, 0)`
-      if (innerRef.current) {
-        innerRef.current.style.transition = `transform ${Math.min(180, duration)}ms ${MOVE_EASE}`
-        innerRef.current.style.transform = 'scale(1)'
+    let completed = false
+    let timeout: number | null = null
+    let animation: Animation | null = null
+    let innerAnimation: Animation | null = null
+
+    const finish = () => {
+      if (completed) return
+      completed = true
+      node.style.transform = toTransform
+      onComplete()
+    }
+
+    if (typeof node.animate === 'function') {
+      animation = node.animate(
+        [
+          { transform: fromTransform },
+          { transform: toTransform },
+        ],
+        {
+          duration,
+          easing: MOVE_EASE,
+          fill: 'forwards',
+        },
+      )
+      animation.onfinish = finish
+      animation.oncancel = () => {
+        completed = true
       }
-    })
-    const timeout = window.setTimeout(onComplete, duration + 40)
+    } else {
+      node.style.transition = 'none'
+      const forceLayout = node.offsetWidth
+      void forceLayout
+      requestAnimationFrame(() => {
+        node.style.transition = `transform ${duration}ms ${MOVE_EASE}`
+        node.style.transform = toTransform
+        timeout = window.setTimeout(finish, duration + 40)
+      })
+    }
+
+    if (innerRef.current && typeof innerRef.current.animate === 'function') {
+      innerAnimation = innerRef.current.animate(
+        [
+          { transform: fast ? 'scale(1.035)' : 'scale(1.015)' },
+          { transform: 'scale(1)' },
+        ],
+        {
+          duration: Math.min(220, duration),
+          easing: MOVE_EASE,
+          fill: 'forwards',
+        },
+      )
+      innerAnimation.onfinish = () => {
+        if (innerRef.current) {
+          innerRef.current.style.transform = 'scale(1)'
+        }
+      }
+    }
 
     return () => {
-      cancelAnimationFrame(raf)
-      window.clearTimeout(timeout)
+      animation?.cancel()
+      innerAnimation?.cancel()
+      if (timeout) window.clearTimeout(timeout)
     }
-  }, [duration, fromPos.x, fromPos.y, toPos.x, toPos.y, onComplete])
+  }, [duration, fast, fromPos.x, fromPos.y, toPos.x, toPos.y, onComplete])
 
   return (
     <div
@@ -555,6 +636,10 @@ export function Chessboard({
     pulseMoveTarget(to, captured)
   }, [getMoveKey, pulseMoveTarget])
 
+  const handleMoveAnimationComplete = useCallback(() => {
+    setAnimating(null)
+  }, [])
+
   // Direct DOM update for drag position — zero React re-renders
   const updateDragPos = useCallback((x: number, y: number) => {
     dragPosRef.current = { x, y }
@@ -616,22 +701,35 @@ export function Chessboard({
 
   // Detect moves, animate piece, and trigger capture animation
   useLayoutEffect(() => {
-    if (prevFenRef.current !== fen && lastMove) {
-      // Animate both player and opponent moves
-      const moveKey = getMoveKey(lastMove.from, lastMove.to)
+    if (prevFenRef.current !== fen) {
+      const prevBoard = parseFEN(prevFenRef.current)
+      const nextBoard = parseFEN(fen)
+      const inferredMove = lastMove
+        ? null
+        : inferMoveFromBoards(prevBoard, nextBoard)
+      const move = lastMove
+        ? (() => {
+          const { row, col } = squareToIndex(lastMove.from)
+          const piece = prevBoard[row]?.[col]
+          return piece ? { piece, from: lastMove.from, to: lastMove.to } : null
+        })()
+        : inferredMove
+
+      if (!move) {
+        prevFenRef.current = fen
+        return
+      }
+
+      const moveKey = getMoveKey(move.from, move.to)
       if (handledMoveRef.current === moveKey) {
         handledMoveRef.current = null
         prevFenRef.current = fen
         return
       }
-      const prevBoard = parseFEN(prevFenRef.current)
-      const { row, col } = squareToIndex(lastMove.from)
-      const piece = prevBoard[row]?.[col]
-      if (piece) {
-        const { row: toRow, col: toCol } = squareToIndex(lastMove.to)
-        const captured = Boolean(prevBoard[toRow]?.[toCol])
-        beginMoveAnimation(piece, lastMove.from, lastMove.to, isPlayerMove, captured)
-      }
+
+      const { row: toRow, col: toCol } = squareToIndex(move.to)
+      const captured = Boolean(prevBoard[toRow]?.[toCol])
+      beginMoveAnimation(move.piece, move.from, move.to, isPlayerMove, captured)
     }
     prevFenRef.current = fen
   }, [fen, lastMove, isPlayerMove, getMoveKey, beginMoveAnimation])
@@ -1230,7 +1328,7 @@ export function Chessboard({
             to={animating.to}
             squareSize={squareSize}
             flipped={isFlipped}
-            onComplete={() => setAnimating(null)}
+            onComplete={handleMoveAnimationComplete}
             pieceStyle={pieceStyle}
             fast={animating.fast}
           />
