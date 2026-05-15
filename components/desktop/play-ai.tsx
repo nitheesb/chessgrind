@@ -60,6 +60,9 @@ const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string; 
   red: { border: 'border-red-500', bg: 'bg-red-500/10', text: 'text-red-500', activeStyle: 'shadow-[0_0_20px_rgba(239,68,68,0.15)] ring-1 ring-red-500/50' },
 }
 
+const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+const SETUP_START_DELAY_MS = 430
+
 export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const { addXP, addRecentGame, updateGameRating, profile } = useGame()
   const { settings, updateSetting } = useSettings()
@@ -79,7 +82,11 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const sessionRef = useRef(0)
   const aiRequestRef = useRef(0)
+  const setupStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [boardSize, setBoardSize] = useState(700)
+  const [setupPreviewFen, setSetupPreviewFen] = useState(STARTING_FEN)
+  const [setupPreviewLastMove, setSetupPreviewLastMove] = useState<{ from: string; to: string } | null>(null)
+  const [setupStarting, setSetupStarting] = useState(false)
 
   useEffect(() => {
     const update = () => {
@@ -109,6 +116,7 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
     return () => {
       sessionRef.current += 1
       aiRequestRef.current += 1
+      if (setupStartTimerRef.current) clearTimeout(setupStartTimerRef.current)
     }
   }, [])
 
@@ -474,38 +482,45 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
 
   // Auto-start game on first move from setup screen
   const handleSetupMove = useCallback((from: string, to: string, promotion?: string): boolean => {
+    if (setupStarting) return false
     const freshGame = new Chess()
     try {
       const move = freshGame.move({ from, to, promotion: promotion || 'q' })
       if (!move) return false
 
-      // Start the game with current settings
-      setGameStarted(true)
-      setGame(freshGame)
-      setGameStatus('playing')
-      setLastMove({ from, to })
-      setMoveHistory([move.san])
-      setTimer(0)
-      setWhiteTime(timeControl.minutes * 60)
-      setBlackTime(timeControl.minutes * 60)
-      setAnalysis(null)
+      setSetupStarting(true)
+      setSetupPreviewFen(freshGame.fen())
+      setSetupPreviewLastMove({ from, to })
       sessionRef.current += 1
       aiRequestRef.current += 1
       const sessionId = sessionRef.current
       playSound(move.captured ? 'capture' : 'move')
       triggerHaptic('medium')
 
-      // Trigger AI response after a short delay
-      if (!freshGame.isGameOver()) {
-        setTimeout(() => {
-          if (sessionRef.current === sessionId) makeAIMove(freshGame, sessionId)
-        }, 80)
-      }
+      setupStartTimerRef.current = setTimeout(() => {
+        if (sessionRef.current !== sessionId) return
+        setGameStarted(true)
+        setGame(freshGame)
+        setGameStatus('playing')
+        setLastMoveIsPlayer(true)
+        setLastMove({ from, to })
+        setMoveHistory([move.san])
+        setTimer(0)
+        setWhiteTime(timeControl.minutes * 60)
+        setBlackTime(timeControl.minutes * 60)
+        setAnalysis(null)
+
+        if (!freshGame.isGameOver()) {
+          setTimeout(() => {
+            if (sessionRef.current === sessionId) makeAIMove(freshGame, sessionId)
+          }, 80)
+        }
+      }, SETUP_START_DELAY_MS)
       return true
     } catch {
       return false
     }
-  }, [playSound, triggerHaptic, makeAIMove, timeControl.minutes])
+  }, [setupStarting, playSound, triggerHaptic, makeAIMove, timeControl.minutes])
 
   if (!gameStarted) {
     return (
@@ -515,13 +530,15 @@ export function DesktopPlayAI({ onNavigate }: DesktopPlayAIProps) {
           <div className="flex flex-col items-center gap-3">
             <div className="lm-board-wrap flex items-center justify-center">
               <Chessboard
-                fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-                interactive={playerColor === 'white'}
+                fen={setupPreviewFen}
+                interactive={playerColor === 'white' && !setupStarting}
                 onMove={handleSetupMove}
                 orientation={playerColor}
                 size={boardSize}
+                lastMove={setupPreviewLastMove || undefined}
                 boardStyle={settings.boardStyle}
                 pieceStyle={settings.pieceStyle}
+                isPlayerMove
                 selectableColor={playerColorCode}
                 legalMoveColor={playerColorCode}
               />

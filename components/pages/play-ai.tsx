@@ -78,30 +78,49 @@ function CheckmateCelebration({ show }: { show: boolean }) {
 
 import { TIME_CONTROLS, type TimeControl } from '@/lib/chess-constants'
 
+const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+const SETUP_START_DELAY_MS = 430
+
 export function PlayAIPage({ onBack }: PlayAIProps) {
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
   const [gameStarted, setGameStarted] = useState(false)
   const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w')
   const [initialMove, setInitialMove] = useState<{ from: string; to: string; promotion?: string } | null>(null)
+  const [setupPreviewFen, setSetupPreviewFen] = useState(STARTING_FEN)
+  const [setupPreviewLastMove, setSetupPreviewLastMove] = useState<{ from: string; to: string } | null>(null)
+  const [setupStarting, setSetupStarting] = useState(false)
+  const setupStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [timeControl, setTimeControl] = useState<TimeControl>(TIME_CONTROLS[0])
   const [showAdvanced, setShowAdvanced] = useState(false)
   const { settings } = useSettings()
   const setupBoardSize = useMobileBoardSize(360)
 
+  useEffect(() => {
+    return () => {
+      if (setupStartTimerRef.current) clearTimeout(setupStartTimerRef.current)
+    }
+  }, [])
+
   // Auto-start from board: use level 3 (Club Player), white, unlimited
   const handleSetupMove = useCallback((from: string, to: string, promotion?: string): boolean => {
+    if (setupStarting) return false
     const freshGame = new Chess()
     try {
       const move = freshGame.move({ from, to, promotion: promotion || 'q' })
       if (!move) return false
-      setSelectedLevel(3)
-      setInitialMove({ from, to, promotion })
-      setGameStarted(true)
+      setSetupStarting(true)
+      setSetupPreviewFen(freshGame.fen())
+      setSetupPreviewLastMove({ from, to })
+      setupStartTimerRef.current = setTimeout(() => {
+        setSelectedLevel(3)
+        setInitialMove({ from, to, promotion })
+        setGameStarted(true)
+      }, SETUP_START_DELAY_MS)
       return true
     } catch {
       return false
     }
-  }, [])
+  }, [setupStarting])
 
   if (gameStarted && selectedLevel !== null) {
     return (
@@ -114,6 +133,9 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
           setGameStarted(false)
           setSelectedLevel(null)
           setInitialMove(null)
+          setSetupStarting(false)
+          setSetupPreviewFen(STARTING_FEN)
+          setSetupPreviewLastMove(null)
         }}
       />
     )
@@ -143,13 +165,15 @@ export function PlayAIPage({ onBack }: PlayAIProps) {
       {/* Interactive board — make a move to quick-start */}
       <motion.div variants={staggerItem} className="flex flex-col items-center gap-2">
         <Chessboard
-          fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-          interactive={playerColor === 'w'}
+          fen={setupPreviewFen}
+          interactive={playerColor === 'w' && !setupStarting}
           onMove={handleSetupMove}
           size={setupBoardSize}
           flipped={playerColor === 'b'}
+          lastMove={setupPreviewLastMove || undefined}
           boardStyle={settings.boardStyle}
           pieceStyle={settings.pieceStyle}
+          isPlayerMove
           selectableColor={playerColor}
           legalMoveColor={playerColor}
         />
